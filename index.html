@@ -1,0 +1,818 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>产品经理大冒险 · Product Quest</title>
+<style>
+  :root{
+    --bg:#15173a; --panel:#2b3a67; --panel-dark:#1b2244; --border:#8fa7c9;
+    --accent:#ffcd75; --green:#4ad07a; --yellow:#f5a742; --red:#e05a6d; --blue:#5cb9ff;
+    --text:#f2f4ff; --dim:#93a4c7;
+  }
+  *{box-sizing:border-box; margin:0; padding:0; -webkit-tap-highlight-color:transparent;}
+  body{
+    background:#0b0c20; color:var(--text); min-height:100vh;
+    display:flex; align-items:center; justify-content:center;
+    font-family:"Zpix","Fusion Pixel","MS Gothic","SimSun",monospace;
+  }
+  #game{
+    width:min(980px,100vw); height:min(660px,100vh);
+    position:relative; overflow:hidden;
+    border:4px solid #465a86; border-radius:6px; background:var(--panel-dark);
+    box-shadow:0 0 0 4px #05060f, 0 18px 60px rgba(0,0,0,.75), inset 0 0 80px rgba(0,0,0,.25);
+  }
+  /* CRT 质感 */
+  #crt{position:absolute; inset:0; pointer-events:none; z-index:90;
+    background:repeating-linear-gradient(0deg, rgba(0,0,0,.10) 0 2px, transparent 2px 4px);}
+  #vig{position:absolute; inset:0; pointer-events:none; z-index:91;
+    background:radial-gradient(ellipse at center, transparent 58%, rgba(0,0,10,.42) 100%);}
+
+  .screen{position:absolute; inset:0; display:none; flex-direction:column;}
+  .screen.active{display:flex; animation:fadein .35s;}
+  @keyframes fadein{from{opacity:0;}}
+
+  .pxbtn{
+    font-family:inherit; cursor:pointer; color:var(--text); position:relative;
+    background:linear-gradient(#35477e,#2b3a67); border:3px solid var(--border); border-radius:4px;
+    box-shadow:0 4px 0 #131a35, inset 0 2px 0 rgba(255,255,255,.14);
+    padding:12px 18px; font-size:15px; text-align:left; line-height:1.55; transition:all .12s;
+  }
+  .pxbtn:hover{background:linear-gradient(#41569a,#35477e); transform:translateY(-2px); box-shadow:0 6px 0 #131a35, 0 6px 18px rgba(92,185,255,.18);}
+  .pxbtn:active{transform:translateY(2px); box-shadow:0 1px 0 #131a35;}
+  .pxbtn.center{text-align:center;}
+  .pxbtn.small{font-size:12px; padding:8px 12px;}
+
+  /* ============ 着陆页 ============ */
+  #landing{overflow-y:auto; align-items:center; padding:30px 40px 30px; gap:20px;
+    background:radial-gradient(ellipse at 50% -10%, #35477e 0%, #15173a 55%, #0d0e26 100%);}
+  #hero{display:flex; flex-direction:column; gap:20px; align-items:center; justify-content:center; z-index:1; width:100%; min-height:560px; flex-shrink:0;}
+  #cast{display:flex; flex-direction:column; gap:12px; border:3px solid #40538a; border-radius:12px; padding:18px 20px 14px; background:#131a3ad9; animation:floaty 3.4s infinite;}
+  #cast .cast-cap{font-size:12.5px; color:var(--blue); text-align:center; letter-spacing:3px;}
+  #cast .cast-row{display:flex; gap:16px;}
+  .cast-item{text-align:center;}
+  .cast-item canvas{width:58px; height:87px; image-rendering:pixelated; filter:drop-shadow(0 5px 3px rgba(0,0,0,.45));}
+  .cast-item .cn{font-size:11px; color:var(--text); margin-top:5px;}
+  .cast-item .cr{font-size:10px; color:var(--dim);}
+  #scroll-hint{z-index:1; color:var(--dim); font-size:12.5px; letter-spacing:2px; animation:hintBob 1.4s ease-in-out infinite;}
+  @keyframes hintBob{50%{transform:translateY(5px);}}
+  .star{position:absolute; background:#fff; opacity:.7; animation:tw 2.4s infinite;}
+  @keyframes tw{50%{opacity:.08;}}
+  #t-logo{z-index:1; text-align:center; animation:floaty 3.4s ease-in-out infinite;}
+  @keyframes floaty{50%{transform:translateY(-8px);}}
+  #t-logo .kicker{color:var(--blue); font-size:13px; letter-spacing:8px; margin-bottom:10px;}
+  #t-logo h1{
+    font-size:42px; color:var(--accent); letter-spacing:8px;
+    text-shadow:0 4px 0 #b1454f, 0 8px 0 rgba(0,0,0,.55), 0 0 34px rgba(255,205,117,.35);
+  }
+  #t-logo .sub{color:var(--dim); font-size:15px; letter-spacing:2px; margin-top:12px;}
+  .blink{animation:blink 1.1s step-start infinite;}
+  @keyframes blink{50%{opacity:0;}}
+  /* 痛点轮播 */
+  #pain-ticker{
+    z-index:1; width:min(620px,100%); min-height:64px; display:flex; align-items:center; justify-content:center;
+    border:3px solid #40538a; border-radius:8px; background:#131a3add; padding:12px 22px; text-align:center;
+  }
+  #pain-text{font-size:16px; line-height:1.8; color:var(--text); transition:opacity .45s, transform .45s;}
+  #pain-text.out{opacity:0; transform:translateY(-8px);}
+  #pain-text b{color:var(--red);}
+  /* 介绍区 */
+  .land-sec{z-index:1; width:min(760px,100%);}
+  .land-sec h3{color:var(--accent); font-size:17px; letter-spacing:3px; margin-bottom:12px; display:flex; align-items:center; gap:10px;}
+  .land-sec h3::after{content:""; flex:1; height:2px; background:linear-gradient(90deg,#40538a,transparent);}
+  .feat-grid{display:grid; grid-template-columns:repeat(2,1fr); gap:12px;}
+  .feat{border:3px solid #40538a; border-radius:8px; background:#1b2244cc; padding:14px 16px; font-size:14px; line-height:1.8; transition:all .15s;}
+  .feat:hover{border-color:var(--blue); transform:translateY(-3px);}
+  .feat .fi{font-size:22px;}
+  .feat .ft{color:var(--accent); font-size:15px; margin:5px 0 3px;}
+  .feat .fd{color:var(--dim); font-size:13px;}
+  .play-grid{display:grid; grid-template-columns:repeat(3,1fr); gap:10px;}
+  .play-item{border:3px solid #40538a; border-radius:8px; background:#1b2244cc; padding:12px; text-align:center; font-size:13px; line-height:1.7;}
+  .play-item .pi{font-size:24px; display:block; margin-bottom:4px;}
+  .play-item b{color:var(--accent); font-size:14px; display:block;}
+  .play-item span{color:var(--dim); font-size:12px;}
+  #land-cta{z-index:1; font-size:17px; padding:16px 52px; animation:pulse 1.4s infinite;}
+
+  /* ============ 角色DIY ============ */
+  #avatar-screen{align-items:center; justify-content:center; gap:16px; padding:24px;
+    background:radial-gradient(ellipse at 50% 115%, #35477e 0%, #15173a 62%, #0d0e26 100%);}
+  #avatar-screen h2{color:var(--accent); letter-spacing:4px; font-size:24px;}
+  #av-wrap{display:flex; gap:34px; align-items:center;}
+  #av-stage{width:210px; height:230px; border:4px solid #465a86; border-radius:10px; display:flex; align-items:center; justify-content:center;
+    background:linear-gradient(transparent 0 68%, #43332a 68% 100%), linear-gradient(#33568e,#2a4577);}
+  #av-prev{width:128px; height:192px; image-rendering:pixelated; filter:drop-shadow(0 10px 6px rgba(0,0,0,.4)); animation:floaty 2.6s infinite;}
+  #av-opts{display:flex; flex-direction:column; gap:11px; width:340px;}
+  .av-row{display:flex; align-items:center; gap:10px; flex-wrap:wrap;}
+  .av-row label{font-size:13px; color:var(--dim); width:52px; flex:none;}
+  .swatch{width:30px; height:30px; border:3px solid #40538a; border-radius:5px; cursor:pointer; transition:transform .1s;}
+  .swatch:hover{transform:scale(1.15);}
+  .swatch.on{border-color:#fff; box-shadow:0 0 10px #fff8;}
+  .avbtn{font-size:13px; padding:7px 14px;}
+  .avbtn.on{background:linear-gradient(#ffd98f,#f0b95a); color:#1a1c2c; border-color:#fff;}
+  #av-name{font-family:inherit; font-size:15px; background:#10142c; color:var(--text); border:3px solid #40538a; border-radius:5px; padding:8px 12px; width:180px;}
+  #av-name:focus{outline:none; border-color:var(--accent);}
+
+  /* ============ 入职工牌仪式 ============ */
+  #badge-modal{position:absolute; inset:0; z-index:60; display:none; flex-direction:column; align-items:center; justify-content:center; gap:24px; background:rgba(5,8,22,.9); overflow:hidden;}
+  #badge-modal.show{display:flex;}
+  #idcard{position:relative; width:252px; background:linear-gradient(#f6f8fc,#dde4f0); border:4px solid #16233f; border-radius:12px;
+    padding:34px 18px 18px; text-align:center; color:#1a2440;
+    animation:cardDrop .8s cubic-bezier(.3,1.35,.5,1); box-shadow:0 26px 70px rgba(0,0,0,.65);}
+  @keyframes cardDrop{0%{transform:translateY(-360px) rotate(-9deg); opacity:0} 62%{transform:translateY(14px) rotate(2.5deg); opacity:1} 82%{transform:translateY(-5px) rotate(-1deg)} 100%{transform:none}}
+  #idcard::before{ /* 挂绳孔 */
+    content:""; position:absolute; top:11px; left:50%; transform:translateX(-50%);
+    width:46px; height:10px; background:#aab6cc; border-radius:6px; border:2.5px solid #16233f;}
+  .lanyard{position:absolute; bottom:100%; left:50%; transform:translateX(-50%); width:16px; height:300px;
+    background:repeating-linear-gradient(0deg,#c8534f 0 12px,#a4404e 12px 24px); border:3px solid #16233f; border-top:none; border-radius:0 0 4px 4px;}
+  .lanyard::after{content:"SPARK"; position:absolute; top:40%; left:50%; transform:translateX(-50%) rotate(90deg); font-size:8px; color:#ffd9d9; letter-spacing:3px;}
+  .card-head{font-size:12.5px; color:#2b3a67; letter-spacing:1px; font-weight:bold; margin-bottom:10px;}
+  .card-photo{width:112px; height:132px; margin:0 auto 10px; background:linear-gradient(#cfe3f7,#a9c8e8); border:3px solid #16233f; border-radius:6px;
+    display:flex; align-items:flex-end; justify-content:center; overflow:hidden;}
+  #badge-canvas{width:84px; height:126px; image-rendering:pixelated;}
+  .card-name{font-size:21px; font-weight:bold; letter-spacing:3px;}
+  .card-title{font-size:13px; color:#4a5a80; margin-top:4px;}
+  .card-no{font-size:10.5px; color:#7a86a3; margin-top:6px; letter-spacing:1px;}
+  .barcode{height:24px; margin:10px 20px 0; border-radius:2px;
+    background:repeating-linear-gradient(90deg,#1a2440 0 2px,transparent 2px 5px,#1a2440 5px 6px,transparent 6px 9px,#1a2440 9px 12px,transparent 12px 15px);}
+  #badge-stamp{position:absolute; right:6px; top:116px; width:78px; height:78px; border:4px solid #d3392f; border-radius:50%;
+    color:#d3392f; font-size:17px; font-weight:bold; display:flex; align-items:center; justify-content:center; line-height:1.35; text-align:center;
+    background:#ffffffb8; transform:rotate(-18deg) scale(0); opacity:0;
+    animation:stampIn .4s .85s cubic-bezier(.2,2.2,.4,1) forwards;}
+  #badge-stamp::before{content:""; position:absolute; inset:5px; border:2px dashed #d3392f88; border-radius:50%;}
+  @keyframes stampIn{0%{transform:rotate(12deg) scale(2.8); opacity:0} 100%{transform:rotate(-18deg) scale(1); opacity:.94}}
+  #badge-cap{color:var(--accent); font-size:15px; letter-spacing:3px; opacity:0; animation:fadeUp .5s 1.35s forwards;}
+  #badge-go{opacity:0; animation:fadeUp .5s 1.7s forwards; font-size:15px;}
+  @keyframes fadeUp{to{opacity:1;}}
+  .confetti{position:absolute; width:9px; height:9px; top:-12px; animation:confFall linear forwards; z-index:1;}
+  @keyframes confFall{to{transform:translateY(700px) rotate(720deg); opacity:.15;}}
+
+  /* ============ 世界地图（大陆选择） ============ */
+  #world-screen{align-items:center; justify-content:center; gap:14px; padding:24px;
+    background:
+      radial-gradient(ellipse at 20% 30%, #1d3a5f33, transparent 40%),
+      radial-gradient(ellipse at 80% 70%, #1d3a5f33, transparent 40%),
+      linear-gradient(180deg,#0e2038,#123)}
+  #world-screen h2{color:var(--accent); letter-spacing:5px; font-size:24px;}
+  #world-screen .wsub{color:var(--dim); font-size:13px; margin-bottom:6px;}
+  #world{position:relative; width:min(760px,96%); height:380px;
+    border:4px solid #2a4a6e; border-radius:10px; overflow:hidden;
+    background:
+      repeating-linear-gradient(45deg, transparent 0 26px, rgba(255,255,255,.02) 26px 28px),
+      linear-gradient(180deg,#17456b,#0f3252);}
+  .isle{position:absolute; cursor:pointer; text-align:center; transition:transform .15s;}
+  .isle:hover{transform:scale(1.06);}
+  .isle .land{margin:0 auto; border:4px solid #0b2438; box-shadow:0 10px 0 #0b243888, inset 0 6px 0 rgba(255,255,255,.18);}
+  .isle .iname{margin-top:9px; font-size:14px; color:#fff; text-shadow:0 2px 0 #000;}
+  .isle .idesc{font-size:11px; color:#bcd6ea;}
+  .isle.open .land{background:radial-gradient(circle at 35% 30%, #6cc888, #3d8f5c 60%, #2e7048); animation:floaty 3s infinite;}
+  .isle.open .iname{color:var(--accent);}
+  .isle.soon{cursor:default; filter:grayscale(.75); opacity:.75;}
+  .isle.soon .land{background:radial-gradient(circle at 35% 30%, #8a97ad, #5b6b84 60%, #47546b);}
+  .isle .badge{position:absolute; top:-12px; right:-8px; background:var(--red); color:#fff; font-size:10px; padding:3px 8px; border-radius:3px; border:2px solid #0b2438;}
+  .isle.open .badge{background:var(--green); color:#0c2612;}
+  #world svg .isle-g{transition:transform .22s; transform-box:fill-box; transform-origin:center;}
+  #world svg .isle-g:hover{transform:translateY(-6px) scale(1.015); filter:brightness(1.08);}
+  #world svg text{font-family:inherit;}
+
+  /* ============ 城市地图 ============ */
+  #map-screen{background:linear-gradient(180deg,#15173a 0%,#1d2b52 100%); padding:18px 26px; overflow-y:auto;}
+  #map-screen>*{flex-shrink:0;} /* 防止flex收缩造成内容互相遮挡 */
+  #map-head{display:flex; align-items:baseline; gap:14px; margin-bottom:4px;}
+  #map-head h2{color:var(--accent); font-size:20px; letter-spacing:3px;}
+  #map-prog{font-size:12px; color:var(--dim);}
+  #map-bar{height:9px; border:2px solid var(--border); border-radius:3px; background:#10142c; margin:8px 0 12px; overflow:hidden;}
+  #map-bar i{display:block; height:100%; background:linear-gradient(90deg,var(--blue),var(--green)); transition:width .6s; box-shadow:0 0 12px var(--green);}
+  @keyframes pulse{50%{box-shadow:0 4px 0 #131a35, 0 0 0 7px rgba(255,205,117,.22);}}
+  /* 城市画布 */
+  #city{position:relative; width:100%; height:398px; border:4px solid #2a3a66; border-radius:10px; overflow:hidden; background:#3f7a48;}
+  /* 道路 */
+  #city .road-h{position:absolute; left:0; right:0; top:58%; height:44px; background:#3a3f4c; border-top:4px solid #262a35; border-bottom:4px solid #262a35;}
+  #city .road-h::before{content:""; position:absolute; left:0; right:0; top:50%; height:4px; transform:translateY(-50%);
+    background:repeating-linear-gradient(90deg,#e8d174 0 26px, transparent 26px 52px);}
+  #city .road-v{position:absolute; top:34%; bottom:0; left:44%; width:40px; background:#3a3f4c; border-left:4px solid #262a35; border-right:4px solid #262a35;}
+  #city .grass{position:absolute; font-size:13px; opacity:.85;}
+  .bld{position:absolute; cursor:pointer; text-align:center; transition:transform .15s; z-index:2;}
+  .bld:hover{transform:translateY(-4px);}
+  .bld .body{position:relative; margin:0 auto; border:4px solid #16233f; border-radius:4px 4px 0 0;
+    box-shadow:0 8px 0 rgba(0,0,0,.28), inset 0 4px 0 rgba(255,255,255,.16);
+    background-image:repeating-linear-gradient(0deg, transparent 0 10px, rgba(255,255,255,.16) 10px 16px, transparent 16px 22px),
+      repeating-linear-gradient(90deg, transparent 0 10px, rgba(0,0,0,.12) 10px 16px, transparent 16px 22px);}
+  .bld .roof{margin:0 auto; height:12px; background:#16233f; border-radius:4px 4px 0 0;}
+  .bld .bsign{position:absolute; top:-14px; left:50%; transform:translateX(-50%); font-size:22px; filter:drop-shadow(0 3px 0 rgba(0,0,0,.4));}
+  .bld .bname{margin-top:7px; font-size:12.5px; color:#fff; text-shadow:0 2px 0 #000; background:#000a; border-radius:3px; padding:2px 8px; display:inline-block;}
+  .bld .bstate{position:absolute; top:-10px; right:-10px; font-size:11px; background:var(--green); color:#0c2612; border:2px solid #16233f; border-radius:3px; padding:2px 6px; z-index:3;}
+  .bld.locked{filter:grayscale(.85); opacity:.68;}
+  .bld.locked .bstate{background:#5b6b8c; color:#dfe6f5;}
+  .bld.here .bsign{animation:hop .8s infinite;}
+  @keyframes hop{50%{transform:translate(-50%,-7px);}}
+  #city-player{position:absolute; width:40px; height:60px; z-index:4; image-rendering:pixelated; filter:drop-shadow(0 4px 3px rgba(0,0,0,.5)); transition:left 1s, top 1s; pointer-events:none;}
+  /* 建筑面板 */
+  #bpanel{margin-top:12px; border:3px solid var(--border); border-radius:8px; background:#1b2244ee; padding:14px 18px; min-height:96px;}
+  #bpanel .bp-title{color:var(--accent); font-size:16px; margin-bottom:8px; letter-spacing:2px;}
+  #bpanel .bp-hint{color:var(--dim); font-size:13px; line-height:1.8;}
+  .bp-lv{display:flex; align-items:center; gap:12px; padding:7px 4px; border-bottom:1px dashed #40538a55;}
+  .bp-lv:last-child{border-bottom:none;}
+  .bp-lv .st{width:30px; text-align:center; font-size:16px;}
+  .bp-lv .nm{flex:1; font-size:14.5px;}
+  .bp-lv .nm small{display:block; color:var(--dim); font-size:11.5px; margin-top:2px;}
+  #map-foot{margin:12px auto 0; display:flex; gap:10px; justify-content:center;}
+
+  /* ============ 场景变体 ============ */
+  .scene-night .office{background:linear-gradient(transparent 0 62%, #241f19 62% 63%, #1a1611 63% 100%), linear-gradient(180deg,#131a3a,#0e1230)!important;}
+  .scene-night .window{background:linear-gradient(#060a20 0%,#141c46 60%,#26315e 100%)!important;}
+  .scene-night .window .cloud{background:#5b6b8c!important; opacity:.5;}
+  .scene-night .window .cloud::before{background:#5b6b8c!important;}
+  .scene-night .moon{position:absolute; top:14px; right:16px; width:26px; height:26px; border-radius:50%; background:#fdf6d8; box-shadow:0 0 18px #fdf6d8aa; display:block!important;}
+  .scene-cafe .office{background:linear-gradient(transparent 0 62%, #4a3327 62% 63%, #3b2820 63% 100%), linear-gradient(180deg,#7a4f33,#5f3d29)!important;}
+  .scene-cafe .window{background:linear-gradient(#ffb36b,#ffd9a0 65%,#ffe9c4)!important;}
+  .scene-cafe .desk{background:linear-gradient(#5a4632,#463726)!important;}
+  .scene-tea .office{background:linear-gradient(transparent 0 62%, #7d5a68 62% 63%, #644754 63% 100%), linear-gradient(180deg,#c88ba0,#a96e85)!important;}
+  .scene-tea .window{background:linear-gradient(#8fd3ff,#ffd9e8)!important;}
+  .scene-tea .desk{background:linear-gradient(#e8a8bd,#c8879e)!important;}
+  .scene-meeting .office{background:linear-gradient(transparent 0 62%, #2c3442 62% 63%, #222836 63% 100%), linear-gradient(180deg,#3d4a63,#2e3950)!important;}
+  .scene-meeting .poster{background:#0f1730!important; color:var(--accent)!important;}
+  .scene-eng .office{background:linear-gradient(transparent 0 62%, #2a3436 62% 63%, #202a2c 63% 100%), linear-gradient(180deg,#37524e,#2a403d)!important;}
+  .scene-eng .window{background:linear-gradient(#31548c,#274070)!important;}
+  .scene-eng .desk{background:linear-gradient(#3d4a52,#2e383e)!important;}
+  .scene-home .office{background:linear-gradient(transparent 0 62%, #5a4638 62% 63%, #4a3a2e 63% 100%), linear-gradient(180deg,#7d6a8f,#63527a)!important;}
+  .scene-home .window{background:linear-gradient(#ffb36b,#ff8f8f 60%,#c98ac9)!important;}
+  .scene-home .desk{background:linear-gradient(#9a7a5a,#7d6248)!important;}
+  .moon{display:none;}
+
+  /* ============ 档案馆 ============ */
+  #arch-list{display:flex; flex-direction:column; gap:12px; overflow-y:auto; flex:1;}
+  .case-card{border:3px solid var(--blue); border-radius:8px; background:linear-gradient(#1e2c58,#182248); padding:15px 18px; cursor:pointer; transition:transform .12s;}
+  .case-card:hover{transform:translateY(-3px);}
+  .case-card .ct{color:var(--blue); font-size:16px; margin-bottom:4px;}
+  .case-card .cd{color:var(--dim); font-size:12.5px;}
+  #case-detail{border:3px solid var(--blue); border-radius:8px; background:#161d40; padding:18px 20px; font-size:14.5px; line-height:2; overflow-y:auto; flex:1; display:none;}
+  #case-detail.show{display:block;}
+  #case-detail b{color:var(--accent);}
+  #case-detail .ch3{color:var(--blue); font-size:15px; letter-spacing:2px; margin:10px 0 4px;}
+  #case-detail .src{color:var(--dim); font-size:12px; margin-top:10px;}
+
+  /* ============ 游戏屏 ============ */
+  #play-screen{background:#233559;}
+  #hud{
+    display:flex; align-items:center; gap:10px; padding:9px 14px;
+    background:linear-gradient(#20294e,#1b2244); border-bottom:3px solid #465a86; z-index:5;
+  }
+  #hud .loc{color:var(--accent); font-size:13px; flex:1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+  #trust-wrap{display:flex; align-items:center; gap:7px; font-size:12px;}
+  #trust-heart{font-size:15px; display:inline-block;}
+  #trust-heart.hurt{animation:hurt .5s;}
+  @keyframes hurt{0%,100%{transform:scale(1)}30%{transform:scale(1.6) rotate(-12deg); filter:brightness(2);}}
+  #trust-bar{width:120px; height:13px; border:2px solid var(--border); border-radius:3px; background:#10142c; overflow:hidden;}
+  #trust-fill{height:100%; background:linear-gradient(90deg,var(--red),var(--yellow),var(--green)); width:100%; transition:width .5s;}
+
+  #stage{flex:1; position:relative; overflow:hidden;}
+  #stage.shake{animation:shake .45s;}
+  @keyframes shake{0%,100%{transform:none}15%{transform:translate(-9px,3px)}30%{transform:translate(8px,-4px)}45%{transform:translate(-6px,2px)}60%{transform:translate(5px,-2px)}80%{transform:translate(-3px,1px)}}
+  #flash{position:absolute; inset:0; z-index:8; pointer-events:none; opacity:0; transition:opacity .5s;}
+  #flash.bad{background:rgba(224,90,109,.28); opacity:1; transition:none;}
+  #flash.good{background:rgba(74,208,122,.20); opacity:1; transition:none;}
+
+  /* 像素办公室 */
+  .office{position:absolute; inset:0;
+    background:linear-gradient(transparent 0 62%, #43332a 62% 63%, #38291f 63% 100%),
+               linear-gradient(180deg,#33568e 0%,#2a4577 55%, #253c67 100%);}
+  .office::before{content:""; position:absolute; left:0; right:0; top:63%; bottom:0;
+    background:repeating-linear-gradient(90deg, rgba(0,0,0,.20) 0 42px, transparent 42px 84px),
+               repeating-linear-gradient(0deg, rgba(0,0,0,.14) 0 4px, transparent 4px 26px);}
+  .office::after{content:""; position:absolute; left:0; right:0; top:60.6%; height:12px;
+    background:#1c2a4a; box-shadow:0 3px 0 rgba(0,0,0,.3);} /* 踢脚线 */
+  .window{position:absolute; top:7%; width:132px; height:150px; overflow:hidden;
+    border:6px solid #142138; box-shadow:0 0 0 4px #405887, 0 8px 22px rgba(0,0,0,.35);
+    background:linear-gradient(#8fd3ff 0%,#c8ecff 70%,#ffe9b8 100%);}
+  .cloud{position:absolute; height:14px; background:#fff; border-radius:8px; opacity:.95; animation:drift linear infinite;}
+  .cloud::before{content:""; position:absolute; top:-7px; left:20%; width:45%; height:12px; background:#fff; border-radius:8px;}
+  @keyframes drift{from{transform:translateX(-60px)}to{transform:translateX(160px)}}
+  .window .frame-v{position:absolute; left:50%; top:0; bottom:0; width:6px; background:#142138; transform:translateX(-50%);}
+  .window .frame-h{position:absolute; top:50%; left:0; right:0; height:6px; background:#142138; transform:translateY(-50%);}
+  .poster{position:absolute; top:12%; width:74px; height:96px; background:#20294e; border:4px solid #142138;
+    display:flex; align-items:center; justify-content:center; font-size:10px; color:var(--dim); text-align:center; line-height:1.8;
+    box-shadow:0 6px 14px rgba(0,0,0,.3);}
+  .desk{position:absolute; bottom:15%; width:216px; height:64px; background:linear-gradient(#8a6039,#6f4c2c); border:4px solid #142138; border-radius:3px;
+    box-shadow:inset 0 10px 0 rgba(255,255,255,.13), 0 8px 16px rgba(0,0,0,.35);}
+  .desk::before{content:""; position:absolute; top:-36px; left:22px; width:58px; height:36px; background:#15151c; border:4px solid #142138; border-radius:3px;}
+  .desk::after{content:""; position:absolute; top:-28px; left:30px; width:42px; height:22px; background:linear-gradient(#63c1ff,#3f8fdf); animation:screenGlow 2.6s infinite;}
+  @keyframes screenGlow{50%{filter:brightness(1.35);}}
+  .mug{position:absolute; top:-14px; right:26px; width:16px; height:14px; background:#e05a6d; border:3px solid #142138;}
+  .steam{position:absolute; top:-30px; right:28px; width:4px; height:12px; background:#fff8; border-radius:3px; animation:steam 1.8s infinite;}
+  @keyframes steam{0%{transform:translateY(0); opacity:.7}100%{transform:translateY(-12px); opacity:0}}
+  .plant{position:absolute; bottom:15%; width:42px; height:74px; filter:drop-shadow(0 6px 6px rgba(0,0,0,.3));}
+  .plant::before{content:""; position:absolute; bottom:0; left:6px; width:30px; height:27px; background:#c8534f; border:3px solid #142138; border-radius:2px 2px 4px 4px;}
+  .plant::after{content:""; position:absolute; bottom:23px; left:0; width:42px; height:48px; background:radial-gradient(circle at 30% 70%,#54c878,#2e8f55); border:3px solid #142138; border-radius:50% 50% 12% 12%; animation:sway 3.5s ease-in-out infinite;}
+  @keyframes sway{50%{transform:rotate(3deg);}}
+
+  /* 像素人物 */
+  .sprite{position:absolute; bottom:26%; transition:left .8s cubic-bezier(.3,1.2,.5,1); z-index:2;}
+  .sprite canvas{display:block; width:112px; height:168px; image-rendering:pixelated; filter:drop-shadow(0 8px 4px rgba(0,0,0,.35));}
+  .sprite .who{
+    position:absolute; top:-28px; left:50%; transform:translateX(-50%);
+    background:#000c; padding:3px 12px; font-size:12px; color:var(--accent); white-space:nowrap;
+    border:2px solid #ffffff22; border-radius:3px;
+  }
+  .sprite .emote{
+    position:absolute; top:-64px; left:60%; font-size:26px; opacity:0; transform:scale(0);
+    transition:all .25s cubic-bezier(.3,2,.5,1);
+    background:#fff; color:#000; border:3px solid #142138; border-radius:10px 10px 10px 2px; padding:3px 7px;
+  }
+  .sprite .emote.show{opacity:1; transform:scale(1);}
+  .sprite.talking canvas{animation:bob .48s infinite;}
+  @keyframes bob{50%{transform:translateY(-5px);}}
+  .sprite.flip canvas{transform:scaleX(-1);}
+  .sprite.flip.talking canvas{animation:bobf .48s infinite;}
+  @keyframes bobf{0%,100%{transform:scaleX(-1) translateY(0);}50%{transform:scaleX(-1) translateY(-5px);}}
+  .sprite .shadow{position:absolute; bottom:-8px; left:50%; transform:translateX(-50%); width:90px; height:14px; background:radial-gradient(ellipse,#0008,transparent 70%);}
+
+  /* 对话框 */
+  #dialog{
+    background:linear-gradient(#222b55,#1b2244); border-top:4px solid #465a86;
+    min-height:216px; padding:20px 22px 14px; position:relative; z-index:4;
+    display:flex; flex-direction:column; gap:10px;
+  }
+  #speaker{
+    position:absolute; top:-19px; left:18px; background:linear-gradient(#ffd98f,#f0b95a); color:#1a1c2c;
+    padding:4px 16px; font-size:14px; border:3px solid #142138; font-weight:bold; border-radius:4px;
+    box-shadow:0 4px 0 rgba(0,0,0,.35);
+  }
+  #dtext{font-size:17.5px; line-height:1.9; min-height:60px; white-space:pre-wrap; cursor:pointer;}
+  #dtext .hl{color:var(--accent);}
+  #next-hint{position:absolute; right:20px; bottom:10px; color:var(--accent); font-size:13px;}
+  #choices{display:flex; flex-direction:column; gap:8px;}
+  #choices .pxbtn{font-size:15.5px; display:flex; gap:12px; align-items:flex-start;}
+  #choices .abc{
+    flex:none; width:26px; height:26px; display:flex; align-items:center; justify-content:center;
+    background:var(--accent); color:#1a1c2c; font-weight:bold; border-radius:3px; border:2px solid #142138; font-size:13px;
+    margin-top:1px;
+  }
+  #choices .pxbtn:hover .abc{background:#fff;}
+
+  /* 知识卡（剧情内插页） */
+  .kcard{
+    border:3px solid var(--blue); border-radius:6px; background:linear-gradient(#1e2c58,#182248);
+    padding:14px 16px; font-size:15px; line-height:1.95; cursor:pointer;
+    box-shadow:0 0 24px rgba(92,185,255,.15), inset 0 2px 0 rgba(255,255,255,.08);
+    animation:cardIn .4s cubic-bezier(.3,1.4,.5,1);
+  }
+  @keyframes cardIn{from{transform:translateY(16px) scale(.96); opacity:0;}}
+  .kcard .kh{color:var(--blue); font-size:14px; letter-spacing:2px; margin-bottom:6px;}
+  .kcard b{color:var(--accent);}
+  .kcard .src{color:var(--dim); font-size:11px; margin-top:6px;}
+  .kcard table{border-collapse:collapse; margin:6px 0; width:100%;}
+  .kcard td,.kcard th{border:2px solid #40538a; padding:5px 9px; font-size:13.5px;}
+  .kcard th{background:#26346a; color:var(--accent);}
+
+  /* 反馈层 */
+  #feedback{position:absolute; inset:0; z-index:20; display:none; align-items:center; justify-content:center; background:rgba(5,8,22,.8);}
+  #feedback.show{display:flex;}
+  #fb-card{
+    width:min(590px,92%); border:4px solid var(--border); border-radius:8px; background:linear-gradient(#222b55,#1b2244);
+    padding:22px 24px; text-align:center; animation:cardIn .35s cubic-bezier(.3,1.4,.5,1); max-height:88%; overflow-y:auto;
+  }
+  #fb-card.bad{border-color:var(--red); box-shadow:0 0 40px rgba(224,90,109,.3);}
+  #fb-card.mid{border-color:var(--yellow); box-shadow:0 0 40px rgba(245,167,66,.25);}
+  #fb-card.good{border-color:var(--green); box-shadow:0 0 40px rgba(74,208,122,.3);}
+  #fb-title{font-size:22px; margin-bottom:12px; letter-spacing:4px;}
+  .bad #fb-title{color:var(--red);} .mid #fb-title{color:var(--yellow);} .good #fb-title{color:var(--green);}
+  #fb-text{font-size:15.5px; line-height:1.95; text-align:left; white-space:pre-wrap;}
+  #fb-lesson{margin-top:13px; padding:12px 14px; background:#0d1230; border-radius:5px; font-size:15px; line-height:1.95; text-align:left; color:var(--accent); border-left:4px solid var(--blue);}
+  #fb-btn{margin-top:16px;}
+
+  /* 随堂检验 */
+  #quiz-panel{position:absolute; inset:0; z-index:15; display:none; flex-direction:column; align-items:center; justify-content:center; background:rgba(8,10,30,.93); padding:24px;}
+  #quiz-panel.show{display:flex;}
+  #quiz-box{width:min(640px,94%); border:4px solid var(--blue); border-radius:8px; background:linear-gradient(#1e2c58,#161d40); padding:22px 26px; animation:cardIn .35s;}
+  #quiz-box .qh{display:flex; justify-content:space-between; color:var(--blue); font-size:13px; letter-spacing:2px; margin-bottom:12px;}
+  #quiz-q{font-size:17px; line-height:1.85; margin-bottom:14px;}
+  #quiz-ops{display:flex; flex-direction:column; gap:8px;}
+  #quiz-ops .pxbtn{font-size:15.5px;}
+  #quiz-ops .pxbtn.right{border-color:var(--green); background:linear-gradient(#2e8f55,#26744a);}
+  #quiz-ops .pxbtn.wrongpick{border-color:var(--red); background:linear-gradient(#a4404e,#8c3743);}
+  #quiz-exp{margin-top:12px; font-size:15px; line-height:1.9; color:var(--accent); background:#0d1230; padding:10px 13px; border-radius:5px; display:none;}
+  #quiz-next{margin-top:14px; display:none;}
+
+  /* 术语解锁提示 */
+  #toast{
+    position:absolute; top:60px; left:50%; transform:translate(-50%,-220%) scale(.9);
+    visibility:hidden; opacity:0;
+    background:linear-gradient(#3fae6b,#2e8f55); color:#eafff0; border:3px solid #a7f070; border-radius:6px;
+    padding:10px 22px; font-size:15px; z-index:30; transition:transform .45s cubic-bezier(.3,1.6,.5,1), opacity .3s, visibility .3s; text-align:center;
+    box-shadow:0 8px 30px rgba(74,208,122,.4);
+  }
+  #toast.show{transform:translate(-50%,0) scale(1); visibility:visible; opacity:1;}
+
+  /* 图鉴/笔记本 */
+  .modal{position:absolute; inset:0; z-index:40; background:rgba(6,8,24,.95); display:none; flex-direction:column; padding:24px 28px;}
+  .modal.show{display:flex;}
+  .modal h2{color:var(--accent); margin-bottom:4px; letter-spacing:3px;}
+  .modal .cnt{color:var(--dim); font-size:13px; margin-bottom:14px;}
+  #dex-grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(158px,1fr)); gap:10px; overflow-y:auto; flex:1;}
+  .dex-card{border:3px solid var(--border); border-radius:6px; background:linear-gradient(#35477e,#2b3a67); padding:12px; cursor:pointer; font-size:14px; transition:transform .12s;}
+  .dex-card:hover{transform:translateY(-3px);}
+  .dex-card.locked{opacity:.32; cursor:default;}
+  .dex-card .icon{font-size:22px;}
+  .dex-card .nm{margin-top:6px; color:var(--accent);}
+  #dex-detail{border:3px solid var(--accent); border-radius:6px; background:#161d40; padding:15px 17px; margin-top:12px; font-size:14.5px; line-height:1.95; display:none;}
+  #dex-detail.show{display:block;}
+  #dex-detail .src{color:var(--dim); font-size:12px; margin-top:8px;}
+  #notes-list{display:flex; flex-direction:column; gap:12px; overflow-y:auto; flex:1;}
+  .note-card{border:3px solid var(--yellow); border-radius:6px; background:linear-gradient(#2c2a4e,#221f40); padding:15px 18px; font-size:14.5px; line-height:2;}
+  .note-card .nh{color:var(--yellow); font-size:15px; margin-bottom:6px; letter-spacing:2px;}
+  .note-card b{color:var(--accent);}
+  .note-card.locked{opacity:.35;}
+  .modal .closebtn{margin-top:14px; align-self:center;}
+
+  /* 结算 */
+  #end-screen{align-items:center; justify-content:center; gap:14px; text-align:center;
+    background:radial-gradient(ellipse at 50% 28%, #2b3a67, #12142e 75%);}
+  #end-screen h2{color:var(--accent); font-size:28px; letter-spacing:5px; animation:floaty 3s infinite;}
+  #end-rank{font-size:70px; text-shadow:0 6px 0 rgba(0,0,0,.5), 0 0 40px currentColor; animation:rankIn .6s cubic-bezier(.3,1.6,.5,1);}
+  @keyframes rankIn{from{transform:scale(3); opacity:0;}}
+  #end-stats{font-size:14px; color:var(--dim); line-height:2.1;}
+  #end-stats b{color:var(--text);}
+  #end-terms{display:flex; gap:8px; flex-wrap:wrap; justify-content:center; max-width:640px;}
+  #end-terms span{background:var(--panel); border:2px solid var(--border); border-radius:4px; padding:4px 10px; font-size:12px;}
+  .tease{color:var(--blue); font-size:13px;}
+</style>
+</head>
+<body>
+<div id="game">
+  <div id="crt"></div><div id="vig"></div>
+
+  <!-- 着陆页 -->
+  <div class="screen active" id="landing">
+    <div id="hero">
+      <div id="t-logo">
+        <div class="kicker">PRODUCT QUEST</div>
+        <h1>产品经理大冒险</h1>
+        <div class="sub">把「产品知识」做成一个可以通关的网页游戏</div>
+      </div>
+      <div id="cast">
+        <div class="cast-cap">— 你将在星火市遇到 —</div>
+        <div class="cast-row">
+          <div class="cast-item"><canvas id="cast-me"></canvas><div class="cn">你</div><div class="cr">新手PM·可DIY</div></div>
+          <div class="cast-item"><canvas id="cast-boss"></canvas><div class="cn">王总</div><div class="cr">爱拍脑袋的老板</div></div>
+          <div class="cast-item"><canvas id="cast-xiaomei"></canvas><div class="cn">小美</div><div class="cr">口是心非的用户</div></div>
+          <div class="cast-item"><canvas id="cast-lijie"></canvas><div class="cn">李姐</div><div class="cr">刀刀见血的投资人</div></div>
+        </div>
+      </div>
+      <div id="pain-ticker"><div id="pain-text"></div></div>
+      <button class="pxbtn center" id="land-cta" onclick="G.toAvatar()">▶ 创建角色，开始冒险</button>
+      <div class="sub" style="font-size:12px; color:var(--dim)">零基础可玩 · Demo版含序章＋第1章＋档案馆支线</div>
+    </div>
+    <div id="scroll-hint">▼ 下滑了解：这个网站是什么 & 怎么玩</div>
+    <div class="land-sec">
+      <h3>◆ 这个网站是干什么的</h3>
+      <div class="feat-grid">
+        <div class="feat"><span class="fi">🧑‍🎓</span><div class="ft">为零基础的你而做</div><div class="fd">文科、商科出身，没写过一行代码？没关系。这里从"什么是产品经理"讲起，一路带你走到"产品上线赚钱"。</div></div>
+        <div class="feat"><span class="fi">🗺️</span><div class="ft">一条完整的0→1主线</div><div class="fd">想法验证 → 用户研究 → PRD原型 → 听懂技术 → 开发上线 → 增长变现。不是知识点的堆砌，是一次完整的产品之旅。</div></div>
+        <div class="feat"><span class="fi">🎭</span><div class="ft">在剧情里学，不在课本里背</div><div class="fd">你将扮演新手PM入职创业公司：老板拍脑袋、工程师怼人、用户口是心非——每个决策都来自真实工作场景。</div></div>
+        <div class="feat"><span class="fi">📚</span><div class="ft">权威方法论打底</div><div class="fd">内容源自《Inspired》《精益创业》《The Mom Test》《俞军产品方法论》等中外经典，每个知识点都标注出处。</div></div>
+      </div>
+    </div>
+    <div class="land-sec">
+      <h3>◆ 怎么玩</h3>
+      <div class="play-grid">
+        <div class="play-item"><span class="pi">🎮</span><b>剧情决策</b><span>三个选项都像对的，选错看"翻车后果"，次优也有讲解</span></div>
+        <div class="play-item"><span class="pi">❤️</span><b>老板信任度</b><span>翻车扣血，血条清零重新挑战本关</span></div>
+        <div class="play-item"><span class="pi">📖</span><b>术语图鉴</b><span>PRD、MVP、TAM…在剧情中解锁收集</span></div>
+        <div class="play-item"><span class="pi">📒</span><b>方法卡</b><span>通关得实战方法论卡片，随时复习</span></div>
+        <div class="play-item"><span class="pi">📝</span><b>随堂检验</b><span>每关3题，答对才算真学会</span></div>
+        <div class="play-item"><span class="pi">🏆</span><b>通关评级</b><span>S/A/B/C评级，可重玩刷新</span></div>
+      </div>
+    </div>
+    <button class="pxbtn center" style="font-size:16px; padding:14px 46px; z-index:1" onclick="G.toAvatar()">▶ 我准备好了，开始冒险</button>
+    <div class="sub" style="font-size:12px; color:var(--dim); z-index:1">完整版规划：9章主线 · 200+术语 · 40+方法卡 · 持续更新的学习世界</div>
+  </div>
+
+  <!-- 角色DIY -->
+  <div class="screen" id="avatar-screen">
+    <h2>👤 打造你的PM形象</h2>
+    <div id="av-wrap">
+      <div id="av-stage"><canvas id="av-prev"></canvas></div>
+      <div id="av-opts">
+        <div class="av-row"><label>昵称</label><input id="av-name" maxlength="6" placeholder="你的名字（≤6字）"></div>
+        <div class="av-row"><label>发型</label>
+          <button class="pxbtn avbtn" data-style="short">短发</button>
+          <button class="pxbtn avbtn" data-style="long">长发</button>
+        </div>
+        <div class="av-row"><label>发色</label><span id="av-hair"></span></div>
+        <div class="av-row"><label>肤色</label><span id="av-skin"></span></div>
+        <div class="av-row"><label>上衣</label><span id="av-cloth"></span></div>
+        <div class="av-row"><label>眼镜</label>
+          <button class="pxbtn avbtn" data-gl="0">不戴</button>
+          <button class="pxbtn avbtn" data-gl="1">戴眼镜</button>
+        </div>
+      </div>
+    </div>
+    <button class="pxbtn center" style="font-size:16px; padding:13px 46px" onclick="G.confirmAvatar()">✔ 就是这个我 · 入职星火科技</button>
+  </div>
+
+  <!-- 入职工牌仪式 -->
+  <div id="badge-modal">
+    <div id="idcard">
+      <div class="lanyard"></div>
+      <div class="card-head">🏢 星火科技 · SPARK TECH</div>
+      <div class="card-photo"><canvas id="badge-canvas"></canvas></div>
+      <div class="card-name" id="badge-name"></div>
+      <div class="card-title">产品经理 · 见习</div>
+      <div class="card-no">NO. SPARK-2026-001 · 产品部</div>
+      <div class="barcode"></div>
+      <div id="badge-stamp">入职<br>成功</div>
+    </div>
+    <div id="badge-cap">✦ 欢迎加入星火科技 ✦</div>
+    <button class="pxbtn center" id="badge-go" onclick="G.badgeGo()">🎉 正式上岗 · 前往学习世界 ▶</button>
+  </div>
+
+  <!-- 世界地图（大陆选择） -->
+  <div class="screen" id="world-screen">
+    <h2>🌍 学习世界</h2>
+    <div class="wsub">一个持续扩张的开放学习世界 · 每块大陆是一门完整技能</div>
+    <div id="world">
+      <svg viewBox="0 0 760 380" style="position:absolute;inset:0;width:100%;height:100%">
+        <defs>
+          <linearGradient id="sea" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="#1a5680"/><stop offset="1" stop-color="#0e3a5c"/>
+          </linearGradient>
+          <radialGradient id="landG" cx="0.35" cy="0.3" r="1">
+            <stop offset="0" stop-color="#7dd096"/><stop offset=".6" stop-color="#48a468"/><stop offset="1" stop-color="#357e50"/>
+          </radialGradient>
+          <radialGradient id="landS" cx="0.35" cy="0.3" r="1">
+            <stop offset="0" stop-color="#9aa8bd"/><stop offset="1" stop-color="#5f7089"/>
+          </radialGradient>
+        </defs>
+        <rect width="760" height="380" fill="url(#sea)"/>
+        <!-- 海浪 -->
+        <g stroke="#ffffff2e" stroke-width="3" fill="none" stroke-linecap="round">
+          <path d="M30,50 q10,-8 20,0 q10,8 20,0"/><path d="M690,50 q10,-8 20,0 q10,8 20,0"/>
+          <path d="M40,340 q10,-8 20,0 q10,8 20,0"/><path d="M700,330 q10,-8 20,0 q10,8 20,0"/>
+          <path d="M380,20 q10,-8 20,0 q10,8 20,0"/><path d="M30,190 q10,-8 20,0 q10,8 20,0"/><path d="M720,200 q10,-8 20,0 q10,8 20,0"/>
+        </g>
+        <text x="26" y="52" font-size="26">🧭</text>
+        <!-- ===== 整块大陆：阴影 + 海岸沙滩 ===== -->
+        <polygon points="70,90 180,50 330,70 470,40 640,80 710,150 690,250 560,330 380,350 200,330 90,260" fill="#0b2438" opacity=".55" transform="translate(0,12)"/>
+        <polygon points="70,90 180,50 330,70 470,40 640,80 710,150 690,250 560,330 380,350 200,330 90,260" fill="none" stroke="#0b2438" stroke-width="22" stroke-linejoin="round"/>
+        <polygon points="70,90 180,50 330,70 470,40 640,80 710,150 690,250 560,330 380,350 200,330 90,260" fill="none" stroke="#e8cf9a" stroke-width="13" stroke-linejoin="round"/>
+        <!-- ===== 未开放板块（接壤的拼图块） ===== -->
+        <g>
+          <polygon points="330,70 470,40 640,80 585,150 520,210 440,170 360,180 352,120" fill="url(#landS)"/>
+          <ellipse cx="450" cy="90" rx="34" ry="10" fill="#ffffff2e"/>
+          <text x="468" y="110" font-size="20" text-anchor="middle" opacity=".75">❓</text>
+          <text x="468" y="137" font-size="14" fill="#eef3f8" text-anchor="middle" font-weight="bold">📈 增长大陆</text>
+          <text x="468" y="154" font-size="10.5" fill="#c4cede" text-anchor="middle">用户增长与运营 · 开发中</text>
+        </g>
+        <g>
+          <polygon points="640,80 710,150 690,250 560,330 545,270 520,210 585,150" fill="url(#landS)" style="filter:brightness(.93)"/>
+          <ellipse cx="655" cy="140" rx="26" ry="8" fill="#ffffff2e"/>
+          <text x="630" y="192" font-size="20" text-anchor="middle" opacity=".75">❓</text>
+          <text x="630" y="219" font-size="14" fill="#eef3f8" text-anchor="middle" font-weight="bold">🤖 AI大陆</text>
+          <text x="630" y="236" font-size="10.5" fill="#c4cede" text-anchor="middle">AI产品与提示词 · 规划中</text>
+        </g>
+        <g>
+          <polygon points="360,180 440,170 520,210 545,270 560,330 380,350 300,342 330,270 335,225" fill="url(#landS)" style="filter:brightness(.86)"/>
+          <ellipse cx="400" cy="320" rx="30" ry="9" fill="#ffffff22"/>
+          <text x="435" y="258" font-size="20" text-anchor="middle" opacity=".75">❓</text>
+          <text x="435" y="285" font-size="14" fill="#eef3f8" text-anchor="middle" font-weight="bold">🎨 设计大陆</text>
+          <text x="435" y="302" font-size="10.5" fill="#c4cede" text-anchor="middle">体验与交互设计 · 规划中</text>
+        </g>
+        <!-- ===== 产品大陆（可点击拼图块） ===== -->
+        <g class="isle-g" onclick="G.toMap()" style="cursor:pointer">
+          <polygon points="70,90 180,50 330,70 352,120 360,180 335,225 330,270 300,342 200,330 90,260" fill="url(#landG)"/>
+          <!-- 山脉 -->
+          <path d="M124,158 L150,112 L176,158 Z" fill="#7c8ba1" stroke="#0b2438" stroke-width="3"/>
+          <path d="M143,124 L150,112 L157,124 Z" fill="#eef3f8"/>
+          <path d="M160,158 L180,126 L200,158 Z" fill="#67768c" stroke="#0b2438" stroke-width="3"/>
+          <!-- 树 -->
+          <g stroke="#0b2438" stroke-width="2.5">
+            <rect x="104" y="226" width="6" height="10" fill="#6f4c2c"/><circle cx="107" cy="218" r="12" fill="#2e8f55"/>
+            <rect x="252" y="112" width="6" height="10" fill="#6f4c2c"/><circle cx="255" cy="104" r="11" fill="#2e8f55"/>
+            <rect x="248" y="240" width="6" height="10" fill="#6f4c2c"/><circle cx="251" cy="232" r="12" fill="#3fae6b"/>
+          </g>
+          <!-- 星火市小镇 -->
+          <g stroke="#0b2438" stroke-width="2.5">
+            <rect x="176" y="196" width="22" height="20" fill="#c8534f"/><path d="M172,198 L187,184 L202,198 Z" fill="#8c3743"/>
+            <rect x="204" y="202" width="16" height="14" fill="#4f9df0"/><path d="M201,204 L212,194 L223,204 Z" fill="#2b5f9e"/>
+            <rect x="154" y="204" width="14" height="12" fill="#ffcd75"/><path d="M151,206 L161,197 L171,206 Z" fill="#c89a45"/>
+          </g>
+          <text x="182" y="180" font-size="15">🚩</text>
+          <!-- 标牌 -->
+          <g>
+            <rect x="50" y="292" width="216" height="56" rx="6" fill="#233a5e" stroke="#8fa7c9" stroke-width="3"/>
+            <text x="128" y="315" font-size="15.5" fill="#ffcd75" text-anchor="middle" font-weight="bold">🧭 产品大陆</text>
+            <rect x="198" y="301" width="54" height="18" rx="3" fill="#3fae6b" stroke="#0b2438" stroke-width="2"/>
+            <text x="225" y="314" font-size="11" fill="#0c2612" text-anchor="middle" font-weight="bold">已开放</text>
+            <text x="158" y="337" font-size="10.5" fill="#bcd6ea" text-anchor="middle">从想法到商业化 · 9章 · 点击登陆</text>
+          </g>
+        </g>
+        <!-- ===== 板块分界线（拼图接缝） ===== -->
+        <g fill="none" stroke-linejoin="round" stroke-linecap="round">
+          <g stroke="#0b2438" stroke-width="5">
+            <polyline points="330,70 352,120 360,180"/>
+            <polyline points="360,180 335,225 330,270 300,342"/>
+            <polyline points="360,180 440,170 520,210"/>
+            <polyline points="640,80 585,150 520,210"/>
+            <polyline points="520,210 545,270 560,330"/>
+          </g>
+          <g stroke="#e8cf9a" stroke-width="2" stroke-dasharray="7 7" opacity=".85">
+            <polyline points="330,70 352,120 360,180"/>
+            <polyline points="360,180 335,225 330,270 300,342"/>
+            <polyline points="360,180 440,170 520,210"/>
+            <polyline points="640,80 585,150 520,210"/>
+            <polyline points="520,210 545,270 560,330"/>
+          </g>
+        </g>
+      </svg>
+    </div>
+    <div class="wsub blink">点击「产品大陆」登陆 ▶</div>
+  </div>
+
+  <!-- 城市地图 -->
+  <div class="screen" id="map-screen">
+    <div id="map-head"><h2>🏙️ 产品大陆 · 星火市</h2><span id="map-prog"></span>
+      <button class="pxbtn small" style="margin-left:auto" onclick="G.toWorld()">🌍 世界地图</button></div>
+    <div id="map-bar"><i id="map-bar-fill"></i></div>
+    <div id="city">
+      <svg viewBox="0 0 1000 400" preserveAspectRatio="none" style="position:absolute;inset:0;width:100%;height:100%">
+        <defs>
+          <linearGradient id="citysky" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="#7db6e8"/><stop offset="1" stop-color="#c3e2f7"/>
+          </linearGradient>
+          <linearGradient id="cityground" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0" stop-color="#5a9e5e"/><stop offset="1" stop-color="#3f7a48"/>
+          </linearGradient>
+        </defs>
+        <rect width="1000" height="140" fill="url(#citysky)"/>
+        <circle cx="915" cy="42" r="26" fill="#ffe9a8"/><circle cx="915" cy="42" r="34" fill="#ffe9a833"/>
+        <!-- 远景天际线 -->
+        <g fill="#6b8db0" opacity=".55">
+          <rect x="30" y="96" width="34" height="44"/><rect x="76" y="82" width="26" height="58"/>
+          <rect x="300" y="90" width="30" height="50"/><rect x="345" y="100" width="40" height="40"/>
+          <rect x="600" y="86" width="28" height="54"/><rect x="700" y="98" width="36" height="42"/>
+          <rect x="920" y="92" width="30" height="48"/>
+        </g>
+        <rect y="136" width="1000" height="264" fill="url(#cityground)"/>
+        <!-- 草地肌理 -->
+        <g fill="#ffffff22">
+          <ellipse cx="150" cy="180" rx="60" ry="10"/><ellipse cx="520" cy="330" rx="80" ry="12"/>
+          <ellipse cx="760" cy="170" rx="55" ry="9"/><ellipse cx="330" cy="260" rx="46" ry="8"/>
+        </g>
+        <g fill="#00000018">
+          <ellipse cx="420" cy="180" rx="55" ry="9"/><ellipse cx="900" cy="300" rx="60" ry="10"/><ellipse cx="120" cy="300" rx="40" ry="8"/>
+        </g>
+        <!-- 池塘 -->
+        <ellipse cx="82" cy="345" rx="66" ry="26" fill="#2a6d9e" stroke="#1c4a70" stroke-width="4"/>
+        <ellipse cx="70" cy="338" rx="30" ry="10" fill="#5cb9ff66"/>
+        <!-- 蜿蜒道路（连接各建筑） -->
+        <g fill="none" stroke-linecap="round">
+          <g stroke="#a8834f" stroke-width="30">
+            <path d="M130,215 C220,235 300,200 387,216 C470,232 520,188 605,197 C700,207 775,235 850,219"/>
+            <path d="M387,216 C352,278 322,338 280,372"/>
+            <path d="M605,197 C622,258 610,300 614,350"/>
+            <path d="M614,350 C690,372 782,342 858,354"/>
+          </g>
+          <g stroke="#dfc08a" stroke-width="22">
+            <path d="M130,215 C220,235 300,200 387,216 C470,232 520,188 605,197 C700,207 775,235 850,219"/>
+            <path d="M387,216 C352,278 322,338 280,372"/>
+            <path d="M605,197 C622,258 610,300 614,350"/>
+            <path d="M614,350 C690,372 782,342 858,354"/>
+          </g>
+          <g stroke="#ffffff88" stroke-width="3" stroke-dasharray="12 16">
+            <path d="M130,215 C220,235 300,200 387,216 C470,232 520,188 605,197 C700,207 775,235 850,219"/>
+            <path d="M387,216 C352,278 322,338 280,372"/>
+            <path d="M605,197 C622,258 610,300 614,350"/>
+            <path d="M614,350 C690,372 782,342 858,354"/>
+          </g>
+        </g>
+      </svg>
+      <span class="grass" style="left:4%;top:52%">🌳</span><span class="grass" style="left:91%;top:44%">🌳</span>
+      <span class="grass" style="left:70%;top:88%">🌲</span><span class="grass" style="left:30%;top:90%">🌼</span>
+      <span class="grass" style="left:50%;top:44%">🌳</span><span class="grass" style="left:13%;top:60%">🌲</span>
+      <span class="grass" style="left:44%;top:62%">🌷</span><span class="grass" style="left:86%;top:56%">🌻</span>
+      <canvas id="city-player"></canvas>
+    </div>
+    <div id="bpanel"><div class="bp-title">🗺️ 探索星火市</div><div class="bp-hint">点击城市里的建筑，查看那里发生的剧情。发光跳动的建筑是你当前的任务地点；灰色建筑将随章节更新开放。</div></div>
+    <div id="map-foot">
+      <button class="pxbtn small" onclick="G.openDex()">📖 术语图鉴</button>
+      <button class="pxbtn small" onclick="G.openNotes()">📒 方法卡</button>
+      <button class="pxbtn small" onclick="G.toAvatar()">👤 修改形象</button>
+      <button class="pxbtn small" onclick="G.exportSave()">💾 导出存档</button>
+      <button class="pxbtn small" onclick="G.importSave()">📥 导入存档</button>
+      <input type="file" id="save-file" accept=".json,application/json" style="display:none">
+      <button class="pxbtn small" onclick="G.resetAll()">↺ 重置进度</button>
+    </div>
+  </div>
+
+  <!-- 游戏屏 -->
+  <div class="screen" id="play-screen">
+    <div id="hud">
+      <button class="pxbtn small" onclick="G.toMap()">≡ 地图</button>
+      <span class="loc" id="hud-loc"></span>
+      <div id="trust-wrap"><span id="trust-heart">❤</span><div id="trust-bar"><div id="trust-fill"></div></div><span id="trust-num">100</span></div>
+      <button class="pxbtn small" onclick="G.openDex()">📖</button>
+      <button class="pxbtn small" onclick="G.openNotes()">📒</button>
+      <button class="pxbtn small" id="mute-btn" onclick="G.toggleMute()">🔊</button>
+    </div>
+    <div id="stage">
+      <div class="office">
+        <div class="window" style="left:7%">
+          <div class="moon"></div>
+          <div class="cloud" style="top:16px; width:36px; animation-duration:9s;"></div>
+          <div class="cloud" style="top:52px; width:26px; animation-duration:13s; animation-delay:-5s;"></div>
+          <div class="frame-v"></div><div class="frame-h"></div>
+        </div>
+        <div class="window" style="left:71%">
+          <div class="cloud" style="top:28px; width:32px; animation-duration:11s; animation-delay:-3s;"></div>
+          <div class="frame-v"></div><div class="frame-h"></div>
+        </div>
+        <div class="poster" style="left:30%">「先问<br>为什么」</div>
+        <div class="poster" style="left:58%">用户<br>≠<br>你自己</div>
+        <div class="desk" style="left:37%"><div class="mug"></div><div class="steam"></div></div>
+        <div class="plant" style="left:3%"></div>
+        <div class="plant" style="right:3%"></div>
+      </div>
+      <div id="flash"></div>
+      <div class="sprite" id="sp-npc" style="left:120%"><span class="who"></span><span class="emote"></span><canvas></canvas><div class="shadow"></div></div>
+      <div class="sprite flip" id="sp-me" style="left:-20%"><span class="who">你</span><span class="emote"></span><canvas></canvas><div class="shadow"></div></div>
+    </div>
+    <div id="dialog">
+      <div id="speaker"></div>
+      <div id="dtext"></div>
+      <div id="choices"></div>
+      <div id="next-hint" class="blink" style="display:none">▼ 点击继续</div>
+    </div>
+  </div>
+
+  <!-- 结算屏 -->
+  <div class="screen" id="end-screen">
+    <h2>★ 关卡通关 ★</h2>
+    <div id="end-rank">S</div>
+    <div id="end-stats"></div>
+    <div style="font-size:13px;color:var(--accent)">— 已收集术语 —</div>
+    <div id="end-terms"></div>
+    <div class="tease" id="end-tease"></div>
+    <button class="pxbtn center" onclick="G.toMap()">返回地图 ▶</button>
+  </div>
+
+  <!-- 反馈弹层 -->
+  <div id="feedback"><div id="fb-card">
+    <div id="fb-title"></div>
+    <div id="fb-text"></div>
+    <div id="fb-lesson"></div>
+    <button class="pxbtn center" id="fb-btn"></button>
+  </div></div>
+
+  <!-- 随堂检验 -->
+  <div id="quiz-panel"><div id="quiz-box">
+    <div class="qh"><span>📝 随堂检验 · 通关必答</span><span id="quiz-idx"></span></div>
+    <div id="quiz-q"></div>
+    <div id="quiz-ops"></div>
+    <div id="quiz-exp"></div>
+    <button class="pxbtn center" id="quiz-next">下一题 ▶</button>
+  </div></div>
+
+  <div id="toast"></div>
+
+  <!-- 术语图鉴 -->
+  <div class="modal" id="dex">
+    <h2>📖 术语图鉴</h2>
+    <div class="cnt" id="dex-cnt"></div>
+    <div id="dex-grid"></div>
+    <div id="dex-detail"></div>
+    <button class="pxbtn center closebtn" onclick="G.closeModal('dex')">关闭</button>
+  </div>
+
+  <!-- 档案馆 -->
+  <div class="modal" id="archive">
+    <h2>📚 产品档案馆</h2>
+    <div class="cnt">真实产品的案例拆解 · 剧情里的方法论，在这里看它们如何改变真实世界</div>
+    <div id="arch-list"></div>
+    <div id="case-detail"></div>
+    <button class="pxbtn center closebtn" id="arch-back" onclick="G.archBack()">关闭</button>
+  </div>
+
+  <!-- 方法卡笔记本 -->
+  <div class="modal" id="notes">
+    <h2>📒 方法卡 · PM实战笔记</h2>
+    <div class="cnt" id="notes-cnt">通关关卡后解锁对应方法卡，随时复习。</div>
+    <div id="notes-list"></div>
+    <button class="pxbtn center closebtn" onclick="G.closeModal('notes')">关闭</button>
+  </div>
+</div>
+
+<script>
+/* 内容注册表：content/*.js 把剧情、术语、建筑等注入这里，engine.js 消费 */
+window.PQ = { levels:[], terms:{}, notes:{}, cases:[], buildings:[], sprites:{}, pains:[] };
+</script>
+<script src="content/world.js"></script>
+<script src="content/pm/terms.js"></script>
+<script src="content/pm/notes.js"></script>
+<script src="content/pm/cases.js"></script>
+<script src="content/pm/ch0-prologue.js"></script>
+<script src="content/pm/ch1-validate.js"></script>
+<script src="content/pm/ch2-user.js"></script>
+<script src="content/pm/ch3-prd.js"></script>
+<script src="engine.js"></script>
+</body>
+</html>
