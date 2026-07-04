@@ -7,6 +7,18 @@
 
 ---
 
+## 📷 游戏长什么样
+
+![剧情决策：老板拍脑袋，你来接招](screenshots/06-decision.png)
+
+| | |
+|:---:|:---:|
+| ![着陆页](screenshots/01-landing.png) 痛点直击的着陆页 | ![翻车现场](screenshots/07-crash.png) 选错不批评，直接看后果 |
+| ![城市探索](screenshots/05-city.png) 星火市：每栋建筑一段剧情 | ![世界地图](screenshots/04-world.png) 持续扩张的学习大陆 |
+| ![角色DIY](screenshots/02-avatar.png) 捏一个自己的像素形象 | ![入职工牌](screenshots/03-badge.png) 专属工牌，仪式感拉满 |
+
+---
+
 ## 为什么做这个游戏？
 
 - 你是文科/商科出身，对做产品心动，却被"技术门槛"三个字劝退
@@ -47,9 +59,17 @@
 
 ## 📖 知识从哪来？
 
-所有知识点均改写自公认的权威来源，并在游戏内标注出处：
+所有知识点均改写自公认的权威来源，游戏内每个术语、每张方法卡都逐条标注出处：
 
-Marty Cagan《Inspired》 · Eric Ries《精益创业》 · Rob Fitzpatrick《The Mom Test》 · Clayton Christensen《创新者的任务》 · Teresa Torres《Continuous Discovery Habits》 · 《俞军产品方法论》 · 苏杰《人人都是产品经理》 · Lenny's Newsletter · Nielsen Norman Group ……
+**产品经典**：Marty Cagan《Inspired（启示录）》（SVPG）· Eric Ries《精益创业》· Rob Fitzpatrick《The Mom Test》· Clayton Christensen《创新者的任务》（JTBD/奶昔研究）· Teresa Torres《Continuous Discovery Habits》· Melissa Perri《Escaping the Build Trap》· Geoffrey Moore《跨越鸿沟》· Alan Cooper《About Face》（Persona）
+
+**中文经典**：《俞军产品方法论》· 苏杰《人人都是产品经理》· 张小龙微信公开课演讲（公开实录）
+
+**方法与框架**：狩野纪昭 KANO 模型（1984）· Intercom RICE 打分法 · DSDM MoSCoW 法则 · BJ Fogg《Tiny Habits》行为模型 B=MAP（斯坦福行为设计实验室）· Barbara Minto《金字塔原理》· Al Ries & Jack Trout《定位》· 贝索斯致股东信（双向门决策）· Mike Cohn《User Stories Applied》· BDD/Gherkin 验收标准 · Steve Krug《Don't Make Me Think》
+
+**行业研究与案例**：CB Insights 创业失败原因研究 · Nielsen Norman Group 可用性研究 · Lenny's Newsletter · Sarah Frier《No Filter》（Instagram 创业史）· 微信红包/拼多多百元券等公开报道与财报资料
+
+发现引用错误或有更权威的来源？欢迎提 Issue 指正——**专业性是这个项目的生命线。**
 
 ## 🚀 本地运行 / 参与共建
 
