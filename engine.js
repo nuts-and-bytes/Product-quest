@@ -611,4 +611,13 @@ document.addEventListener('keydown',e=>{
       && !document.getElementById('quiz-panel').classList.contains('show')){ e.preventDefault(); G.advance(); }
   }
 });
+/* 桌面端沉浸缩放：整个游戏画布随窗口等比放大/缩小（字体、像素画同步） */
+function fitGame(){
+  const g=document.getElementById('game');
+  if(window.innerWidth<=720){ g.style.zoom=''; return; } // 移动端走响应式布局
+  const s=Math.min(window.innerWidth/1004, window.innerHeight/684);
+  g.style.zoom=Math.max(.55, Math.min(s, 2.2)).toFixed(3);
+}
+window.addEventListener('resize', fitGame);
+fitGame();
 G.init();
