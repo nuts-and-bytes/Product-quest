@@ -237,8 +237,10 @@ const G = {
     }
     if(b.archive){ this.openArchive(); return; }
     let html=`<div class="bp-title">${b.emoji} ${b.name}</div>`;
+    let lastCh='';
     b.levels.forEach(id=>{
       const i=LEVELS.findIndex(l=>l.id===id), lv=LEVELS[i];
+      if(lv.ch!==lastCh){ lastCh=lv.ch; html+=`<div class="bp-ch">▸ ${lv.ch}</div>`; }
       const st=i<this.progress?'done': i===this.progress?'current':'locked';
       const nQ=(lv.quiz||[]).length, nD=lv.script.filter(n=>n.choices).length;
       html+=`<div class="bp-lv"><span class="st">${st==='done'?'✅': st==='current'?'⭐': '🔒'}</span>
