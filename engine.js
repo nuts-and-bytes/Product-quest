@@ -219,6 +219,13 @@ const G = {
     const p=document.getElementById('city-player');
     drawSprite(p,'me');
     p.style.left=`calc(${pb.x}% + ${pb.w+10}px)`; p.style.top=`calc(${pb.y}% + ${pb.h-40}px)`;
+    // 自动展示当前任务建筑的最新状态（修复：通关后面板显示旧的锁定状态）
+    if(this.progress>=LEVELS.length){
+      document.getElementById('bpanel').innerHTML='<div class="bp-title">🎉 现有章节全部通关！</div><div class="bp-hint">新章节正在快马加鞭制作中。可重玩任意关卡刷新评级，或去产品档案馆读读案例。</div>';
+    } else {
+      const curB=BUILDINGS.find(b=>b.id===curBld);
+      if(curB) this.openBuilding(curB);
+    }
   },
 
   openBuilding(b){
@@ -386,6 +393,7 @@ const G = {
   },
 
   typeText(text, done){
+    text=String(text).replace(/\{name\}/g, (this.avatar&&this.avatar.name)||'你');
     const el=document.getElementById('dtext');
     el.textContent=''; this.typing=true;
     let i=0, tick=0;
@@ -509,7 +517,7 @@ const G = {
     const t=TERMS[key]; if(!t)return;
     SFX.unlock();
     const toast=document.getElementById('toast');
-    toast.innerHTML=`✨ 术语解锁 ${t.icon} <b>${t.name}</b><br><span style="font-size:11px;opacity:.85">已收入术语图鉴，可随时查看</span>`;
+    toast.innerHTML=`<span style="font-size:12.5px; letter-spacing:2px">✨ 术语解锁 ✨</span><br><b style="font-size:16px; display:inline-block; margin:3px 0 2px">${t.icon} ${t.name}</b><br><span style="font-size:11px;opacity:.85">已收入术语图鉴，可随时查看</span>`;
     toast.classList.add('show');
     setTimeout(()=>toast.classList.remove('show'),2600);
   },

@@ -154,7 +154,8 @@
       linear-gradient(180deg,#0e2038,#123)}
   #world-screen h2{color:var(--accent); letter-spacing:5px; font-size:24px;}
   #world-screen .wsub{color:var(--dim); font-size:13px; margin-bottom:6px;}
-  #world{position:relative; width:min(760px,96%); height:380px;
+  #world-scroll{width:min(760px,96%); overflow-x:auto; -webkit-overflow-scrolling:touch; border-radius:10px;}
+  #world{position:relative; width:100%; min-width:620px; height:380px;
     border:4px solid #2a4a6e; border-radius:10px; overflow:hidden;
     background:
       repeating-linear-gradient(45deg, transparent 0 26px, rgba(255,255,255,.02) 26px 28px),
@@ -512,9 +513,11 @@
     #bpanel .bp-title{font-size:14.5px;}
     .bp-lv .nm{font-size:13px;}
     #map-foot{flex-wrap:wrap; gap:7px;}
-    #world-screen{padding:14px 10px; gap:10px;}
+    #world-screen{padding:14px 10px; gap:12px;}
     #world-screen h2{font-size:19px;}
-    #world{height:auto; aspect-ratio:2/1; min-height:0;}
+    #world-scroll{width:100%;}
+    #world{height:330px; min-width:660px;}
+    .poster{display:none;} /* 手机上装饰海报遮挡人物，隐藏 */
     #world-screen .wsub{font-size:11.5px; text-align:center;}
 
     /* 弹层 */
@@ -630,7 +633,7 @@
   <div class="screen" id="world-screen">
     <h2>🌍 学习世界</h2>
     <div class="wsub">一个持续扩张的开放学习世界 · 每块大陆是一门完整技能</div>
-    <div id="world">
+    <div id="world-scroll"><div id="world">
       <svg viewBox="0 0 760 380" style="position:absolute;inset:0;width:100%;height:100%">
         <defs>
           <linearGradient id="sea" x1="0" y1="0" x2="0" y2="1">
@@ -724,7 +727,7 @@
           </g>
         </g>
       </svg>
-    </div>
+    </div></div>
     <div class="wsub blink">点击「产品大陆」登陆 ▶</div>
   </div>
 
@@ -905,14 +908,14 @@
 /* 内容注册表：content/*.js 把剧情、术语、建筑等注入这里，engine.js 消费 */
 window.PQ = { levels:[], terms:{}, notes:{}, cases:[], buildings:[], sprites:{}, pains:[] };
 </script>
-<script src="content/world.js?v=0.4"></script>
-<script src="content/pm/terms.js?v=0.4"></script>
-<script src="content/pm/notes.js?v=0.4"></script>
-<script src="content/pm/cases.js?v=0.4"></script>
-<script src="content/pm/ch0-prologue.js?v=0.4"></script>
-<script src="content/pm/ch1-validate.js?v=0.4"></script>
-<script src="content/pm/ch2-user.js?v=0.4"></script>
-<script src="content/pm/ch3-prd.js?v=0.4"></script>
-<script src="engine.js?v=0.4"></script>
+<script src="content/world.js?v=0.5"></script>
+<script src="content/pm/terms.js?v=0.5"></script>
+<script src="content/pm/notes.js?v=0.5"></script>
+<script src="content/pm/cases.js?v=0.5"></script>
+<script src="content/pm/ch0-prologue.js?v=0.5"></script>
+<script src="content/pm/ch1-validate.js?v=0.5"></script>
+<script src="content/pm/ch2-user.js?v=0.5"></script>
+<script src="content/pm/ch3-prd.js?v=0.5"></script>
+<script src="engine.js?v=0.5"></script>
 </body>
 </html>
