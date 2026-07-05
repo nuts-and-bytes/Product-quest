@@ -62,19 +62,20 @@
 | 第1章 | 想法值不值得做：第一性原理 · 市场测算 · Mom Test 访谈 | ✅ 可玩 |
 | 第2章 | 用户与需求：种子用户 · JTBD · 旅程地图 · KANO/RICE | ✅ 可玩 |
 | 第3章 | PRD与原型：用户故事 · 异常流 · 埋点 · 评审辩护 | ✅ 可玩 |
-| 第4章 | 听懂工程师说话 | 🚧 开发中 |
-| 第5-8章 | 开发管理 · 上线部署 · 数据增长 · 商业化 | 🗓️ 规划中 |
+| 第4章 | 听懂工程师说话：技术地图 · 成本冰山 · 站会黑话 · AI能力边界 | ✅ 可玩 |
+| 第5章 | 上线冲刺：测试验收 · 灰度发布 · 深夜P0 | 🚧 开发中 |
+| 第6-8章 | 数据增长 · 商业化 · 终章作品集 | 🗓️ 规划中 |
 | 更远处 | 增长大陆 · AI大陆 · 设计大陆——一个持续扩张的学习世界 | 🌍 敬请期待 |
 
-> 当前版本约 **3-4 小时**剧情量：15 个关卡、33 个决策点、45 道检验题、31 个术语、15 张方法卡、7 篇案例拆解。
+> 当前版本约 **4-5 小时**剧情量：20 个关卡、44 个决策点、60 道检验题、40 个术语、20 张方法卡、9 篇案例拆解。全站图标为手绘像素风，与画面风格统一。
 
 ## 📖 知识从哪来？
 
 所有知识点均改写自公认的权威来源，游戏内每个术语、每张方法卡都逐条标注出处：
 
-**产品经典**：Marty Cagan《Inspired（启示录）》（SVPG）· Eric Ries《精益创业》· Rob Fitzpatrick《The Mom Test》· Clayton Christensen《创新者的任务》（JTBD/奶昔研究）· Teresa Torres《Continuous Discovery Habits》· Melissa Perri《Escaping the Build Trap》· Geoffrey Moore《跨越鸿沟》· Alan Cooper《About Face》（Persona）
+**产品经典**：Marty Cagan《Inspired（启示录）》（SVPG）· Eric Ries《精益创业》· Rob Fitzpatrick《The Mom Test》· Clayton Christensen《创新者的任务》（JTBD/奶昔研究）· Teresa Torres《Continuous Discovery Habits》· Melissa Perri《Escaping the Build Trap》· Geoffrey Moore《跨越鸿沟》· Alan Cooper《About Face》· Steve Mulder《赢在用户》（Persona）· Giles Colborne《简约至上》
 
-**中文经典**：《俞军产品方法论》· 苏杰《人人都是产品经理》· 张小龙微信公开课演讲（公开实录）
+**中文经典**：《俞军产品方法论》· 苏杰《人人都是产品经理》· 王坚《结网》· 张小龙微信公开课演讲（公开实录）
 
 **方法与框架**：狩野纪昭 KANO 模型（1984）· Intercom RICE 打分法 · DSDM MoSCoW 法则 · BJ Fogg《Tiny Habits》行为模型 B=MAP（斯坦福行为设计实验室）· Barbara Minto《金字塔原理》· Al Ries & Jack Trout《定位》· 贝索斯致股东信（双向门决策）· Mike Cohn《User Stories Applied》· BDD/Gherkin 验收标准 · Steve Krug《Don't Make Me Think》
 

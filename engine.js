@@ -102,18 +102,19 @@ const G = {
       document.getElementById('landing').appendChild(s);
     }
     this.load(); this.renderDex();
+    PQ.hydratePxi(document); // 像素图标注入
     // 首页角色阵容
     [['cast-me','me'],['cast-boss','boss'],['cast-xiaomei','xiaomei'],['cast-lijie','lijie']].forEach(([id,key])=>{
       const c=document.getElementById(id); if(c&&c.getContext) drawSprite(c,key);
     });
     // 痛点轮播
     const pt=document.getElementById('pain-text');
-    pt.innerHTML='😩 '+PAINS[0];
+    pt.innerHTML='<b style="color:var(--red)">◆</b> '+PAINS[0];
     setInterval(()=>{
       pt.classList.add('out');
       setTimeout(()=>{
         this.painIdx=(this.painIdx+1)%PAINS.length;
-        pt.innerHTML=(this.painIdx===PAINS.length-1?'💡 ':'😩 ')+PAINS[this.painIdx];
+        pt.innerHTML=(this.painIdx===PAINS.length-1?'<b style="color:var(--accent)">◆</b> ':'<b style="color:var(--red)">◆</b> ')+PAINS[this.painIdx];
         pt.classList.remove('out');
       },450);
     },3400);
@@ -193,7 +194,7 @@ const G = {
   toMap(){
     SFX.click();
     this.show('map-screen');
-    document.getElementById('map-prog').textContent=`主线进度 ${this.progress}/${LEVELS.length}`+(this.progress>=LEVELS.length?' · 🎉 Demo全通关':'');
+    document.getElementById('map-prog').textContent=`主线进度 ${this.progress}/${LEVELS.length}`+(this.progress>=LEVELS.length?' · ★ 全部通关':'');
     document.getElementById('map-bar-fill').style.width=(this.progress/LEVELS.length*100)+'%';
     const city=document.getElementById('city');
     city.querySelectorAll('.bld').forEach(b=>b.remove());
@@ -206,11 +207,11 @@ const G = {
       const allDone=b.levels&&states.every(s=>s==='done');
       div.className='bld'+(b.lock?' locked':'')+(hasCurrent?' here':'');
       div.style.left=b.x+'%'; div.style.top=b.y+'%';
-      div.innerHTML=`<span class="bsign">${b.emoji}</span>
+      div.innerHTML=`<span class="bsign">${PQ.pxi(PQ.bicon[b.id]||"building",22,"#f2f4ff")}</span>
         <div class="roof" style="width:${b.w-18}px"></div>
         <div class="body" style="width:${b.w}px; height:${b.h}px; background-color:${b.color}"></div>
         <div class="bname">${b.name}</div>
-        <div class="bstate">${b.lock?'🔒': b.archive?'支线': allDone?'✔': hasCurrent?'❗任务':(b.levels?states.filter(s=>s==='done').length+'/'+b.levels.length:'')}</div>`;
+        <div class="bstate">${b.lock?PQ.pxi('lock',10,'#dfe6f5'): b.archive?'支线': allDone?'✔': hasCurrent?'!任务':(b.levels?states.filter(s=>s==='done').length+'/'+b.levels.length:'')}</div>`;
       div.onclick=()=>G.openBuilding(b);
       city.appendChild(div);
     });
@@ -221,7 +222,7 @@ const G = {
     p.style.left=`calc(${pb.x}% + ${pb.w+10}px)`; p.style.top=`calc(${pb.y}% + ${pb.h-40}px)`;
     // 自动展示当前任务建筑的最新状态（修复：通关后面板显示旧的锁定状态）
     if(this.progress>=LEVELS.length){
-      document.getElementById('bpanel').innerHTML='<div class="bp-title">🎉 现有章节全部通关！</div><div class="bp-hint">新章节正在快马加鞭制作中。可重玩任意关卡刷新评级，或去产品档案馆读读案例。</div>';
+      document.getElementById('bpanel').innerHTML='<div class="bp-title">★ 现有章节全部通关！</div><div class="bp-hint">新章节正在快马加鞭制作中。可重玩任意关卡刷新评级，或去产品档案馆读读案例。</div>';
     } else {
       const curB=BUILDINGS.find(b=>b.id===curBld);
       if(curB) this.openBuilding(curB);
@@ -232,19 +233,19 @@ const G = {
     SFX.click();
     const panel=document.getElementById('bpanel');
     if(b.lock){
-      panel.innerHTML=`<div class="bp-title">${b.emoji} ${b.name}</div><div class="bp-hint">🔒 ${b.lock}<br>这座建筑将随完整版章节更新开放，星火市会越来越热闹。</div>`;
+      panel.innerHTML=`<div class="bp-title">${PQ.pxi(PQ.bicon[b.id]||"building",16,"var(--accent)")} ${b.name}</div><div class="bp-hint">${PQ.pxi("lock",12,"#8fa7c9")} ${b.lock}<br>这座建筑将随完整版章节更新开放，星火市会越来越热闹。</div>`;
       return;
     }
     if(b.archive){ this.openArchive(); return; }
-    let html=`<div class="bp-title">${b.emoji} ${b.name}</div>`;
+    let html=`<div class="bp-title">${PQ.pxi(PQ.bicon[b.id]||"building",16,"var(--accent)")} ${b.name}</div>`;
     let lastCh='';
     b.levels.forEach(id=>{
       const i=LEVELS.findIndex(l=>l.id===id), lv=LEVELS[i];
       if(lv.ch!==lastCh){ lastCh=lv.ch; html+=`<div class="bp-ch">▸ ${lv.ch}</div>`; }
       const st=i<this.progress?'done': i===this.progress?'current':'locked';
       const nQ=(lv.quiz||[]).length, nD=lv.script.filter(n=>n.choices).length;
-      html+=`<div class="bp-lv"><span class="st">${st==='done'?'✅': st==='current'?'⭐': '🔒'}</span>
-        <span class="nm">${lv.isBoss?'👑 ':''}${lv.name}<small>${lv.loc} · ${nD}个决策 · ${nQ}题检验${lv.note?' · 方法卡×1':''}</small></span>
+      html+=`<div class="bp-lv"><span class="st">${st==='done'?'<span style="color:var(--green)">✔</span>': st==='current'?'<span style="color:var(--accent)">★</span>': PQ.pxi('lock',12,'#8fa7c9')}</span>
+        <span class="nm">${lv.isBoss?'<span style="color:var(--accent)">★</span> ':''}${lv.name}<small>${lv.loc} · ${nD}个决策 · ${nQ}题检验${lv.note?' · 方法卡×1':''}</small></span>
         ${st!=='locked'?`<button class="pxbtn small" onclick="G.startLevel(${i})">${st==='done'?'重玩':'进入 ▶'}</button>`:''}
       </div>`;
     });
@@ -347,7 +348,7 @@ const G = {
     const el=document.getElementById(who==='me'?'sp-me':'sp-npc');
     const e=el.querySelector('.emote');
     if(!emo){ e.classList.remove('show'); return; }
-    e.textContent=emo; e.classList.add('show');
+    e.innerHTML=PQ.pxi(PQ.emoteIcon[emo]||'idea',18,'#1a1c2c'); e.classList.add('show');
     setTimeout(()=>e.classList.remove('show'), 2200);
   },
 
@@ -363,7 +364,7 @@ const G = {
 
     if(node.card){ // 知识卡插页
       this.setTalking(null); this.stopMouth();
-      sp.textContent='📘 知识卡'; sp.style.background='linear-gradient(#7cc4ff,#4f9df0)'; sp.style.color='#0c1830';
+      sp.textContent='◆ 知识卡'; sp.style.background='linear-gradient(#7cc4ff,#4f9df0)'; sp.style.color='#0c1830';
       dtext.innerHTML=`<div class="kcard">${node.card}</div>`;
       SFX.unlock();
       const card=dtext.querySelector('.kcard');
@@ -371,7 +372,7 @@ const G = {
       return;
     }
 
-    if(node.sp==='n'){ sp.textContent='📜 旁白'; sp.style.background='linear-gradient(#7cc4ff,#4f9df0)'; sp.style.color='#0c1830'; this.setTalking(null); this.stopMouth(); }
+    if(node.sp==='n'){ sp.textContent='◆ 旁白'; sp.style.background='linear-gradient(#7cc4ff,#4f9df0)'; sp.style.color='#0c1830'; this.setTalking(null); this.stopMouth(); }
     else if(node.sp==='me'){ sp.textContent=this.avatar.name; sp.style.background='linear-gradient(#ffd98f,#f0b95a)'; sp.style.color='#1a1c2c'; this.setTalking('me'); if(node.emo)this.emote('me',node.emo); }
     else{
       const lvv=LEVELS[this.lvIdx], key=node.sp;
@@ -519,7 +520,7 @@ const G = {
     const t=TERMS[key]; if(!t)return;
     SFX.unlock();
     const toast=document.getElementById('toast');
-    toast.innerHTML=`<span style="font-size:12.5px; letter-spacing:2px">✨ 术语解锁 ✨</span><br><b style="font-size:16px; display:inline-block; margin:3px 0 2px">${t.icon} ${t.name}</b><br><span style="font-size:11px;opacity:.85">已收入术语图鉴，可随时查看</span>`;
+    toast.innerHTML=`<span style="font-size:12.5px; letter-spacing:2px">◆ 术语解锁 ◆</span><br><b style="font-size:16px; display:inline-block; margin:3px 0 2px">${PQ.pxi("spark",14,"#eafff0")} ${t.name}</b><br><span style="font-size:11px;opacity:.85">已收入术语图鉴，可随时查看</span>`;
     toast.classList.add('show');
     setTimeout(()=>toast.classList.remove('show'),2600);
   },
@@ -538,11 +539,11 @@ const G = {
     el.style.color = rank==='S'?'#ffcd75': rank==='A'?'#4ad07a': rank==='B'?'#5cb9ff':'#e05a6d';
     document.getElementById('end-stats').innerHTML=
       `本关：<b>${lv.name}</b><br>剧情决策 <b>${this.dScore}/${this.dMax}</b> ｜ 随堂检验 <b>${this.qOk}/${this.qTotal}</b> ｜ 老板信任度 <b>${this.trust}</b>`+
-      (lv.note?`<br>📒 方法卡入手：<b>${NOTES[lv.note].title}</b>`:'');
+      (lv.note?`<br>◆ 方法卡入手：<b>${NOTES[lv.note].title}</b>`:'');
     const et=document.getElementById('end-terms'); et.innerHTML='';
-    this.unlocked.forEach(k=>{ const t=TERMS[k]; if(t){const s=document.createElement('span'); s.textContent=t.icon+' '+t.name; et.appendChild(s);} });
+    this.unlocked.forEach(k=>{ const t=TERMS[k]; if(t){const s=document.createElement('span'); s.textContent='◆ '+t.name; et.appendChild(s);} });
     document.getElementById('end-tease').textContent =
-      this.progress>=LEVELS.length ? '🎉 Demo全部通关！完整版中你将继续：写PRD、和工程师过招、上线、增长、赚钱……'
+      this.progress>=LEVELS.length ? '★ 现有章节全部通关！新章节持续更新中，敬请期待……'
       : (rank==='S'?'完美通关！':'可重玩本关刷新评级 · ')+'下一关已解锁 →';
     SFX.unlock();
     this.show('end-screen');
@@ -556,10 +557,10 @@ const G = {
     keys.forEach(k=>{
       const t=TERMS[k], has=this.unlocked.includes(k);
       const card=document.createElement('div'); card.className='dex-card'+(has?'':' locked');
-      card.innerHTML=`<div class="icon">${has?t.icon:'❓'}</div><div class="nm">${has?t.name:'？？？'}</div>`;
+      card.innerHTML=`<div class="icon">${has?PQ.pxi("spark",22,"var(--accent)"):PQ.pxi("qmark",22,"#5b6b8c")}</div><div class="nm">${has?t.name:'？？？'}</div>`;
       if(has) card.onclick=()=>{ SFX.click();
         const d=document.getElementById('dex-detail');
-        d.innerHTML=`<b style="color:var(--accent)">${t.icon} ${t.name}</b><br>${t.def}<div class="src">${t.src}</div>`;
+        d.innerHTML=`<b style="color:var(--accent)">${PQ.pxi("spark",13,"var(--accent)")} ${t.name}</b><br>${t.def}<div class="src">${t.src}</div>`;
         d.classList.add('show');
       };
       grid.appendChild(card);
@@ -573,7 +574,7 @@ const G = {
     keys.forEach(k=>{
       const n=NOTES[k], has=this.notes.includes(k);
       const c=document.createElement('div'); c.className='note-card'+(has?'':' locked');
-      c.innerHTML=has?`<div class="nh">${n.title}</div>${n.body}`:`<div class="nh">🔒 ${n.title}</div>通关对应关卡后解锁`;
+      c.innerHTML=has?`<div class="nh">${n.title}</div>${n.body}`:`<div class="nh">${PQ.pxi("lock",13,"#8fa7c9")} ${n.title}</div>通关对应关卡后解锁`;
       list.appendChild(c);
     });
     document.getElementById('notes').classList.add('show');
@@ -610,7 +611,7 @@ const G = {
     inp.click();
   },
 
-  toggleMute(){ SFX.muted=!SFX.muted; document.getElementById('mute-btn').textContent=SFX.muted?'🔇':'🔊'; }
+  toggleMute(){ SFX.muted=!SFX.muted; document.getElementById('mute-btn').innerHTML=PQ.pxi(SFX.muted?'mute':'sound',15); }
 };
 
 document.getElementById('dialog').addEventListener('click',e=>{ if(e.target.closest('#choices')||e.target.closest('.kcard'))return; G.advance(); });
