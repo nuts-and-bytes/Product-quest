@@ -36,7 +36,7 @@ const FACE = {
 };
 function drawSprite(canvas, key, opt){
   opt=opt||{};
-  let map, pal=PAL, face=FACE[key], skin='#f2c19a';
+  let map, pal=PAL, face=FACE[key]||{mouth:[6,7,4], eyes:[[4,5,2],[10,5,2]]}, skin='#f2c19a';
   const hasG = (typeof G!=='undefined') && G && G.avatar;
   if(key==='me'){
     const av = hasG ? G.avatar : {style:'short',hair:'#2b2b2b',skin:'#f2c19a',cloth:'#4f9df0'};

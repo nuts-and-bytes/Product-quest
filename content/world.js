@@ -49,12 +49,12 @@ Object.assign(PQ.sprites, {
 
 /* 星火市建筑（levels 引用关卡id；lock=未开放提示；archive=档案馆支线） */
 PQ.buildings.push(...[
-  {id:'hq',   name:'星火科技', emoji:'🏢', x:6,  y:12, w:132, h:150, color:'#3b5a8f', levels:['p1','c1','boss','u1','u4','uboss']},
+  {id:'hq',   name:'星火科技', emoji:'🏢', x:6,  y:12, w:132, h:150, color:'#3b5a8f', levels:['p1','c1','boss','u1','u4','uboss','l2','l3','l4','lboss']},
   {id:'cafe', name:'蓝山咖啡馆', emoji:'☕', x:33, y:30, w:104, h:84,  color:'#8a5a38', levels:['c2']},
   {id:'tea',  name:'波波奶茶店', emoji:'🧋', x:56, y:66, w:98,  h:74,  color:'#b56a86', levels:['c3','u2']},
   {id:'home', name:'阳光社区', emoji:'🏠', x:38, y:60, w:100, h:88, color:'#c08552', levels:['u3']},
   {id:'arch', name:'产品档案馆', emoji:'📚', x:79, y:24, w:112, h:110, color:'#6b5a9e', archive:true},
-  {id:'eng',  name:'工程部大楼', emoji:'🛠️', x:22, y:66, w:110, h:96,  color:'#4a6b6e', levels:['e1','e2','e3','e4','eboss','t1','t2','t3','t4','tboss']},
+  {id:'eng',  name:'工程部大楼', emoji:'🛠️', x:22, y:66, w:110, h:96,  color:'#4a6b6e', levels:['e1','e2','e3','e4','eboss','t1','t2','t3','t4','tboss','l1']},
   {id:'data', name:'数据中心',  emoji:'📊', x:55, y:16, w:100, h:120, color:'#37648f', lock:'第7章 · 数据与增长'},
   {id:'bank', name:'星火交易所', emoji:'💰', x:80, y:64, w:104, h:86,  color:'#8f7a37', lock:'第8章 · 商业化'}
 ]);
