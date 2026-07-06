@@ -65,11 +65,11 @@
 | 第4章 | 听懂工程师说话：技术地图 · 成本冰山 · 站会黑话 · AI能力边界 | ✅ 可玩 |
 | 第5章 | 上线冲刺：测试验收 · 灰度发布 · 深夜P0危机 · 无责复盘 | ✅ 可玩 |
 | 第6章 | 数据与增长：北极星 · AARRR漏斗 · 留存曲线 · A/B测试 · LTV/CAC | ✅ 可玩 |
-| 第7章 | 怎么赚钱：商业化 | 🚧 开发中 |
-| 终章 | 复盘与作品集 | 🗓️ 规划中 |
+| 第7章 | 怎么赚钱：变现模式 · 定价心理战 · 付费墙 · 单位经济 · 融资路演 | ✅ 可玩 |
+| 终章 | 复盘与作品集 | 🚧 开发中 |
 | 更远处 | 增长大陆 · AI大陆 · 设计大陆——一个持续扩张的学习世界 | 🌍 敬请期待 |
 
-> 当前版本约 **6-7 小时**剧情量：30 个关卡、66 个决策点、90 道检验题、59 个术语、30 张方法卡、13 篇案例拆解。全站图标为手绘像素风，与画面风格统一。
+> 当前版本约 **7-8 小时**剧情量：35 个关卡、77 个决策点、105 道检验题、68 个术语、35 张方法卡、15 篇案例拆解。全站图标为手绘像素风，与画面风格统一。
 
 ## 📖 知识从哪来？
 
@@ -81,7 +81,7 @@
 
 **方法与框架**：狩野纪昭 KANO 模型（1984）· Intercom RICE 打分法 · DSDM MoSCoW 法则 · BJ Fogg《Tiny Habits》行为模型 B=MAP（斯坦福行为设计实验室）· Sean Ellis《增长黑客》· Barbara Minto《金字塔原理》· Al Ries & Jack Trout《定位》· 贝索斯致股东信（双向门决策）· Mike Cohn《User Stories Applied》· BDD/Gherkin 验收标准 · Steve Krug《Don't Make Me Think》
 
-**行业研究与案例**：CB Insights 创业失败原因研究 · Nielsen Norman Group 可用性研究 · Lenny's Newsletter · Sarah Frier《No Filter》（Instagram 创业史）· 微信红包/拼多多百元券等公开报道与财报资料
+**行业研究与案例**：Alexander Osterwalder《商业模式新生代》· Costco/Spotify 公开财报 · CB Insights 创业失败原因研究 · Nielsen Norman Group 可用性研究 · Lenny's Newsletter · Sarah Frier《No Filter》（Instagram 创业史）· 微信红包/拼多多百元券等公开报道与财报资料
 
 发现引用错误或有更权威的来源？欢迎提 Issue 指正——**专业性是这个项目的生命线。**
 
