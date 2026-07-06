@@ -88,7 +88,7 @@ const AV_COLORS = {
   cloth:['#4f9df0','#3fae6b','#e05a6d','#ffcd75','#8e5aa8','#5b6b8c']
 };
 const G = {
-  trust:100, unlocked:[], notes:[], progress:0,
+  trust:100, unlocked:[], notes:[], progress:0, stats:{},
   avatar:{style:'short', hair:'#2b2b2b', skin:'#f2c19a', cloth:'#4f9df0', glasses:false, name:'你'},
   lvIdx:0, nodeIdx:0, typing:false, typeTimer:null,
   dScore:0, dMax:0, qOk:0, qTotal:0, // 本关得分
@@ -121,7 +121,7 @@ const G = {
     // 全局眨眼循环
     setInterval(()=>this.blink(),3200);
   },
-  save(){ try{ localStorage.setItem('pmquest2', JSON.stringify({trust:this.trust,unlocked:this.unlocked,notes:this.notes,progress:this.progress,avatar:this.avatar})); }catch(e){} },
+  save(){ try{ localStorage.setItem('pmquest2', JSON.stringify({trust:this.trust,unlocked:this.unlocked,notes:this.notes,progress:this.progress,avatar:this.avatar,stats:this.stats||{}})); }catch(e){} },
   load(){ try{ const d=JSON.parse(localStorage.getItem('pmquest2')); if(d){Object.assign(this,d); if(!d.avatar)this.avatar={style:'short',hair:'#2b2b2b',skin:'#f2c19a',cloth:'#4f9df0',glasses:false,name:'你'};} }catch(e){} },
 
   /* ---------- 角色DIY ---------- */
@@ -160,10 +160,18 @@ const G = {
     this.avatar.name=n||'你';
     this.save(); this.showBadge();
   },
-  showBadge(){
+  showBadge(opts){
+    opts=opts||{}; this._gold=!!opts.gold;
     SFX.click();
     const modal=document.getElementById('badge-modal');
     document.getElementById('badge-name').textContent=this.avatar.name;
+    const card=document.getElementById('idcard');
+    card.classList.toggle('gold', this._gold);
+    card.querySelector('.card-title').textContent=this._gold?'产品经理 · 正式':'产品经理 · 见习';
+    card.querySelector('.card-no').textContent=this._gold?'NO. SPARK-2026-PM ★ 全章通关认证':'NO. SPARK-2026-001 · 产品部';
+    document.getElementById('badge-stamp').innerHTML=this._gold?'通关<br>认证':'入职<br>成功';
+    document.getElementById('badge-cap').textContent=this._gold?'★ 恭喜通关 · 星火认证产品经理 ★':'✦ 欢迎加入星火科技 ✦';
+    document.getElementById('badge-go').innerHTML=this._gold?'★ 生成我的作品集 ▶':'★ 正式上岗 · 前往学习世界 ▶';
     drawSprite(document.getElementById('badge-canvas'),'me');
     // 重置动画（支持重复观看）
     ['idcard','badge-stamp','badge-cap','badge-go'].forEach(id=>{
@@ -184,7 +192,11 @@ const G = {
     SFX.unlock();
     setTimeout(()=>SFX.beep(110,.22,'square',.09),850); // 盖章闷响
   },
-  badgeGo(){ SFX.click(); document.getElementById('badge-modal').classList.remove('show'); this.toWorld(); },
+  badgeGo(){ SFX.click();
+    document.getElementById('badge-modal').classList.remove('show');
+    if(this._gold){ this._gold=false; this.exportPortfolio(); this.toMap(); }
+    else this.toWorld();
+  },
   resetAll(){ if(confirm('确定清空全部进度？')){ try{localStorage.removeItem('pmquest2');}catch(e){} location.reload(); } },
 
   show(id){ document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active')); document.getElementById(id).classList.add('active'); },
@@ -534,6 +546,7 @@ const G = {
     const got=this.dScore + this.qOk*2;
     const pct=total?got/total:1;
     const rank = pct>=.95?'S': pct>=.8?'A': pct>=.6?'B':'C';
+    if(!this.stats)this.stats={}; this.stats[lv.id]={rank:rank}; this.save();
     const el=document.getElementById('end-rank');
     el.textContent=rank;
     el.style.color = rank==='S'?'#ffcd75': rank==='A'?'#4ad07a': rank==='B'?'#5cb9ff':'#e05a6d';
@@ -547,6 +560,7 @@ const G = {
       : (rank==='S'?'完美通关！':'可重玩本关刷新评级 · ')+'下一关已解锁 →';
     SFX.unlock();
     this.show('end-screen');
+    if(lv.finale){ setTimeout(()=>this.showBadge({gold:true}), 900); }
   },
 
   /* ---------- 图鉴 & 笔记 ---------- */
@@ -585,7 +599,7 @@ const G = {
   exportSave(){
     SFX.click();
     const raw = localStorage.getItem('pmquest2') ||
-      JSON.stringify({trust:this.trust,unlocked:this.unlocked,notes:this.notes,progress:this.progress,avatar:this.avatar});
+      JSON.stringify({trust:this.trust,unlocked:this.unlocked,notes:this.notes,progress:this.progress,avatar:this.avatar,stats:this.stats||{}});
     const blob = new Blob([raw], {type:'application/json'});
     const a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
@@ -609,6 +623,60 @@ const G = {
       r.readAsText(f); inp.value='';
     };
     inp.click();
+  },
+
+  /* ---------- 作品集生成器（终章核心功能） ---------- */
+  buildPortfolio(){
+    const av=this.avatar||{}; const st=this.stats||{};
+    const rk=id=> (st[id]&&st[id].rank)||'—';
+    const date=new Date(); const ds=date.getFullYear()+'年'+(date.getMonth()+1)+'月'+date.getDate()+'日';
+    // 像素形象转SVG
+    const map=PLAYER_TPL[av.style]||PLAYER_TPL.short;
+    const pal=Object.assign({},PAL,{h:av.hair||'#2b2b2b',S:av.skin||'#f2c19a',B:av.cloth||'#4f9df0'});
+    let rects=''; map.forEach((row,y)=>{ for(let x=0;x<16;x++){ const c=pal[row[x]]; if(c) rects+='<rect x="'+x+'" y="'+y+'" width="1" height="1" fill="'+c+'"/>'; } });
+    const avsvg='<svg width="80" height="120" viewBox="0 0 16 24" shape-rendering="crispEdges" xmlns="http://www.w3.org/2000/svg">'+rects+'</svg>';
+    const abil=[["机会验证与需求判断","序章 · 第1章","boss"],["用户研究与需求定义","第2章","uboss"],["方案定义 · PRD与原型","第3章","eboss"],["技术理解与跨职能协作","第4章","tboss"],["交付管理与危机处置","第5章","lboss"],["数据分析与增长","第6章","gboss"],["商业化与融资叙事","第7章","bboss"],["复盘与面试表达","终章","f1"]];
+    const abilRows=abil.map(a=>'<tr><td>'+a[0]+'</td><td>'+a[1]+'</td><td class="rk rk-'+rk(a[2])+'">'+rk(a[2])+'</td></tr>').join('');
+    const termNames=Object.values(TERMS).map(t=>t.name).join('、');
+    const noteNames=Object.values(NOTES).map(n=>n.title.replace(/方法卡 \d+ · /,'')).join('、');
+    return '<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>'+(av.name||'我')+'的产品作品集</title><style>'
+    +'body{font-family:"PingFang SC","Microsoft YaHei",sans-serif;max-width:820px;margin:0 auto;padding:36px 28px;color:#1f2430;line-height:1.85;background:#fafbfd}'
+    +'h1{font-size:26px;margin:6px 0}h2{font-size:18px;border-left:5px solid #3b6dd8;padding-left:10px;margin:34px 0 12px}'
+    +'.head{display:flex;gap:22px;align-items:center;border-bottom:3px solid #1f2430;padding-bottom:20px}'
+    +'.sub{color:#66708a;font-size:14px}.tag{display:inline-block;background:#eef2fb;color:#3b6dd8;border-radius:4px;padding:1px 8px;font-size:12px;margin-left:6px}'
+    +'.notice{background:#fff7e0;border:2px solid #e8b93f;border-radius:8px;padding:12px 16px;font-size:13.5px;margin:20px 0;color:#6b5312}'
+    +'table{border-collapse:collapse;width:100%;font-size:14px}td,th{border:1px solid #ccd3e0;padding:8px 12px;text-align:left}th{background:#eef2fb}'
+    +'.rk{font-weight:bold;text-align:center;width:60px}.rk-S{color:#c8920a}.rk-A{color:#2e9e5b}.rk-B{color:#3b6dd8}.rk-C{color:#888}'
+    +'.sec p{margin:8px 0}.m{color:#3b6dd8;font-size:12.5px}.tpl{background:#f0f3fa;border-radius:8px;padding:14px 18px;font-size:14px;margin:10px 0}'
+    +'.small{font-size:12.5px;color:#66708a}@media print{body{background:#fff}}'
+    +'</style></head><body>'
+    +'<div class="head">'+avsvg+'<div><h1>'+(av.name||'我')+' · 产品作品集</h1><div class="sub">星火科技 产品经理项目 · 结业于 '+ds+'<span class="tag">从0到1完整实战演练</span></div></div></div>'
+    +'<div class="notice"><b>诚实声明：</b>本作品集基于模拟实战项目《产品经理大冒险》（8章·35+关卡·77个真实场景决策）生成，用于展示方法论掌握程度。其中的产品数据为剧情设定。求职时，请将此处的框架应用于你的真实实践——方法是真的，故事应当是你自己的。</div>'
+    +'<h2>产品案例复盘 · 星火攒钱App（0→1）</h2><div class="sec">'
+    +'<p><b>① 问题与洞察</b><span class="m">｜Mom Test访谈 · JTBD · 行为证据</span><br>通过5轮用户访谈推翻"大而全理财App"原方案：目标用户（月光攒钱人群）已在用土办法自救（工资上交母亲、攒金豆），本质任务是"发薪日把钱变成花不掉的形态，换取安心感"——竞品是妈妈、金豆和"什么都不做"。</p>'
+    +'<p><b>② 方案定义</b><span class="m">｜MVP · KANO/RICE/MoSCoW · Won&#39;t清单</span><br>说服决策层放弃三个月大盘计划，改为四周单功能MVP（发薪日一键锁钱+反悔冷静期），预设两个验证指标；20条需求经三把尺子砍至5条，Won&#39;t清单全员签字。</p>'
+    +'<p><b>③ 交付上线</b><span class="m">｜PRD七要素 · 灰度金丝雀 · P0响应SOP</span><br>PRD以边界异常与埋点为重心（含状态机与幂等要求）；上线采用5%金丝雀→全量策略；上线夜处置资损级P0（重复扣款）：黄金一小时内完成资金确认、用户沟通（事实+时限+补偿）与修复，次日无责复盘产出3条带owner的行动项。</p>'
+    +'<p><b>④ 数据结果</b><span class="m">｜北极星 · 同期群留存 · 魔法数字 · A/B</span><br>90天：周活跃锁钱用户 3,400；月留存 34% 企稳；发现魔法数字"连锁3个发薪日→留存92%"并落地引导；关键文案A/B（样本4,600）提升首锁转化2.3pct。</p>'
+    +'<p><b>⑤ 商业化</b><span class="m">｜Freemium · 价值定价 · 单位经济</span><br>会员制（核心习惯永远免费，付费卖升舱）；价格测试定档15元/月+年费锚点结构；付费触点优化后回本周期从15个月缩至9个月；以"问题-方案-数据-模式-盘子"完成融资路演并获TS。</p></div>'
+    +'<h2>能力矩阵</h2><table><tr><th>能力项</th><th>对应实战</th><th>评级</th></tr>'+abilRows+'</table>'
+    +'<div class="small" style="margin-top:6px">评级来自各章Boss战通关成绩（S=零失误 A=优秀 B=合格；"—"为旧存档未记录，可重玩获取）</div>'
+    +'<h2>知识体系清单</h2><div class="sec"><p><b>掌握术语（'+Object.keys(TERMS).length+'个）：</b><span class="small">'+termNames+'</span></p>'
+    +'<p><b>方法卡（'+Object.keys(NOTES).length+'张）：</b><span class="small">'+noteNames+'</span></p></div>'
+    +'<h2>面试叙事模板（可替换为你的真实经历）</h2>'
+    +'<div class="tpl"><b>讲项目（STAR）：</b>S 两亿年轻人存不下钱，公司押注四周｜T 从0到1，军令状两个数字｜A 访谈推翻原方案 / RICE当面砍掉老板需求 / 上线夜P0处置｜R 北极星3400 · 留存34% · A轮TS</div>'
+    +'<div class="tpl"><b>讲失败（无责复盘四段）：</b>具体认错（PRD异常流漏写回调重放）→ 止损时间线（23:47接报→黄金一小时对外→天亮修复）→ 改进（幂等校验进PRD模板）→ 成长（异常流清单成为肌肉记忆）</div>'
+    +'<div style="margin-top:40px;text-align:center" class="small">由《产品经理大冒险》生成 · nuts-and-bytes.github.io/Product-quest<br>方法是真的，判断力是你的。</div>'
+    +'</body></html>';
+  },
+  exportPortfolio(){
+    SFX.click();
+    if(this.progress < LEVELS.length){ alert('通关全部章节后，即可生成你的专属作品集'); return; }
+    const html=this.buildPortfolio();
+    const blob=new Blob([html],{type:'text/html'});
+    const a=document.createElement('a');
+    a.href=URL.createObjectURL(blob);
+    a.download=(this.avatar.name||'我')+'的产品作品集.html';
+    a.click(); URL.revokeObjectURL(a.href);
   },
 
   toggleMute(){ SFX.muted=!SFX.muted; document.getElementById('mute-btn').innerHTML=PQ.pxi(SFX.muted?'mute':'sound',15); }

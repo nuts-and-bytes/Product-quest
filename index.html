@@ -142,6 +142,12 @@
     animation:stampIn .4s .85s cubic-bezier(.2,2.2,.4,1) forwards;}
   #badge-stamp::before{content:""; position:absolute; inset:5px; border:2px dashed #d3392f88; border-radius:50%;}
   @keyframes stampIn{0%{transform:rotate(12deg) scale(2.8); opacity:0} 100%{transform:rotate(-18deg) scale(1); opacity:.94}}
+  #idcard.gold{background:linear-gradient(#fff3d6,#f5d98a); border-color:#7a5c14; box-shadow:0 26px 70px rgba(200,146,10,.45);}
+  #idcard.gold::before{background:#d9b96a;}
+  #idcard.gold .card-photo{background:linear-gradient(#fff8e6,#ffe4a8); border-color:#7a5c14;}
+  #idcard.gold .lanyard{background:repeating-linear-gradient(0deg,#c8920a 0 12px,#a4780a 12px 24px);}
+  #idcard.gold #badge-stamp{border-color:#b8860b; color:#b8860b;}
+  #idcard.gold .card-name{color:#5c4408;}
   #badge-cap{color:var(--accent); font-size:15px; letter-spacing:3px; opacity:0; animation:fadeUp .5s 1.35s forwards;}
   #badge-go{opacity:0; animation:fadeUp .5s 1.7s forwards; font-size:15px;}
   @keyframes fadeUp{to{opacity:1;}}
@@ -814,6 +820,7 @@
       <button class="pxbtn small" onclick="G.toAvatar()"><i data-pxi="person" data-size="13"></i> 修改形象</button>
       <button class="pxbtn small" onclick="G.exportSave()"><i data-pxi="save" data-size="13"></i> 导出存档</button>
       <button class="pxbtn small" onclick="G.importSave()"><i data-pxi="load" data-size="13"></i> 导入存档</button>
+      <button class="pxbtn small" onclick="G.exportPortfolio()"><i data-pxi="trophy" data-size="13"></i> 我的作品集</button>
       <input type="file" id="save-file" accept=".json,application/json" style="display:none">
       <button class="pxbtn small" onclick="G.resetAll()">↺ 重置进度</button>
     </div>
@@ -920,19 +927,20 @@
 /* 内容注册表：content/*.js 把剧情、术语、建筑等注入这里，engine.js 消费 */
 window.PQ = { levels:[], terms:{}, notes:{}, cases:[], buildings:[], sprites:{}, pains:[] };
 </script>
-<script src="assets/pxicons.js?v=1.1"></script>
-<script src="content/world.js?v=1.1"></script>
-<script src="content/pm/terms.js?v=1.1"></script>
-<script src="content/pm/notes.js?v=1.1"></script>
-<script src="content/pm/cases.js?v=1.1"></script>
-<script src="content/pm/ch0-prologue.js?v=1.1"></script>
-<script src="content/pm/ch1-validate.js?v=1.1"></script>
-<script src="content/pm/ch2-user.js?v=1.1"></script>
-<script src="content/pm/ch3-prd.js?v=1.1"></script>
-<script src="content/pm/ch4-tech.js?v=1.1"></script>
-<script src="content/pm/ch5-launch.js?v=1.1"></script>
-<script src="content/pm/ch6-growth.js?v=1.1"></script>
-<script src="content/pm/ch7-monetize.js?v=1.1"></script>
-<script src="engine.js?v=1.1"></script>
+<script src="assets/pxicons.js?v=1.2"></script>
+<script src="content/world.js?v=1.2"></script>
+<script src="content/pm/terms.js?v=1.2"></script>
+<script src="content/pm/notes.js?v=1.2"></script>
+<script src="content/pm/cases.js?v=1.2"></script>
+<script src="content/pm/ch0-prologue.js?v=1.2"></script>
+<script src="content/pm/ch1-validate.js?v=1.2"></script>
+<script src="content/pm/ch2-user.js?v=1.2"></script>
+<script src="content/pm/ch3-prd.js?v=1.2"></script>
+<script src="content/pm/ch4-tech.js?v=1.2"></script>
+<script src="content/pm/ch5-launch.js?v=1.2"></script>
+<script src="content/pm/ch6-growth.js?v=1.2"></script>
+<script src="content/pm/ch7-monetize.js?v=1.2"></script>
+<script src="content/pm/ch8-finale.js?v=1.2"></script>
+<script src="engine.js?v=1.2"></script>
 </body>
 </html>
