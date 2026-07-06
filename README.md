@@ -64,11 +64,12 @@
 | 第3章 | PRD与原型：用户故事 · 异常流 · 埋点 · 评审辩护 | ✅ 可玩 |
 | 第4章 | 听懂工程师说话：技术地图 · 成本冰山 · 站会黑话 · AI能力边界 | ✅ 可玩 |
 | 第5章 | 上线冲刺：测试验收 · 灰度发布 · 深夜P0危机 · 无责复盘 | ✅ 可玩 |
-| 第6章 | 有人用吗：数据与增长 | 🚧 开发中 |
-| 第7-8章 | 商业化 · 终章作品集 | 🗓️ 规划中 |
+| 第6章 | 数据与增长：北极星 · AARRR漏斗 · 留存曲线 · A/B测试 · LTV/CAC | ✅ 可玩 |
+| 第7章 | 怎么赚钱：商业化 | 🚧 开发中 |
+| 终章 | 复盘与作品集 | 🗓️ 规划中 |
 | 更远处 | 增长大陆 · AI大陆 · 设计大陆——一个持续扩张的学习世界 | 🌍 敬请期待 |
 
-> 当前版本约 **5-6 小时**剧情量：25 个关卡、55 个决策点、75 道检验题、50 个术语、25 张方法卡、11 篇案例拆解。全站图标为手绘像素风，与画面风格统一。
+> 当前版本约 **6-7 小时**剧情量：30 个关卡、66 个决策点、90 道检验题、59 个术语、30 张方法卡、13 篇案例拆解。全站图标为手绘像素风，与画面风格统一。
 
 ## 📖 知识从哪来？
 
@@ -78,7 +79,7 @@
 
 **中文经典**：《俞军产品方法论》· 苏杰《人人都是产品经理》· 王坚《结网》· 张小龙微信公开课演讲（公开实录）
 
-**方法与框架**：狩野纪昭 KANO 模型（1984）· Intercom RICE 打分法 · DSDM MoSCoW 法则 · BJ Fogg《Tiny Habits》行为模型 B=MAP（斯坦福行为设计实验室）· Barbara Minto《金字塔原理》· Al Ries & Jack Trout《定位》· 贝索斯致股东信（双向门决策）· Mike Cohn《User Stories Applied》· BDD/Gherkin 验收标准 · Steve Krug《Don't Make Me Think》
+**方法与框架**：狩野纪昭 KANO 模型（1984）· Intercom RICE 打分法 · DSDM MoSCoW 法则 · BJ Fogg《Tiny Habits》行为模型 B=MAP（斯坦福行为设计实验室）· Sean Ellis《增长黑客》· Barbara Minto《金字塔原理》· Al Ries & Jack Trout《定位》· 贝索斯致股东信（双向门决策）· Mike Cohn《User Stories Applied》· BDD/Gherkin 验收标准 · Steve Krug《Don't Make Me Think》
 
 **行业研究与案例**：CB Insights 创业失败原因研究 · Nielsen Norman Group 可用性研究 · Lenny's Newsletter · Sarah Frier《No Filter》（Instagram 创业史）· 微信红包/拼多多百元券等公开报道与财报资料
 
