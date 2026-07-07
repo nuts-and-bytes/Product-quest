@@ -435,6 +435,17 @@
   #toast.show{transform:translate(-50%,0) scale(1); visibility:visible; opacity:1;}
 
   /* 图鉴/笔记本 */
+  /* 术语速查 */
+  .tlink{color:var(--blue); border-bottom:1px dotted var(--blue); cursor:pointer;}
+  .tlink:hover{color:#9bd4ff;}
+  #term-pop{position:absolute; inset:0; z-index:50; background:rgba(5,8,22,.82); display:none; align-items:center; justify-content:center; padding:26px; cursor:pointer;}
+  #term-pop.show{display:flex;}
+  #term-pop .tp-box{max-width:560px; max-height:80%; overflow-y:auto; background:#161d40; border:3px solid var(--blue); border-radius:8px; padding:18px 20px; font-size:15px; line-height:1.95;}
+  #term-pop .tp-box>b{color:var(--accent); font-size:16px;}
+  #term-pop .tp-def{margin-top:8px;}
+  #term-pop .tp-src{color:var(--dim); font-size:12px; margin-top:10px;}
+  #term-pop .tp-close{color:var(--dim); font-size:11.5px; text-align:center; margin-top:12px;}
+  @media (max-width:640px){ #term-pop .tp-box{font-size:13.5px; padding:14px 15px;} }
   .modal{position:absolute; inset:0; z-index:40; background:rgba(6,8,24,.95); display:none; flex-direction:column; padding:24px 28px;}
   .modal.show{display:flex;}
   .modal h2{color:var(--accent); margin-bottom:4px; letter-spacing:3px;}
@@ -911,6 +922,9 @@
 
   <div id="toast"></div>
 
+  <!-- 术语速查弹窗 -->
+  <div id="term-pop"></div>
+
   <!-- 术语图鉴 -->
   <div class="modal" id="dex">
     <h2><i data-pxi="book" data-size="20" data-color="var(--accent)"></i> 术语图鉴</h2>
@@ -942,20 +956,20 @@
 /* 内容注册表：content/*.js 把剧情、术语、建筑等注入这里，engine.js 消费 */
 window.PQ = { levels:[], terms:{}, notes:{}, cases:[], buildings:[], sprites:{}, pains:[] };
 </script>
-<script src="assets/pxicons.js?v=1.5"></script>
-<script src="content/world.js?v=1.5"></script>
-<script src="content/pm/terms.js?v=1.5"></script>
-<script src="content/pm/notes.js?v=1.5"></script>
-<script src="content/pm/cases.js?v=1.5"></script>
-<script src="content/pm/ch0-prologue.js?v=1.5"></script>
-<script src="content/pm/ch1-validate.js?v=1.5"></script>
-<script src="content/pm/ch2-user.js?v=1.5"></script>
-<script src="content/pm/ch3-prd.js?v=1.5"></script>
-<script src="content/pm/ch4-tech.js?v=1.5"></script>
-<script src="content/pm/ch5-launch.js?v=1.5"></script>
-<script src="content/pm/ch6-growth.js?v=1.5"></script>
-<script src="content/pm/ch7-monetize.js?v=1.5"></script>
-<script src="content/pm/ch8-finale.js?v=1.5"></script>
-<script src="engine.js?v=1.5"></script>
+<script src="assets/pxicons.js?v=1.6"></script>
+<script src="content/world.js?v=1.6"></script>
+<script src="content/pm/terms.js?v=1.6"></script>
+<script src="content/pm/notes.js?v=1.6"></script>
+<script src="content/pm/cases.js?v=1.6"></script>
+<script src="content/pm/ch0-prologue.js?v=1.6"></script>
+<script src="content/pm/ch1-validate.js?v=1.6"></script>
+<script src="content/pm/ch2-user.js?v=1.6"></script>
+<script src="content/pm/ch3-prd.js?v=1.6"></script>
+<script src="content/pm/ch4-tech.js?v=1.6"></script>
+<script src="content/pm/ch5-launch.js?v=1.6"></script>
+<script src="content/pm/ch6-growth.js?v=1.6"></script>
+<script src="content/pm/ch7-monetize.js?v=1.6"></script>
+<script src="content/pm/ch8-finale.js?v=1.6"></script>
+<script src="engine.js?v=1.6"></script>
 </body>
 </html>

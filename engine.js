@@ -120,9 +120,53 @@ const G = {
     },3400);
     // 全局眨眼循环
     setInterval(()=>this.blink(),3200);
+    // 术语链接点击（捕获阶段，避免触发对话推进）
+    document.addEventListener('click',e=>{
+      const l=e.target.closest&&e.target.closest('.tlink');
+      if(l){ e.stopPropagation(); e.preventDefault(); this.termPop(l.dataset.tt,l.dataset.tk); return; }
+      const p=e.target.closest&&e.target.closest('#term-pop');
+      if(p){ e.stopPropagation(); p.classList.remove('show'); }
+    },true);
   },
   // 匿名统计（Umami未加载/被拦截时静默跳过）
   track(ev,data){ try{ if(window.umami&&umami.track) umami.track(ev,data); }catch(e){} },
+
+  /* ---------- 术语速查：正文缩写自动变可点击链接 ---------- */
+  _buildAliases(){
+    // 术语图鉴别名（key -> TERMS）
+    const t={pm:['PM'],tam:['TAM','SAM','SOM'],momtest:['Mom Test'],mvp:['MVP'],jtbd:['JTBD'],
+      kano:['KANO'],rice:['RICE'],moscow:['MoSCoW','Won’t'],voc:['VOC'],ac:['AC'],prd:['PRD'],
+      api:['API'],p0:['P0','P1','P2'],llm:['LLM'],halluc:['Hallucination'],uat:['UAT'],sop:['SOP'],
+      nsm:['NSM'],aarrr:['AARRR'],aha:['Aha Moment'],abtest:['A/B测试'],ltv:['LTV','CAC'],
+      viral:['K因子'],freemium:['Freemium'],arpu:['ARPU'],moat:['Moat'],star:['STAR'],
+      fogg:['B=MAP'],creep:['Scope Creep'],story:['User Story'],agile:['Agile']};
+    this._alias={};
+    for(const[k,list]of Object.entries(t)) for(const a of list) this._alias[a]={type:'term',key:k};
+    for(const g of Object.keys(window.PQ.gloss||{})){ this._alias[g]={type:'gloss',key:g};
+      if(g!==g.toLowerCase()) this._alias[g.toLowerCase()]={type:'gloss',key:g}; }
+    const alts=Object.keys(this._alias).sort((a,b)=>b.length-a.length)
+      .map(s=>s.replace(/[.*+?^${}()|[\]\\/]/g,'\\$&')).join('|');
+    this._aliasRx=new RegExp('(^|[^A-Za-z0-9])('+alts+')(?![A-Za-z0-9])','g');
+  },
+  // 把文本中的已知缩写包成可点击链接（每段每个缩写只链首次，防止满屏下划线）
+  linkify(text){
+    if(!this._alias) this._buildAliases();
+    const esc=String(text).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    const seen={};
+    return esc.replace(this._aliasRx,(m,pre,word)=>{
+      const info=this._alias[word];
+      if(!info||seen[info.key]) return m;
+      seen[info.key]=1;
+      return pre+`<span class="tlink" data-tt="${info.type}" data-tk="${info.key}">${word}</span>`;
+    });
+  },
+  termPop(type,key){
+    const t = type==='gloss' ? (window.PQ.gloss||{})[key] : TERMS[key];
+    if(!t) return; SFX.click();
+    const p=document.getElementById('term-pop');
+    p.innerHTML=`<div class="tp-box"><b>${PQ.pxi('book',14,'var(--accent)')} ${t.name}</b><div class="tp-def">${t.def}</div>${t.src?`<div class="tp-src">${t.src}</div>`:''}<div class="tp-close">— 点击任意处关闭 —</div></div>`;
+    p.classList.add('show');
+  },
   save(){ try{ localStorage.setItem('pmquest2', JSON.stringify({trust:this.trust,unlocked:this.unlocked,notes:this.notes,progress:this.progress,avatar:this.avatar,stats:this.stats||{}})); }catch(e){} },
   load(){ try{ const d=JSON.parse(localStorage.getItem('pmquest2')); if(d){Object.assign(this,d); if(!d.avatar)this.avatar={style:'short',hair:'#2b2b2b',skin:'#f2c19a',cloth:'#4f9df0',glasses:false,name:'你'};} }catch(e){} },
 
@@ -420,7 +464,7 @@ const G = {
     this.typeTimer=setInterval(()=>{
       el.textContent=text.slice(0,++i);
       if(++tick%3===0) SFX.type();
-      if(i>=text.length){ clearInterval(this.typeTimer); this.typing=false; done&&done(); }
+      if(i>=text.length){ clearInterval(this.typeTimer); this.typing=false; el.innerHTML=this.linkify(text); done&&done(); }
     },20);
     this._fullText=text; this._typeDone=done;
   },
@@ -428,7 +472,7 @@ const G = {
   advance(){
     if(this.typing){
       clearInterval(this.typeTimer); this.typing=false;
-      document.getElementById('dtext').textContent=this._fullText;
+      document.getElementById('dtext').innerHTML=this.linkify(this._fullText);
       this._typeDone&&this._typeDone(); return;
     }
     const node=LEVELS[this.lvIdx].script[this.nodeIdx];
@@ -454,8 +498,8 @@ const G = {
     const cls = c.s===2?'good': c.s===1?'mid':'bad';
     card.className=cls;
     document.getElementById('fb-title').textContent = c.s===2?'◎ 最优判断！': c.s===1?'◑ 可行，但不是最优':'✖ 翻车了！';
-    document.getElementById('fb-text').textContent=c.fb;
-    document.getElementById('fb-lesson').textContent=c.lesson||'';
+    document.getElementById('fb-text').innerHTML=this.linkify(c.fb);
+    document.getElementById('fb-lesson').innerHTML=this.linkify(c.lesson||'');
     const btn=document.getElementById('fb-btn');
     const flash=document.getElementById('flash');
     if(c.s===2){ SFX.ok(); flash.className='good'; }
@@ -512,7 +556,7 @@ const G = {
     if(i===q.a){ this.qOk++; SFX.ok(); }
     else{ btn.classList.add('wrongpick'); SFX.bad(); }
     const exp=document.getElementById('quiz-exp');
-    exp.textContent=(i===q.a?'✔ 正确！':'✘ 不对。')+' '+q.exp;
+    exp.innerHTML=this.linkify((i===q.a?'✔ 正确！':'✘ 不对。')+' '+q.exp);
     exp.style.display='block';
     const nx=document.getElementById('quiz-next');
     nx.style.display='inline-block';
