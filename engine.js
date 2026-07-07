@@ -537,9 +537,21 @@ const G = {
     const t=TERMS[key]; if(!t)return;
     SFX.unlock();
     const toast=document.getElementById('toast');
-    toast.innerHTML=`<span style="font-size:12.5px; letter-spacing:2px">◆ 术语解锁 ◆</span><br><b style="font-size:16px; display:inline-block; margin:3px 0 2px">${PQ.pxi("spark",14,"#eafff0")} ${t.name}</b><br><span style="font-size:11px;opacity:.85">已收入术语图鉴，可随时查看</span>`;
+    toast.innerHTML=`<span style="font-size:12.5px; letter-spacing:2px">◆ 术语解锁 ◆</span><br><b style="font-size:16px; display:inline-block; margin:3px 0 2px">${PQ.pxi("spark",14,"#eafff0")} ${t.name}</b><br><span style="font-size:11px;opacity:.85">点这里看它是什么意思 ▶</span>`;
+    toast.style.cursor='pointer';
+    toast.onclick=()=>{ SFX.click(); toast.classList.remove('show'); this.showTermDetail(key); };
     toast.classList.add('show');
-    setTimeout(()=>toast.classList.remove('show'),2600);
+    setTimeout(()=>toast.classList.remove('show'),3400);
+  },
+  // 直达术语详情：打开图鉴并展开指定术语
+  showTermDetail(key){
+    const t=TERMS[key]; if(!t)return;
+    this.renderDex();
+    document.getElementById('dex').classList.add('show');
+    const d=document.getElementById('dex-detail');
+    d.innerHTML=`<b style="color:var(--accent)">${PQ.pxi("spark",13,"var(--accent)")} ${t.name}</b><br>${t.def}<div class="src">${t.src}</div>`;
+    d.classList.add('show');
+    d.scrollIntoView({block:'nearest'});
   },
 
   endLevel(){
