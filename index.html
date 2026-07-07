@@ -3,7 +3,20 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>产品经理大冒险 · Product Quest</title>
+<title>产品经理大冒险 · Product Quest — 零基础也能通关的产品经理学习游戏</title>
+<meta name="description" content="把产品知识做成可以通关的像素RPG：扮演新手PM入职创业公司，37个关卡走完从想法验证到商业化的完整0→1。71个术语、37张方法卡、16篇真实案例，全部标注权威出处。零基础免费畅玩，通关一键生成产品作品集。">
+<meta name="keywords" content="产品经理,产品经理入门,PM学习,产品经理游戏,MVP,PRD,用户研究,零基础转行产品经理,产品思维">
+<link rel="canonical" href="https://nuts-and-bytes.github.io/Product-quest/">
+<meta property="og:type" content="website">
+<meta property="og:title" content="产品经理大冒险 · Product Quest">
+<meta property="og:description" content="把产品知识做成一个可以通关的网页游戏——37关走完从想法到商业化的完整0→1，通关即作品集。">
+<meta property="og:url" content="https://nuts-and-bytes.github.io/Product-quest/">
+<meta property="og:image" content="https://nuts-and-bytes.github.io/Product-quest/screenshots/06-decision.png">
+<meta name="twitter:card" content="summary_large_image">
+<!-- 匿名统计（Umami）：注册 https://cloud.umami.is 后，把下行注释去掉并填入你的 website-id
+<script defer src="https://cloud.umami.is/script.js" data-website-id="YOUR-WEBSITE-ID"></script>
+-->
+
 <style>
   :root{
     --bg:#15173a; --panel:#2b3a67; --panel-dark:#1b2244; --border:#8fa7c9;
@@ -581,7 +594,7 @@
       </div>
       <div id="pain-ticker"><div id="pain-text"></div></div>
       <button class="pxbtn center" id="land-cta" onclick="G.toAvatar()">▶ 创建角色，开始冒险</button>
-      <div class="sub" style="font-size:12px; color:var(--dim)">零基础可玩 · Demo版含序章＋第1章＋档案馆支线</div>
+      <div class="sub" style="font-size:12px; color:var(--dim)">零基础可玩 · 主线全部完结：9章 · 37关 · 通关即作品集</div>
     </div>
     <div id="scroll-hint">▼ 下滑了解：这个网站是什么 & 怎么玩</div>
     <div class="land-sec">
@@ -605,7 +618,8 @@
       </div>
     </div>
     <button class="pxbtn center" style="font-size:16px; padding:14px 46px; z-index:1" onclick="G.toAvatar()">▶ 我准备好了，开始冒险</button>
-    <div class="sub" style="font-size:12px; color:var(--dim); z-index:1">完整版规划：9章主线 · 200+术语 · 40+方法卡 · 持续更新的学习世界</div>
+    <div class="sub" style="font-size:12px; color:var(--dim); z-index:1">产品大陆主线完结：71个术语 · 37张方法卡 · 16篇案例 · 更多大陆持续更新</div>
+    <div class="sub" style="font-size:11px; color:var(--dim); z-index:1; margin-top:2px">发现bug或知识点错误？<a href="https://github.com/nuts-and-bytes/Product-quest/issues" target="_blank" rel="noopener" style="color:var(--blue)">提个Issue</a> · 觉得不错就 <a href="https://github.com/nuts-and-bytes/Product-quest" target="_blank" rel="noopener" style="color:var(--accent)">点个Star ★</a></div>
   </div>
 
   <!-- 角色DIY -->
@@ -822,6 +836,7 @@
       <button class="pxbtn small" onclick="G.importSave()"><i data-pxi="load" data-size="13"></i> 导入存档</button>
       <button class="pxbtn small" onclick="G.exportPortfolio()"><i data-pxi="trophy" data-size="13"></i> 我的作品集</button>
       <input type="file" id="save-file" accept=".json,application/json" style="display:none">
+      <button class="pxbtn small" onclick="window.open('https://github.com/nuts-and-bytes/Product-quest/issues','_blank')"><i data-pxi="qmark" data-size="13"></i> 反馈问题</button>
       <button class="pxbtn small" onclick="G.resetAll()">↺ 重置进度</button>
     </div>
   </div>
@@ -927,20 +942,20 @@
 /* 内容注册表：content/*.js 把剧情、术语、建筑等注入这里，engine.js 消费 */
 window.PQ = { levels:[], terms:{}, notes:{}, cases:[], buildings:[], sprites:{}, pains:[] };
 </script>
-<script src="assets/pxicons.js?v=1.2"></script>
-<script src="content/world.js?v=1.2"></script>
-<script src="content/pm/terms.js?v=1.2"></script>
-<script src="content/pm/notes.js?v=1.2"></script>
-<script src="content/pm/cases.js?v=1.2"></script>
-<script src="content/pm/ch0-prologue.js?v=1.2"></script>
-<script src="content/pm/ch1-validate.js?v=1.2"></script>
-<script src="content/pm/ch2-user.js?v=1.2"></script>
-<script src="content/pm/ch3-prd.js?v=1.2"></script>
-<script src="content/pm/ch4-tech.js?v=1.2"></script>
-<script src="content/pm/ch5-launch.js?v=1.2"></script>
-<script src="content/pm/ch6-growth.js?v=1.2"></script>
-<script src="content/pm/ch7-monetize.js?v=1.2"></script>
-<script src="content/pm/ch8-finale.js?v=1.2"></script>
-<script src="engine.js?v=1.2"></script>
+<script src="assets/pxicons.js?v=1.3"></script>
+<script src="content/world.js?v=1.3"></script>
+<script src="content/pm/terms.js?v=1.3"></script>
+<script src="content/pm/notes.js?v=1.3"></script>
+<script src="content/pm/cases.js?v=1.3"></script>
+<script src="content/pm/ch0-prologue.js?v=1.3"></script>
+<script src="content/pm/ch1-validate.js?v=1.3"></script>
+<script src="content/pm/ch2-user.js?v=1.3"></script>
+<script src="content/pm/ch3-prd.js?v=1.3"></script>
+<script src="content/pm/ch4-tech.js?v=1.3"></script>
+<script src="content/pm/ch5-launch.js?v=1.3"></script>
+<script src="content/pm/ch6-growth.js?v=1.3"></script>
+<script src="content/pm/ch7-monetize.js?v=1.3"></script>
+<script src="content/pm/ch8-finale.js?v=1.3"></script>
+<script src="engine.js?v=1.3"></script>
 </body>
 </html>
