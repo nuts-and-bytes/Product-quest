@@ -121,6 +121,8 @@ const G = {
     // 全局眨眼循环
     setInterval(()=>this.blink(),3200);
   },
+  // 匿名统计（Umami未加载/被拦截时静默跳过）
+  track(ev,data){ try{ if(window.umami&&umami.track) umami.track(ev,data); }catch(e){} },
   save(){ try{ localStorage.setItem('pmquest2', JSON.stringify({trust:this.trust,unlocked:this.unlocked,notes:this.notes,progress:this.progress,avatar:this.avatar,stats:this.stats||{}})); }catch(e){} },
   load(){ try{ const d=JSON.parse(localStorage.getItem('pmquest2')); if(d){Object.assign(this,d); if(!d.avatar)this.avatar={style:'short',hair:'#2b2b2b',skin:'#f2c19a',cloth:'#4f9df0',glasses:false,name:'你'};} }catch(e){} },
 
@@ -158,6 +160,7 @@ const G = {
   confirmAvatar(){
     const n=document.getElementById('av-name').value.trim();
     this.avatar.name=n||'你';
+    if(this.progress===0) this.track('game_start');
     this.save(); this.showBadge();
   },
   showBadge(opts){
@@ -294,6 +297,7 @@ const G = {
 
   startLevel(i){
     SFX.click();
+    this.track('level_start',{id:LEVELS[i].id});
     this.lvIdx=i; this.nodeIdx=0; this.quizIdx=0;
     this.dScore=0; this.qOk=0;
     const lv=LEVELS[i];
@@ -463,6 +467,7 @@ const G = {
     this.dScore += c.s;
     const dead=this.trust<=0;
     if(c.s===0){
+      if(dead) this.track('trust_crash',{id:LEVELS[this.lvIdx].id});
       btn.textContent=dead?'💀 信任崩塌…重新挑战本关':'⏪ 时光倒流，重新选择';
       btn.onclick=()=>{ SFX.click(); this.hideFb();
         if(dead){ this.trust=60; this.updateTrust(0); this.startLevel(this.lvIdx); }
@@ -547,6 +552,8 @@ const G = {
     const pct=total?got/total:1;
     const rank = pct>=.95?'S': pct>=.8?'A': pct>=.6?'B':'C';
     if(!this.stats)this.stats={}; this.stats[lv.id]={rank:rank}; this.save();
+    this.track('level_complete',{id:lv.id,rank:rank});
+    if(lv.finale) this.track('game_finish');
     const el=document.getElementById('end-rank');
     el.textContent=rank;
     el.style.color = rank==='S'?'#ffcd75': rank==='A'?'#4ad07a': rank==='B'?'#5cb9ff':'#e05a6d';
@@ -671,6 +678,7 @@ const G = {
   exportPortfolio(){
     SFX.click();
     if(this.progress < LEVELS.length){ alert('通关全部章节后，即可生成你的专属作品集'); return; }
+    this.track('portfolio_export');
     const html=this.buildPortfolio();
     const blob=new Blob([html],{type:'text/html'});
     const a=document.createElement('a');
