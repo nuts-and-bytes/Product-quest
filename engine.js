@@ -62,7 +62,7 @@ function drawSprite(canvas, key, opt){
 
 /* ================= 音效（WebAudio，可静音） ================= */
 const SFX = {
-  ctx:null, muted:false,
+  ctx:null, muted:(()=>{try{return !!localStorage.getItem('pqmute');}catch(e){return false;}})(),
   ac(){ if(!this.ctx){ try{this.ctx=new (window.AudioContext||window.webkitAudioContext)();}catch(e){} } return this.ctx; },
   beep(freq,dur,type,vol){
     if(this.muted)return; const ac=this.ac(); if(!ac)return;
@@ -72,7 +72,21 @@ const SFX = {
     g.gain.exponentialRampToValueAtTime(.001, ac.currentTime+(dur||.06));
     o.connect(g); g.connect(ac.destination); o.start(); o.stop(ac.currentTime+(dur||.06));
   },
-  type(){ this.beep(880+Math.random()*220,.03,'square',.015); },
+  // 打字音是全局唯一每秒响十几次的音效，别的音效响一次就完了，它不行——
+  // 方波在 880Hz 的谐波全落在人耳最敏感的 2-5kHz，且 setValueAtTime 瞬间起音是 DC 跳变，
+  // 每一声开头都带爆音。低频三角波 + 低通削谐波 + 4ms 淡入磨掉攻击边缘："哒"，不是"哔"。
+  type(){
+    if(this.muted)return; const ac=this.ac(); if(!ac)return;
+    const t=ac.currentTime;
+    const o=ac.createOscillator(), g=ac.createGain(), lp=ac.createBiquadFilter();
+    o.type='triangle'; o.frequency.value=290+Math.random()*35; // 抖动 ±18Hz：像键盘，不像警报
+    lp.type='lowpass'; lp.frequency.value=1400; lp.Q.value=.7;
+    g.gain.setValueAtTime(0,t);
+    g.gain.linearRampToValueAtTime(.012,t+.004);
+    g.gain.exponentialRampToValueAtTime(.0001,t+.05);
+    o.connect(lp); lp.connect(g); g.connect(ac.destination);
+    o.start(t); o.stop(t+.055);
+  },
   ok(){ this.beep(660,.09); setTimeout(()=>this.beep(990,.12),90); },
   mid(){ this.beep(520,.1); setTimeout(()=>this.beep(620,.1),100); },
   bad(){ this.beep(220,.16,'sawtooth',.05); setTimeout(()=>this.beep(160,.22,'sawtooth',.05),140); },
@@ -81,6 +95,7 @@ const SFX = {
 };
 
 /* ================= 游戏引擎 ================= */
+const QUIET=/[\s，。！？、；：""''（）《》〈〉—…·,.!?;:'"()\[\]]/; // 打字时不发声的字符
 const PAINS = PQ.pains; // 痛点文案由 content/world.js 注册
 const AV_COLORS = {
   hair:['#2b2b2b','#5c3a21','#c8534f','#e0a63f','#8e5aa8','#9aa8b8'],
@@ -103,6 +118,7 @@ const G = {
     }
     this.load(); this.renderDex();
     PQ.hydratePxi(document); // 像素图标注入
+    this.syncMute();         // 静音状态跨会话保留，图标得跟上
     // 首页角色阵容
     [['cast-me','me'],['cast-boss','boss'],['cast-xiaomei','xiaomei'],['cast-lijie','lijie']].forEach(([id,key])=>{
       const c=document.getElementById(id); if(c&&c.getContext) drawSprite(c,key);
@@ -302,7 +318,7 @@ const G = {
       const i=LEVELS.findIndex(l=>l.id===id), lv=LEVELS[i];
       if(lv.ch!==lastCh){ lastCh=lv.ch; html+=`<div class="bp-ch">▸ ${lv.ch}</div>`; }
       const st=i<this.progress?'done': i===this.progress?'current':'locked';
-      const nQ=(lv.quiz||[]).length, nD=lv.script.filter(n=>n.choices).length;
+      const nQ=(lv.quiz||[]).length, nD=lv.script.filter(n=>n.choices||n.forensic).length;
       html+=`<div class="bp-lv"><span class="st">${st==='done'?'<span style="color:var(--green)">✔</span>': st==='current'?'<span style="color:var(--accent)">★</span>': PQ.pxi('lock',12,'#8fa7c9')}</span>
         <span class="nm">${lv.isBoss?'<span style="color:var(--accent)">★</span> ':''}${lv.name}<small>${lv.loc} · ${nD}个决策 · ${nQ}题检验${lv.note?' · 方法卡×1':''}</small></span>
         ${st!=='locked'?`<button class="pxbtn small" onclick="G.startLevel(${i})">${st==='done'?'重玩':'进入 ▶'}</button>`:''}
@@ -346,7 +362,7 @@ const G = {
     this.dScore=0; this.qOk=0;
     const lv=LEVELS[i];
     this._npcKey=lv.npc;
-    this.dMax=lv.script.filter(n=>n.choices).length*2;
+    this.dMax=lv.script.filter(n=>n.choices||n.forensic).length*2;
     this.qTotal=(lv.quiz||[]).length;
     document.getElementById('hud-loc').textContent=lv.ch+' — '+lv.name;
     document.getElementById('stage').className = lv.scene?('scene-'+lv.scene):'';
@@ -432,6 +448,14 @@ const G = {
       return;
     }
 
+    if(node.forensic){ // 数据现场：在图上指认，判定复用 pick()
+      this.setTalking(null); this.stopMouth();
+      sp.textContent=node.forensic.title||'◆ 数据现场'; sp.style.background='linear-gradient(#7cc4ff,#4f9df0)'; sp.style.color='#0c1830';
+      SFX.unlock();
+      this.showForensic(node.forensic);
+      return;
+    }
+
     if(node.sp==='n'){ sp.textContent='◆ 旁白'; sp.style.background='linear-gradient(#7cc4ff,#4f9df0)'; sp.style.color='#0c1830'; this.setTalking(null); this.stopMouth(); }
     else if(node.sp==='me'){ sp.textContent=this.avatar.name; sp.style.background='linear-gradient(#ffd98f,#f0b95a)'; sp.style.color='#1a1c2c'; this.setTalking('me'); if(node.emo)this.emote('me',node.emo); }
     else{
@@ -462,8 +486,10 @@ const G = {
     let i=0, tick=0;
     clearInterval(this.typeTimer);
     this.typeTimer=setInterval(()=>{
+      const ch=text[i];
       el.textContent=text.slice(0,++i);
-      if(++tick%3===0) SFX.type();
+      // 标点和空格不发声：句读处自然留白，耳朵有地方喘气。tick 只数发声字符，4 个一响。
+      if(!QUIET.test(ch) && ++tick%4===0) SFX.type();
       if(i>=text.length){ clearInterval(this.typeTimer); this.typing=false; el.innerHTML=this.linkify(text); done&&done(); }
     },20);
     this._fullText=text; this._typeDone=done;
@@ -476,9 +502,61 @@ const G = {
       this._typeDone&&this._typeDone(); return;
     }
     const node=LEVELS[this.lvIdx].script[this.nodeIdx];
-    if(node && (node.choices||node.card)) return;
+    if(node && (node.choices||node.card||node.forensic)) return;
     SFX.click();
     this.nodeIdx++; this.playNode();
+  },
+
+  // ── 数据现场 ──────────────────────────────────────────────
+  // 用图代替文字呈现选项：玩家在图上指认，判定/后果/扣血/时光倒流/计分全部复用 pick()。
+  // 纯 DOM（不用 canvas，因而没有坐标换算、没有 resize 重绘），触控目标即元素本身。
+  spark(pts){ // 迷你折线：viewBox 自适应，父容器多宽都不失真
+    const W=100,H=30,n=pts.length;
+    const d=pts.map((v,i)=>`${(2+i*(W-4)/(n-1)).toFixed(1)},${(H-2-v*(H-6)).toFixed(1)}`).join(' ');
+    return `<svg class="spark" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none"><polyline points="${d}"/></svg>`;
+  },
+
+  showForensic(f){
+    const dtext=document.getElementById('dtext');
+    document.getElementById('choices').innerHTML='';
+    let body='';
+
+    if(f.kind==='dash'||f.kind==='wall'){
+      // 同一张网格，两种卡面：dash=数值+曲线（比形状），wall=功能名+中性描述（比职能）
+      const face=(it)=>{
+        const tag=it.tag?` <b class="frt">${it.tag}</b>`:'';
+        return f.kind==='dash'
+          ? `<div class="fcn">${it.name}${tag}</div><div class="fcv">${it.val}</div>${this.spark(it.pts)}`
+          : `<div class="fwn">${it.name}${tag}</div><div class="fwd">${it.note}</div>`;
+      };
+      const cards=[...f.items].sort(()=>Math.random()-.5); // 与 showChoices 一致：防"背位置"
+      const ref=f.ref?`<div class="fcard fref">${face(f.ref)}</div>`:''; // 参照物：可看，不可点
+      body=`<div class="fdash">${ref}${cards.map((it,i)=>
+        `<button class="fcard" data-i="${i}">${face(it)}</button>`).join('')}</div>`;
+      dtext.innerHTML=`<div class="fscene"><div class="fq">${f.q}</div>${body}<div class="fhint">${f.hint}</div></div>`;
+      dtext.querySelectorAll('.fcard:not(.fref)').forEach(el=>{ // 排除参照卡：它没有 data-i，点了会 pick(undefined)
+        el.onclick=(e)=>{ e.stopPropagation(); this.pick(cards[+el.dataset.i]); };
+      });
+      return;
+    }
+
+    // kind==='funnel'：条宽=人数，落差块宽=流失人数。标签写转化率，宽度说人数——两者会打架。
+    const top=f.steps[0].n;
+    body=`<div class="ffun">${f.steps.map((s,i)=>{
+      const bar=`<div class="fstep" data-t="${s.id||''}"><div class="fbar" style="width:${Math.max(9,s.n/top*100)}%">`+
+        `<span>${s.name} ${s.n.toLocaleString()}</span></div></div>`;
+      if(i===f.steps.length-1) return bar;
+      const nx=f.steps[i+1];
+      return bar+`<div class="fgap" data-t="${s.gapId||''}"><div class="fdrop" style="width:${((s.n-nx.n)/top*100).toFixed(1)}%"></div>`+
+        `<div class="fglab">↓ 转化 ${nx.rate}%</div></div>`;
+    }).join('')}</div>`;
+    dtext.innerHTML=`<div class="fscene"><div class="fq">${f.q}</div>${body}<div class="fhint">${f.hint}</div></div>`;
+    const byId={}; f.items.forEach(it=>byId[it.id]=it);
+    dtext.querySelectorAll('[data-t]').forEach(el=>{
+      const it=byId[el.dataset.t]; if(!it) return;
+      el.classList.add('fhit');
+      el.onclick=(e)=>{ e.stopPropagation(); this.pick(it); };
+    });
   },
 
   showChoices(choices){
@@ -515,7 +593,8 @@ const G = {
       btn.textContent=dead?'💀 信任崩塌…重新挑战本关':'⏪ 时光倒流，重新选择';
       btn.onclick=()=>{ SFX.click(); this.hideFb();
         if(dead){ this.trust=60; this.updateTrust(0); this.startLevel(this.lvIdx); }
-        else{ this.dScore-=0; const node=LEVELS[this.lvIdx].script[this.nodeIdx]; this.showChoices(node.choices); }
+        else{ this.dScore-=0; const node=LEVELS[this.lvIdx].script[this.nodeIdx];
+          if(node.forensic) this.showForensic(node.forensic); else this.showChoices(node.choices); }
       };
     }else{
       btn.textContent='继续 ▶';
@@ -743,7 +822,10 @@ const G = {
     a.click(); URL.revokeObjectURL(a.href);
   },
 
-  toggleMute(){ SFX.muted=!SFX.muted; document.getElementById('mute-btn').innerHTML=PQ.pxi(SFX.muted?'mute':'sound',15); }
+  toggleMute(){ SFX.muted=!SFX.muted;
+    try{ SFX.muted?localStorage.setItem('pqmute','1'):localStorage.removeItem('pqmute'); }catch(e){} // 不持久化=玩家关了它还回来
+    this.syncMute(); },
+  syncMute(){ const b=document.getElementById('mute-btn'); if(b) b.innerHTML=PQ.pxi(SFX.muted?'mute':'sound',15); }
 };
 
 document.getElementById('dialog').addEventListener('click',e=>{ if(e.target.closest('#choices')||e.target.closest('.kcard'))return; G.advance(); });
