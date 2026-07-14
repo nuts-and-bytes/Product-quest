@@ -302,7 +302,7 @@ const G = {
       const i=LEVELS.findIndex(l=>l.id===id), lv=LEVELS[i];
       if(lv.ch!==lastCh){ lastCh=lv.ch; html+=`<div class="bp-ch">▸ ${lv.ch}</div>`; }
       const st=i<this.progress?'done': i===this.progress?'current':'locked';
-      const nQ=(lv.quiz||[]).length, nD=lv.script.filter(n=>n.choices).length;
+      const nQ=(lv.quiz||[]).length, nD=lv.script.filter(n=>n.choices||n.forensic).length;
       html+=`<div class="bp-lv"><span class="st">${st==='done'?'<span style="color:var(--green)">✔</span>': st==='current'?'<span style="color:var(--accent)">★</span>': PQ.pxi('lock',12,'#8fa7c9')}</span>
         <span class="nm">${lv.isBoss?'<span style="color:var(--accent)">★</span> ':''}${lv.name}<small>${lv.loc} · ${nD}个决策 · ${nQ}题检验${lv.note?' · 方法卡×1':''}</small></span>
         ${st!=='locked'?`<button class="pxbtn small" onclick="G.startLevel(${i})">${st==='done'?'重玩':'进入 ▶'}</button>`:''}
@@ -346,7 +346,7 @@ const G = {
     this.dScore=0; this.qOk=0;
     const lv=LEVELS[i];
     this._npcKey=lv.npc;
-    this.dMax=lv.script.filter(n=>n.choices).length*2;
+    this.dMax=lv.script.filter(n=>n.choices||n.forensic).length*2;
     this.qTotal=(lv.quiz||[]).length;
     document.getElementById('hud-loc').textContent=lv.ch+' — '+lv.name;
     document.getElementById('stage').className = lv.scene?('scene-'+lv.scene):'';
@@ -432,6 +432,14 @@ const G = {
       return;
     }
 
+    if(node.forensic){ // 数据现场：在图上指认，判定复用 pick()
+      this.setTalking(null); this.stopMouth();
+      sp.textContent=node.forensic.title||'◆ 数据现场'; sp.style.background='linear-gradient(#7cc4ff,#4f9df0)'; sp.style.color='#0c1830';
+      SFX.unlock();
+      this.showForensic(node.forensic);
+      return;
+    }
+
     if(node.sp==='n'){ sp.textContent='◆ 旁白'; sp.style.background='linear-gradient(#7cc4ff,#4f9df0)'; sp.style.color='#0c1830'; this.setTalking(null); this.stopMouth(); }
     else if(node.sp==='me'){ sp.textContent=this.avatar.name; sp.style.background='linear-gradient(#ffd98f,#f0b95a)'; sp.style.color='#1a1c2c'; this.setTalking('me'); if(node.emo)this.emote('me',node.emo); }
     else{
@@ -476,9 +484,61 @@ const G = {
       this._typeDone&&this._typeDone(); return;
     }
     const node=LEVELS[this.lvIdx].script[this.nodeIdx];
-    if(node && (node.choices||node.card)) return;
+    if(node && (node.choices||node.card||node.forensic)) return;
     SFX.click();
     this.nodeIdx++; this.playNode();
+  },
+
+  // ── 数据现场 ──────────────────────────────────────────────
+  // 用图代替文字呈现选项：玩家在图上指认，判定/后果/扣血/时光倒流/计分全部复用 pick()。
+  // 纯 DOM（不用 canvas，因而没有坐标换算、没有 resize 重绘），触控目标即元素本身。
+  spark(pts){ // 迷你折线：viewBox 自适应，父容器多宽都不失真
+    const W=100,H=30,n=pts.length;
+    const d=pts.map((v,i)=>`${(2+i*(W-4)/(n-1)).toFixed(1)},${(H-2-v*(H-6)).toFixed(1)}`).join(' ');
+    return `<svg class="spark" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none"><polyline points="${d}"/></svg>`;
+  },
+
+  showForensic(f){
+    const dtext=document.getElementById('dtext');
+    document.getElementById('choices').innerHTML='';
+    let body='';
+
+    if(f.kind==='dash'||f.kind==='wall'){
+      // 同一张网格，两种卡面：dash=数值+曲线（比形状），wall=功能名+中性描述（比职能）
+      const face=(it)=>{
+        const tag=it.tag?` <b class="frt">${it.tag}</b>`:'';
+        return f.kind==='dash'
+          ? `<div class="fcn">${it.name}${tag}</div><div class="fcv">${it.val}</div>${this.spark(it.pts)}`
+          : `<div class="fwn">${it.name}${tag}</div><div class="fwd">${it.note}</div>`;
+      };
+      const cards=[...f.items].sort(()=>Math.random()-.5); // 与 showChoices 一致：防"背位置"
+      const ref=f.ref?`<div class="fcard fref">${face(f.ref)}</div>`:''; // 参照物：可看，不可点
+      body=`<div class="fdash">${ref}${cards.map((it,i)=>
+        `<button class="fcard" data-i="${i}">${face(it)}</button>`).join('')}</div>`;
+      dtext.innerHTML=`<div class="fscene"><div class="fq">${f.q}</div>${body}<div class="fhint">${f.hint}</div></div>`;
+      dtext.querySelectorAll('.fcard:not(.fref)').forEach(el=>{ // 排除参照卡：它没有 data-i，点了会 pick(undefined)
+        el.onclick=(e)=>{ e.stopPropagation(); this.pick(cards[+el.dataset.i]); };
+      });
+      return;
+    }
+
+    // kind==='funnel'：条宽=人数，落差块宽=流失人数。标签写转化率，宽度说人数——两者会打架。
+    const top=f.steps[0].n;
+    body=`<div class="ffun">${f.steps.map((s,i)=>{
+      const bar=`<div class="fstep" data-t="${s.id||''}"><div class="fbar" style="width:${Math.max(9,s.n/top*100)}%">`+
+        `<span>${s.name} ${s.n.toLocaleString()}</span></div></div>`;
+      if(i===f.steps.length-1) return bar;
+      const nx=f.steps[i+1];
+      return bar+`<div class="fgap" data-t="${s.gapId||''}"><div class="fdrop" style="width:${((s.n-nx.n)/top*100).toFixed(1)}%"></div>`+
+        `<div class="fglab">↓ 转化 ${nx.rate}%</div></div>`;
+    }).join('')}</div>`;
+    dtext.innerHTML=`<div class="fscene"><div class="fq">${f.q}</div>${body}<div class="fhint">${f.hint}</div></div>`;
+    const byId={}; f.items.forEach(it=>byId[it.id]=it);
+    dtext.querySelectorAll('[data-t]').forEach(el=>{
+      const it=byId[el.dataset.t]; if(!it) return;
+      el.classList.add('fhit');
+      el.onclick=(e)=>{ e.stopPropagation(); this.pick(it); };
+    });
   },
 
   showChoices(choices){
@@ -515,7 +575,8 @@ const G = {
       btn.textContent=dead?'💀 信任崩塌…重新挑战本关':'⏪ 时光倒流，重新选择';
       btn.onclick=()=>{ SFX.click(); this.hideFb();
         if(dead){ this.trust=60; this.updateTrust(0); this.startLevel(this.lvIdx); }
-        else{ this.dScore-=0; const node=LEVELS[this.lvIdx].script[this.nodeIdx]; this.showChoices(node.choices); }
+        else{ this.dScore-=0; const node=LEVELS[this.lvIdx].script[this.nodeIdx];
+          if(node.forensic) this.showForensic(node.forensic); else this.showChoices(node.choices); }
       };
     }else{
       btn.textContent='继续 ▶';

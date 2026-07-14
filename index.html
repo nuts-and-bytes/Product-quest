@@ -395,6 +395,54 @@
   .kcard td,.kcard th{border:2px solid #40538a; padding:5px 9px; font-size:13.5px;}
   .kcard th{background:#26346a; color:var(--accent);}
 
+  /* ── 数据现场（forensic）：在图上指认，而不是从三段文字里挑一段 ── */
+  .fscene{
+    border:3px solid var(--blue); border-radius:6px; background:linear-gradient(#1e2c58,#182248);
+    padding:12px 12px 10px; box-shadow:0 0 24px rgba(92,185,255,.15), inset 0 2px 0 rgba(255,255,255,.08);
+    animation:cardIn .4s cubic-bezier(.3,1.4,.5,1);
+  }
+  .fq{color:var(--blue); font-size:14px; letter-spacing:1px; margin-bottom:10px; line-height:1.6;}
+  .fhint{color:var(--dim); font-size:11px; margin-top:9px; text-align:center;}
+  /* 所有可点目标外观完全一致——正确答案不带任何视觉暗示 */
+  /* 112px 下限：320px 宽的机器上也必须凑够 2 列——这题要横向比曲线，比不成就是废题 */
+  .fdash{display:grid; grid-template-columns:repeat(auto-fit,minmax(112px,1fr)); gap:8px;}
+  .fcard{
+    display:block; width:100%; text-align:left; cursor:pointer; font-family:inherit;
+    border:2px solid #40538a; border-radius:4px; background:#26346a; color:var(--fg);
+    padding:8px 9px 4px; transition:transform .08s, border-color .12s, background .12s;
+  }
+  .fcard:hover,.fcard:active{border-color:var(--accent); background:#2f4080; transform:translateY(-2px);}
+  .fref,.fref:hover,.fref:active{ /* 参照物：已识破的那个数，可看不可点 */
+    border-style:dashed; border-color:#40538a; background:#202b54; opacity:.7;
+    cursor:default; transform:none;
+  }
+  .fref .spark polyline{stroke:var(--dim);}
+  .frt{color:var(--red); font-size:10px; letter-spacing:0;}
+  .fcn{font-size:11.5px; color:var(--dim); line-height:1.4;}
+  .fcv{font-size:19px; color:var(--accent); margin:3px 0 5px; letter-spacing:.5px;}
+  /* wall 卡面：功能名当主角，描述是中性事实——不能透判据，判据得玩家自己想 */
+  .fwn{font-size:13px; color:var(--fg); line-height:1.4;}
+  .fwd{font-size:11px; color:var(--dim); line-height:1.5; margin-top:5px;}
+  .spark{display:block; width:100%; height:30px;}
+  .spark polyline{fill:none; stroke:var(--blue); stroke-width:2; shape-rendering:crispEdges; vector-effect:non-scaling-stroke;}
+
+  .ffun{display:flex; flex-direction:column; gap:2px;}
+  .fstep{border:2px solid transparent; border-radius:4px; padding:3px;}
+  .fgap{border:2px solid transparent; border-radius:4px; padding:5px 3px;} /* 落差是可点目标，撑到 44px 触控高 */
+  .fhit{cursor:pointer; transition:border-color .12s, background .12s;}
+  .fhit:hover,.fhit:active{border-color:var(--accent); background:rgba(255,205,117,.08);}
+  .fbar{
+    background:linear-gradient(#5cb9ff,#3a86c8); border:2px solid #8fa7c9; border-radius:3px;
+    min-height:34px; display:flex; align-items:center; padding:0 8px; box-sizing:border-box;
+  }
+  .fbar span{font-size:12.5px; color:#0c1830; white-space:nowrap;}
+  .fgap{display:flex; align-items:center; gap:8px; min-height:30px;}
+  .fdrop{
+    height:15px; flex:none; border-radius:2px;
+    background:repeating-linear-gradient(45deg,#e05a6d,#e05a6d 3px,#a83c4c 3px,#a83c4c 6px);
+  }
+  .fglab{font-size:12px; color:var(--dim); white-space:nowrap;}
+
   /* 反馈层 */
   #feedback{position:absolute; inset:0; z-index:20; display:none; align-items:center; justify-content:center; background:rgba(5,8,22,.8);}
   #feedback.show{display:flex;}
