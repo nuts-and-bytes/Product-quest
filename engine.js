@@ -62,7 +62,7 @@ function drawSprite(canvas, key, opt){
 
 /* ================= 音效（WebAudio，可静音） ================= */
 const SFX = {
-  ctx:null, muted:false,
+  ctx:null, muted:(()=>{try{return !!localStorage.getItem('pqmute');}catch(e){return false;}})(),
   ac(){ if(!this.ctx){ try{this.ctx=new (window.AudioContext||window.webkitAudioContext)();}catch(e){} } return this.ctx; },
   beep(freq,dur,type,vol){
     if(this.muted)return; const ac=this.ac(); if(!ac)return;
@@ -72,7 +72,21 @@ const SFX = {
     g.gain.exponentialRampToValueAtTime(.001, ac.currentTime+(dur||.06));
     o.connect(g); g.connect(ac.destination); o.start(); o.stop(ac.currentTime+(dur||.06));
   },
-  type(){ this.beep(880+Math.random()*220,.03,'square',.015); },
+  // 打字音是全局唯一每秒响十几次的音效，别的音效响一次就完了，它不行——
+  // 方波在 880Hz 的谐波全落在人耳最敏感的 2-5kHz，且 setValueAtTime 瞬间起音是 DC 跳变，
+  // 每一声开头都带爆音。低频三角波 + 低通削谐波 + 4ms 淡入磨掉攻击边缘："哒"，不是"哔"。
+  type(){
+    if(this.muted)return; const ac=this.ac(); if(!ac)return;
+    const t=ac.currentTime;
+    const o=ac.createOscillator(), g=ac.createGain(), lp=ac.createBiquadFilter();
+    o.type='triangle'; o.frequency.value=290+Math.random()*35; // 抖动 ±18Hz：像键盘，不像警报
+    lp.type='lowpass'; lp.frequency.value=1400; lp.Q.value=.7;
+    g.gain.setValueAtTime(0,t);
+    g.gain.linearRampToValueAtTime(.012,t+.004);
+    g.gain.exponentialRampToValueAtTime(.0001,t+.05);
+    o.connect(lp); lp.connect(g); g.connect(ac.destination);
+    o.start(t); o.stop(t+.055);
+  },
   ok(){ this.beep(660,.09); setTimeout(()=>this.beep(990,.12),90); },
   mid(){ this.beep(520,.1); setTimeout(()=>this.beep(620,.1),100); },
   bad(){ this.beep(220,.16,'sawtooth',.05); setTimeout(()=>this.beep(160,.22,'sawtooth',.05),140); },
@@ -81,6 +95,7 @@ const SFX = {
 };
 
 /* ================= 游戏引擎 ================= */
+const QUIET=/[\s，。！？、；：""''（）《》〈〉—…·,.!?;:'"()\[\]]/; // 打字时不发声的字符
 const PAINS = PQ.pains; // 痛点文案由 content/world.js 注册
 const AV_COLORS = {
   hair:['#2b2b2b','#5c3a21','#c8534f','#e0a63f','#8e5aa8','#9aa8b8'],
@@ -103,6 +118,7 @@ const G = {
     }
     this.load(); this.renderDex();
     PQ.hydratePxi(document); // 像素图标注入
+    this.syncMute();         // 静音状态跨会话保留，图标得跟上
     // 首页角色阵容
     [['cast-me','me'],['cast-boss','boss'],['cast-xiaomei','xiaomei'],['cast-lijie','lijie']].forEach(([id,key])=>{
       const c=document.getElementById(id); if(c&&c.getContext) drawSprite(c,key);
@@ -470,8 +486,10 @@ const G = {
     let i=0, tick=0;
     clearInterval(this.typeTimer);
     this.typeTimer=setInterval(()=>{
+      const ch=text[i];
       el.textContent=text.slice(0,++i);
-      if(++tick%3===0) SFX.type();
+      // 标点和空格不发声：句读处自然留白，耳朵有地方喘气。tick 只数发声字符，4 个一响。
+      if(!QUIET.test(ch) && ++tick%4===0) SFX.type();
       if(i>=text.length){ clearInterval(this.typeTimer); this.typing=false; el.innerHTML=this.linkify(text); done&&done(); }
     },20);
     this._fullText=text; this._typeDone=done;
@@ -804,7 +822,10 @@ const G = {
     a.click(); URL.revokeObjectURL(a.href);
   },
 
-  toggleMute(){ SFX.muted=!SFX.muted; document.getElementById('mute-btn').innerHTML=PQ.pxi(SFX.muted?'mute':'sound',15); }
+  toggleMute(){ SFX.muted=!SFX.muted;
+    try{ SFX.muted?localStorage.setItem('pqmute','1'):localStorage.removeItem('pqmute'); }catch(e){} // 不持久化=玩家关了它还回来
+    this.syncMute(); },
+  syncMute(){ const b=document.getElementById('mute-btn'); if(b) b.innerHTML=PQ.pxi(SFX.muted?'mute':'sound',15); }
 };
 
 document.getElementById('dialog').addEventListener('click',e=>{ if(e.target.closest('#choices')||e.target.closest('.kcard'))return; G.advance(); });
