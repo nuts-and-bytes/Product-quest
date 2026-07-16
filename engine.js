@@ -43,7 +43,8 @@ function drawSprite(canvas, key, opt){
     map=PLAYER_TPL[av.style]||PLAYER_TPL.short;
     pal={...PAL, h:av.hair, S:av.skin, B:av.cloth};
     face=FACE.me; skin=av.skin;
-  } else { map=SPRITES[key]; }
+  } else { map=SPRITES[key]||PLAYER_TPL.short; }
+  if(!map || !Array.isArray(map)) return;
   const ctx=canvas.getContext('2d');
   canvas.width=16; canvas.height=24;
   map.forEach((row,y)=>{ for(let x=0;x<16;x++){ const c=pal[row[x]]; if(c){ctx.fillStyle=c; ctx.fillRect(x,y,1,1);} } });
@@ -63,35 +64,53 @@ function drawSprite(canvas, key, opt){
 /* ================= 音效（WebAudio，可静音） ================= */
 const SFX = {
   ctx:null, muted:(()=>{try{return !!localStorage.getItem('pqmute');}catch(e){return false;}})(),
-  ac(){ if(!this.ctx){ try{this.ctx=new (window.AudioContext||window.webkitAudioContext)();}catch(e){} } return this.ctx; },
+  ac(){
+    if(!this.ctx){
+      try{
+        const AudioC = window.AudioContext || window.webkitAudioContext;
+        if(AudioC) this.ctx = new AudioC();
+      }catch(e){}
+    }
+    if(this.ctx && this.ctx.state === 'suspended'){
+      try{ this.ctx.resume(); }catch(e){}
+    }
+    return this.ctx;
+  },
   beep(freq,dur,type,vol){
-    if(this.muted)return; const ac=this.ac(); if(!ac)return;
-    const o=ac.createOscillator(), g=ac.createGain();
-    o.type=type||'square'; o.frequency.value=freq;
-    g.gain.setValueAtTime(vol||.04, ac.currentTime);
-    g.gain.exponentialRampToValueAtTime(.001, ac.currentTime+(dur||.06));
-    o.connect(g); g.connect(ac.destination); o.start(); o.stop(ac.currentTime+(dur||.06));
+    if(this.muted)return;
+    try{
+      const ac=this.ac(); if(!ac)return;
+      const o=ac.createOscillator(), g=ac.createGain();
+      o.type=type||'square'; o.frequency.value=freq;
+      const t=ac.currentTime||0;
+      g.gain.setValueAtTime(vol||.04, t);
+      g.gain.exponentialRampToValueAtTime(.001, t+(dur||.06));
+      o.connect(g); g.connect(ac.destination); o.start(t); o.stop(t+(dur||.06));
+    }catch(e){}
   },
   // 打字音是全局唯一每秒响十几次的音效，别的音效响一次就完了，它不行——
   // 方波在 880Hz 的谐波全落在人耳最敏感的 2-5kHz，且 setValueAtTime 瞬间起音是 DC 跳变，
   // 每一声开头都带爆音。低频三角波 + 低通削谐波 + 4ms 淡入磨掉攻击边缘："哒"，不是"哔"。
   type(){
-    if(this.muted)return; const ac=this.ac(); if(!ac)return;
-    const t=ac.currentTime;
-    const o=ac.createOscillator(), g=ac.createGain(), lp=ac.createBiquadFilter();
-    o.type='triangle'; o.frequency.value=290+Math.random()*35; // 抖动 ±18Hz：像键盘，不像警报
-    lp.type='lowpass'; lp.frequency.value=1400; lp.Q.value=.7;
-    g.gain.setValueAtTime(0,t);
-    g.gain.linearRampToValueAtTime(.012,t+.004);
-    g.gain.exponentialRampToValueAtTime(.0001,t+.05);
-    o.connect(lp); lp.connect(g); g.connect(ac.destination);
-    o.start(t); o.stop(t+.055);
+    if(this.muted)return;
+    try{
+      const ac=this.ac(); if(!ac)return;
+      const t=ac.currentTime||0;
+      const o=ac.createOscillator(), g=ac.createGain(), lp=ac.createBiquadFilter();
+      o.type='triangle'; o.frequency.value=290+Math.random()*35; // 抖动 ±18Hz：像键盘，不像警报
+      lp.type='lowpass'; lp.frequency.value=1400; lp.Q.value=.7;
+      g.gain.setValueAtTime(0,t);
+      g.gain.linearRampToValueAtTime(.012,t+.004);
+      g.gain.exponentialRampToValueAtTime(.0001,t+.05);
+      o.connect(lp); lp.connect(g); g.connect(ac.destination);
+      o.start(t); o.stop(t+.055);
+    }catch(e){}
   },
-  ok(){ this.beep(660,.09); setTimeout(()=>this.beep(990,.12),90); },
-  mid(){ this.beep(520,.1); setTimeout(()=>this.beep(620,.1),100); },
-  bad(){ this.beep(220,.16,'sawtooth',.05); setTimeout(()=>this.beep(160,.22,'sawtooth',.05),140); },
-  unlock(){ [523,659,784,1047].forEach((f,i)=>setTimeout(()=>this.beep(f,.1,'triangle',.05),i*80)); },
-  click(){ this.beep(440,.04,'square',.03); }
+  ok(){ try{ this.beep(660,.09); setTimeout(()=>this.beep(990,.12),90); }catch(e){} },
+  mid(){ try{ this.beep(520,.1); setTimeout(()=>this.beep(620,.1),100); }catch(e){} },
+  bad(){ try{ this.beep(220,.16,'sawtooth',.05); setTimeout(()=>this.beep(160,.22,'sawtooth',.05),140); }catch(e){} },
+  unlock(){ try{ [523,659,784,1047].forEach((f,i)=>setTimeout(()=>this.beep(f,.1,'triangle',.05),i*80)); }catch(e){} },
+  click(){ try{ this.beep(440,.04,'square',.03); }catch(e){} }
 };
 
 /* ================= 游戏引擎 ================= */
@@ -839,10 +858,21 @@ document.addEventListener('keydown',e=>{
 /* 桌面端沉浸缩放：整个游戏画布随窗口等比放大/缩小（字体、像素画同步） */
 function fitGame(){
   const g=document.getElementById('game');
-  if(window.innerWidth<=720){ g.style.zoom=''; return; } // 移动端走响应式布局
+  if(!g) return;
+  if(window.innerWidth<=720 || (window.matchMedia && window.matchMedia('(max-width: 720px)').matches)){
+    g.style.zoom='';
+    return;
+  }
   const s=Math.min(window.innerWidth/1004, window.innerHeight/684);
   g.style.zoom=Math.max(.55, Math.min(s, 2.2)).toFixed(3);
 }
 window.addEventListener('resize', fitGame);
-fitGame();
-G.init();
+function bootPQ(){
+  fitGame();
+  try{ G.init(); }catch(e){ console.error('PQ boot error:', e); }
+}
+if(document.readyState === 'loading'){
+  document.addEventListener('DOMContentLoaded', bootPQ);
+} else {
+  bootPQ();
+}

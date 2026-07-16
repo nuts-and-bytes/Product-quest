@@ -29,7 +29,8 @@
     font-family:"Zpix","Fusion Pixel","MS Gothic","SimSun",monospace;
   }
   #game{
-    width:min(980px,100vw); height:min(660px,100vh);
+    width:100vw; max-width:980px; width:min(980px,100vw);
+    height:100vh; max-height:660px; height:min(660px,100vh);
     position:relative; overflow:hidden;
     border:4px solid #465a86; border-radius:6px; background:var(--panel-dark);
     box-shadow:0 0 0 4px #05060f, 0 18px 60px rgba(0,0,0,.75), inset 0 0 80px rgba(0,0,0,.25);
@@ -532,7 +533,7 @@
   html{touch-action:manipulation;}
   @media (max-width:720px){
     body{align-items:stretch; justify-content:stretch;}
-    #game{width:100vw; height:100dvh; border:none; border-radius:0; box-shadow:none;}
+    #game{width:100%; width:100vw; max-width:none; height:100%; height:100vh; max-height:none; height:100dvh; border:none; border-radius:0; box-shadow:none;}
     #crt{background:repeating-linear-gradient(0deg, rgba(0,0,0,.06) 0 2px, transparent 2px 4px);}
 
     /* 着陆页 */
@@ -573,7 +574,7 @@
     .sprite .who{font-size:11px; padding:2px 8px; top:-24px;}
     .sprite .emote{font-size:20px; top:-52px;}
     .sprite .shadow{width:64px;}
-    #dialog{min-height:0; max-height:56dvh; padding:10px 14px 12px; gap:8px;}
+    #dialog{min-height:0; max-height:56vh; max-height:56dvh; padding:10px 14px 12px; gap:8px;}
     #dtext{font-size:15.5px; line-height:1.8; min-height:44px;}
     #speaker{font-size:12.5px; padding:3px 12px;}
     #stage{min-height:0;}
