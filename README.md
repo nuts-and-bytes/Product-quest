@@ -1,5 +1,7 @@
 # 🎮 产品经理大冒险 · Product Quest
 
+[![zread doc](https://img.shields.io/badge/zread-AI%20Deep%20Read-black?style=for-the-badge)](https://zread.ai/github.com/nuts-and-bytes/Product-quest)
+
 > **把「产品知识」做成一个可以通关的网页游戏。**
 > 你将扮演一名零基础的新手产品经理，入职创业公司「星火科技」，在爱拍脑袋的老板、毒舌的工程师、口是心非的用户之间做出一个个真实决策——通关，就是学完一遍从想法到商业化的完整 0→1。
 
