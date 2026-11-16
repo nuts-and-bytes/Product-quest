@@ -15,7 +15,7 @@
 <meta name="twitter:card" content="summary_large_image">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%23172e37'/%3E%3Cpath d='M32 8 38 26 56 32 38 38 32 56 26 38 8 32 26 26Z' fill='%23e3c38a'/%3E%3C/svg%3E">
 <!-- 匿名统计（Umami，无cookie） -->
-<script defer src="https://cloud.umami.is/script.js" data-website-id="eea752ee-7951-4d33-bb04-c6041e79ab20"></script>
+<script async src="https://cloud.umami.is/script.js" data-website-id="eea752ee-7951-4d33-bb04-c6041e79ab20"></script>
 
 <style>
   :root{
@@ -834,6 +834,7 @@
   }
 </style>
 <link rel="stylesheet" href="assets/world-ui.css?v=3.1">
+<link rel="stylesheet" href="assets/first-day.css?v=3.2">
 </head>
 <body>
 <div id="game" class="world-mode" data-screen="landing">
@@ -872,12 +873,14 @@
   <!-- 角色DIY -->
   <div class="screen" id="avatar-screen">
     <div id="av-card">
-      <h2><i data-pxi="person" data-size="20" data-color="var(--accent)"></i> 打造你的3D PM形象</h2>
+      <h2><i data-pxi="person" data-size="20" data-color="var(--accent)"></i> 先认识一下自己</h2>
+      <p class="av-intro">选一个喜欢的形象，金色背包会陪你走遍星火岛。以后也能随时换装。</p>
       <div id="av-presets"></div>
       <div id="av-wrap">
         <div id="av-stage"><canvas id="av-prev"></canvas><div id="av-drag-hint">⟳ 拖拽可 360° 旋转</div></div>
         <div id="av-opts">
           <div class="av-row"><label>昵称</label><input id="av-name" maxlength="6" placeholder="你的名字（≤6字）"></div>
+          <details id="av-details"><summary>细调发型与穿搭 <span>可选</span></summary>
           <div class="av-row"><label>发型</label>
             <button class="pxbtn avbtn" data-style="short">🐣 呆毛萌芽</button>
             <button class="pxbtn avbtn" data-style="long">🎀 甜心兔耳</button>
@@ -908,6 +911,7 @@
           <div class="av-row"><label>发色</label><span id="av-hair"></span></div>
           <div class="av-row"><label>肤色</label><span id="av-skin"></span></div>
           <div class="av-row"><label>主色</label><span id="av-cloth"></span></div>
+          </details>
         </div>
       </div>
       <button class="pxbtn center" style="font-size:16px; padding:13px 46px" onclick="G.confirmAvatar()">✔ 就是这个我 · 入职星火科技</button>
@@ -1077,6 +1081,7 @@
     <div id="map-foot">
       <button class="pxbtn small" onclick="G.openDex()"><i data-pxi="book" data-size="13"></i> 术语图鉴</button>
       <button class="pxbtn small" onclick="G.openNotes()"><i data-pxi="note" data-size="13"></i> 方法卡</button>
+      <button class="pxbtn small" onclick="PQFirstDay.replay()">✦ 重温入职第一天</button>
       <button class="pxbtn small" onclick="G.toAvatar()"><i data-pxi="person" data-size="13"></i> 修改形象</button>
       <button class="pxbtn small" onclick="G.exportSave()"><i data-pxi="save" data-size="13"></i> 导出存档</button>
       <button class="pxbtn small" onclick="G.importSave()"><i data-pxi="load" data-size="13"></i> 导入存档</button>
@@ -1199,8 +1204,8 @@ window.PQ = { levels:[], terms:{}, notes:{}, cases:[], buildings:[], sprites:{},
 <script src="content/pm/notes.js?v=1.6"></script>
 <script src="content/pm/cases.js?v=1.6"></script>
 <script src="content/pm/ch0-prologue.js?v=1.6"></script>
-<script src="content/pm/ch1-validate.js?v=1.6"></script>
-<script src="content/pm/ch2-user.js?v=1.6"></script>
+<script src="content/pm/ch1-validate.js?v=3.2"></script>
+<script src="content/pm/ch2-user.js?v=3.2"></script>
 <script src="content/pm/ch3-prd.js?v=1.6"></script>
 <script src="content/pm/ch4-tech.js?v=1.6"></script>
 <script src="content/pm/ch5-launch.js?v=1.6"></script>
@@ -1215,7 +1220,10 @@ if(_qp) window.OPC_SAVE_KEY = 'opc-pq-' + (/^[a-zA-Z0-9-]{1,80}$/.test(_qp) ? _q
 <script src="assets/world-quality.js?v=3.1"></script>
 <script src="assets/chapter-progress.js?v=3.1"></script>
 <script src="assets/world-environment.js?v=3.1"></script>
-<script src="assets/island3d.js?v=3.1"></script>
-<script src="engine.js?v=3.1"></script>
+<script src="assets/island3d.js?v=3.2"></script>
+<script src="assets/first-day-state.js?v=3.2"></script>
+<script src="assets/story3d.js?v=3.2"></script>
+<script src="assets/first-day.js?v=3.2"></script>
+<script src="engine.js?v=3.2"></script>
 </body>
 </html>
