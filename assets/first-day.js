@@ -160,9 +160,11 @@
       const button=(text,fn)=>{const b=document.createElement('button');b.textContent=text;b.onclick=fn;box.appendChild(b);};
       if(!s.drink){button('☕ 来杯手冲',()=>this.order('coffee'));button('♨ 想喝热茶',()=>this.order('tea'));}
       else{
+        button(G.cafeCase?.phase==='complete'?'蓝山 · 查看项目手记':G.cafeCase?.phase==='intro'?'蓝山 · 熟客为什么走了？':'蓝山 · 继续我的调查',()=>PQCafeCase.open());
         button('小美 · 聊聊她的纸信封',()=>this.chatMei());button('李姐 · 打个招呼',()=>this.chatLi());button('窗边 · 坐一会儿',()=>this.rest());
         button(s.stage==='coffee'?'结束第一天，去探索 →':'继续探索 →',()=>this.finish());
       }
+      if(!s.drink)button('先看看柜台前发生了什么',()=>PQCafeCase.open());
     },
     order(drink){
       G.firstDay.drink=drink;G.save();PQStory3D.focus('xiaomei');
@@ -199,6 +201,7 @@
       const s=G.firstDay,lines=[];
       if(s.clues.includes('envelopes'))lines.push('小美的纸信封：发薪日先分好预算，余钱交给妈妈。她答应以后聊聊自己的真实消费经历。');
       if(s.clues.includes('investor'))lines.push('窗边的李姐：每周三来蓝山。她愿意听真实的人和行为，胜过一个漂亮的点子。');
+      if(G.cafeCase?.legacy)lines.push('蓝山项目手记：你试过的办法已经留在店里。回到咖啡馆的调查入口，可以查看结果或体验不同的营业日。');
       if(!lines.length)lines.push('还没有记下新的相遇。和小美或窗边的李姐聊聊，故事会慢慢留下来。');
       this.say('相遇手记 · 自动保存','今天记住的事',lines,()=>this.renderCafe());
     },

@@ -173,6 +173,7 @@ const G = {
     this.syncMute();         // 静音状态跨会话保留，图标得跟上
     if(window.PQIsland) PQIsland.onShow({ cinematic:'landing', snap:true });
     if(window.PQFirstDay)PQFirstDay.init();
+    if(window.PQCafeCase)PQCafeCase.init();
     const start=document.getElementById('land-cta');
     if(this.progress>0||this.firstDay?.started) start.firstElementChild.textContent='继续我的冒险';
     // 全局眨眼循环
@@ -224,7 +225,7 @@ const G = {
     p.innerHTML=`<div class="tp-box"><b>${PQ.pxi('book',14,'var(--accent)')} ${t.name}</b><div class="tp-def">${t.def}</div>${t.src?`<div class="tp-src">${t.src}</div>`:''}<div class="tp-close">— 点击任意处关闭 —</div></div>`;
     p.classList.add('show');
   },
-  save(){ try{ localStorage.setItem((window.OPC_SAVE_KEY || 'pmquest2'), JSON.stringify({trust:this.trust,unlocked:this.unlocked,notes:this.notes,progress:this.progress,avatar:this.avatar,stats:this.stats||{},exploration:this.exploration||{},firstDay:this.firstDay})); }catch(e){} },
+  save(){ try{ localStorage.setItem((window.OPC_SAVE_KEY || 'pmquest2'), JSON.stringify({trust:this.trust,unlocked:this.unlocked,notes:this.notes,progress:this.progress,avatar:this.avatar,stats:this.stats||{},exploration:this.exploration||{},firstDay:this.firstDay,cafeCase:this.cafeCase})); }catch(e){} },
   load(){ try{ const d=JSON.parse(localStorage.getItem((window.OPC_SAVE_KEY || 'pmquest2'))); if(d){Object.assign(this,d); this.avatar=normalizeAvatar(d.avatar);} }catch(e){} },
 
   /* ---------- 角色DIY ---------- */
@@ -392,7 +393,8 @@ const G = {
     opts=opts||{};
     if(id!=='play-screen'){clearTimeout(this._startTimer);clearInterval(this.typeTimer);clearInterval(this.talkAnim);this.typing=false;document.getElementById('feedback').classList.remove('show');document.getElementById('quiz-panel').classList.remove('show');}
     if(window.PQFirstDay)PQFirstDay.closeDialog();
-    if(window.PQStory3D?.active&&!['play-screen','social-screen','end-screen'].includes(id))PQStory3D.exit();
+    if(id!=='cafe-case-screen'&&window.PQCafeCase?.active)PQCafeCase.suspend();
+    if(window.PQStory3D?.active&&!['play-screen','social-screen','end-screen','cafe-case-screen'].includes(id))PQStory3D.exit();
     document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
     document.getElementById(id).classList.add('active');
     const g=document.getElementById('game');
@@ -445,6 +447,7 @@ const G = {
     }
     let html=`<div class="bp-head"><div class="bp-title">${PQ.pxi(PQ.bicon[b.id]||"building",16,"var(--accent)")} ${b.name}</div><button type="button" class="bp-close" aria-label="关闭" onclick="G.closeBuilding()">×</button></div>`;
     if(b.id==='cafe')html+=`<button class="exp-primary" onclick="PQFirstDay.enterCafe()">进咖啡馆坐坐 · 点单 / 聊天 ↗</button>`;
+    if(b.id==='cafe')html+=`<button class="exp-primary" onclick="PQCafeCase.open()">${this.cafeCase?.phase==='complete'?'查看蓝山项目手记':'蓝山调查 · 失踪的第二杯咖啡'} ↗</button>`;
     if(b.subtitle) html+=`<div class="bp-sub">${b.subtitle}</div>`;
     const completed=this.buildingChapters(b).filter(c=>c.complete);
     if(completed.length){
@@ -948,7 +951,7 @@ const G = {
   exportSave(){
     SFX.click();
     const raw = localStorage.getItem((window.OPC_SAVE_KEY || 'pmquest2')) ||
-      JSON.stringify({trust:this.trust,unlocked:this.unlocked,notes:this.notes,progress:this.progress,avatar:this.avatar,stats:this.stats||{},exploration:this.exploration||{},firstDay:this.firstDay});
+      JSON.stringify({trust:this.trust,unlocked:this.unlocked,notes:this.notes,progress:this.progress,avatar:this.avatar,stats:this.stats||{},exploration:this.exploration||{},firstDay:this.firstDay,cafeCase:this.cafeCase});
     const blob = new Blob([raw], {type:'application/json'});
     const a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
@@ -1062,8 +1065,8 @@ function bootPQ(){
     panel.innerHTML='<div><span class="journey-eyebrow">PRODUCT QUEST</span><h2>世界还没准备好。</h2><p>部分画面资源没有完整载入。重新载入后，就可以继续你的冒险。</p><button class="journey-primary">重新载入 →</button></div>';
     panel.querySelector('button').onclick=()=>location.reload();document.getElementById('game').appendChild(panel);
   };
-  if(!window.THREE||!window.PQIsland||!window.PQFirstDay||!window.PQStory3D){retry();return;}
-  try{ G.init(); }catch(e){ console.error('PQ boot error:', e);retry(); }
+  if(!window.THREE||!window.PQIsland||!window.PQFirstDay||!window.PQStory3D||!window.PQCafeModel||!window.PQCafeScene||!window.PQCafeCase){retry();return;}
+  try{ G.init();if(new URLSearchParams(location.search).get('experience')==='cafe')PQCafeCase.open(); }catch(e){ console.error('PQ boot error:', e);retry(); }
 }
 window.G = G;
 window.PLAYER_TPL = PLAYER_TPL;
