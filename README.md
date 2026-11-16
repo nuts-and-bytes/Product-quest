@@ -1,5 +1,21 @@
 # 🎮 产品经理大冒险 · Product Quest
 
+### 开放群岛 · 电影画质版
+
+原有 37 关玩法保留。星火岛通过三条栈道连接琥珀林地、星潮观测站和珊瑚花园，点击首页「先去世界里看看」即可探索。WASD / 手机摇杆移动，Shift 奔跑，E 互动，J 手记，H 取景。
+
+首页重构为实时 3D 入口。完成序章或章节最终关卡后，相关建筑出现金色标记，可以回顾成果、查看评级、重玩关卡与重温粒子庆典。旧存档继续可用。
+
+HDR 辉光、深度光束、环境遮蔽、水面反光、风动草叶和 GPU 粒子共同构成新光影。默认自动画质按帧耗时升降档，兼有电影 / 均衡 / 流畅三档手动模式。远景角色与静态道路均做了网格优化。
+
+```bash
+python3 -m http.server 8765
+node --test tests/*.test.cjs
+node scripts/build-single-html.mjs
+```
+
+构建产生约 1.36 MiB 的 `dist/Product-Quest.html`，内含引擎、场景和完整剧情，无 CDN 依赖；离线版移除网络统计。存档仍在浏览器本地，换浏览器或从在线版转离线版时请先导出存档。当前是四岛连续区域，详细实现与验证边界见 [开放世界说明](docs/open-world.md)。
+
 [![zread doc](https://img.shields.io/badge/zread-AI%20Deep%20Read-black?style=for-the-badge)](https://zread.ai/nuts-and-bytes/Product-quest)
 
 > **把「产品知识」做成一个可以通关的网页游戏。**
@@ -20,7 +36,7 @@
 
 ---
 
-## 📷 游戏长什么样
+## 📷 原有剧情与功能界面（历史截图）
 
 ![剧情决策：老板拍脑袋，你来接招](screenshots/06-decision.png)
 

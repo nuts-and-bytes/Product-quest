@@ -10,13 +10,15 @@
   'use strict';
 
   const HEX_CACHE = {};
+  const LINEAR_CACHE = {};
   function hexToRgb(hex) {
     if (HEX_CACHE[hex]) return HEX_CACHE[hex];
     const clean = String(hex || '#ffffff').replace('#', '');
     const full = clean.length === 3
       ? clean[0] + clean[0] + clean[1] + clean[1] + clean[2] + clean[2]
       : clean.padEnd(6, 'f');
-    const n = parseInt(full, 16) || 0xffffff;
+    const parsed = parseInt(full, 16);
+    const n = Number.isNaN(parsed) ? 0xffffff : parsed;
     const rgb = [((n >> 16) & 255) / 255, ((n >> 8) & 255) / 255, (n & 255) / 255];
     HEX_CACHE[hex] = rgb;
     return rgb;
@@ -40,7 +42,8 @@
     set(x, y, z, color) {
       if (!color) return;
       const rx = Math.round(x), ry = Math.round(y), rz = Math.round(z);
-      this.map.set(rx + ',' + ry + ',' + rz, { x: rx, y: ry, z: rz, c: hexToRgb(color) });
+      const linear = LINEAR_CACHE[color] || (LINEAR_CACHE[color] = hexToRgb(color).map(v => v <= 0.04045 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4)));
+      this.map.set(rx + ',' + ry + ',' + rz, { x: rx, y: ry, z: rz, c: linear });
     }
     del(x, y, z) {
       this.map.delete(Math.round(x) + ',' + Math.round(y) + ',' + Math.round(z));
@@ -105,7 +108,7 @@
             pos.push((vx + c[0] + ox) * unit, (vy + c[1] + oy) * unit, (vz + c[2] + oz) * unit);
             norm.push(fc.dir[0], fc.dir[1], fc.dir[2]);
             const k = skipAO ? 1.0 : fc.shade * ao;
-            col.push(Math.min(1, baseR * k), Math.min(1, baseG * k), Math.min(1, baseB * k));
+            col.push(baseR * k, baseG * k, baseB * k);
           }
 
           if (aos[0] + aos[2] > aos[1] + aos[3]) {
@@ -161,7 +164,7 @@
         roughness: rough,
         metalness: metal,
         emissive: new THREE.Color(color),
-        emissiveIntensity: em,
+        emissiveIntensity: em * 0.07,
         transparent: op < 1,
         opacity: op
       });
@@ -429,7 +432,7 @@
       map: faceTex,
       emissiveMap: faceTex,
       emissive: new THREE.Color('#ffffff'),
-      emissiveIntensity: 0.50,
+      emissiveIntensity: 0.025,
       roughness: 0.36,
       metalness: 0.0
     });
@@ -999,38 +1002,27 @@
 
   function buildContinentIsland(c) {
     const vg = new VoxelGrid();
-    const rx = 11, rz = 9;
+    const region = PQWorldMap.regions.find(r => r.id === c.id);
+    const rx = region.rx, rz = region.rz;
     const isAutumn = c.theme === 'autumn';
     const isCrystal = c.theme === 'crystal';
     for (let x = -rx; x <= rx; x++) {
       for (let z = -rz; z <= rz; z++) {
-        const d = Math.hypot(x / rx, z / rz) + 0.14 * Math.sin(x * 0.4 + z * 0.3);
+        const d = Math.hypot(x / rx, z / rz);
         if (d > 1.0) continue;
-        const h = d < 0.42 ? 3 : d < 0.72 ? 2 : 1;
+        const h = 0;
         for (let y = -1; y <= h; y++) {
           let col = '#6b5a47';
           if (y === h) {
             if (d > 0.84) col = '#ebd29d';
-            else if (isAutumn) col = (hash2(x, z) > 0.5 ? '#e28f4b' : '#d6a449');
-            else if (isCrystal) col = (hash2(x, z) > 0.5 ? '#5d84b8' : '#739fd4');
-            else col = (hash2(x, z) > 0.5 ? '#e37e8a' : '#76bf9a');
+            else if (isAutumn) col = (hash2(x, z) > 0.5 ? '#bfa26a' : '#b3a075');
+            else if (isCrystal) col = (hash2(x, z) > 0.5 ? '#7e9d9c' : '#8fa9a4');
+            else col = (hash2(x, z) > 0.5 ? '#c1b0a0' : '#a2b496');
           }
           vg.set(x, y, z, col);
         }
       }
     }
-    if (isAutumn) {
-      vg.fillBox(-2, 4, -2, -2, 8, -2, '#f5c242');
-      vg.fillBox(0, 4, 0, 0, 10, 0, '#ffcd75');
-      vg.fillBox(2, 4, 2, 2, 12, 2, '#ff8a5b');
-    } else if (isCrystal) {
-      vg.fillBox(-1, 4, -1, 1, 9, 1, '#7cf3ff');
-      vg.set(0, 10, 0, '#ffffff'); vg.set(0, 11, 0, '#a6f9ff');
-    } else {
-      vg.fillBox(-2, 4, -1, 2, 7, 1, '#ffd980');
-      vg.fillBox(-1, 8, -1, 1, 9, 1, '#ff758f');
-    }
-
     const group = new THREE.Group();
     group.position.set(c.wx, 0, c.wz);
     group.add(makeVoxelMesh(vg, 1.0, [0, 0, 0], { roughness: 0.84 }));
@@ -1054,10 +1046,10 @@
       ocean: new THREE.Color('#2794d1'),
       sunColor: new THREE.Color('#fff7e3'),
       sunPos: new THREE.Vector3(46, 72, 38),
-      sunInt: 1.95,
+      sunInt: 3.0,
       hemiSky: new THREE.Color('#e6f7ff'),
       hemiGround: new THREE.Color('#4fa85a'),
-      hemiInt: 0.96,
+      hemiInt: 1.2,
       glowInt: 0.06,
       lampInt: 0.0,
       starOp: 0.0,
@@ -1067,17 +1059,17 @@
     },
     sunset: {
       label: '🌇 黄昏',
-      sky: new THREE.Color('#ee8c68'),
-      fog: new THREE.Color('#f4a27b'),
+      sky: new THREE.Color('#697b9d'),
+      fog: new THREE.Color('#e8bd98'),
       fogDensity: 0.0031,
       ocean: new THREE.Color('#2e6c99'),
-      sunColor: new THREE.Color('#ff8e47'),
+      sunColor: new THREE.Color('#ffd099'),
       sunPos: new THREE.Vector3(-60, 18, 24),
-      sunInt: 1.65,
-      hemiSky: new THREE.Color('#ffc9a8'),
-      hemiGround: new THREE.Color('#48385c'),
-      hemiInt: 0.78,
-      glowInt: 0.82,
+      sunInt: 2.6,
+      hemiSky: new THREE.Color('#b2c1dc'),
+      hemiGround: new THREE.Color('#36475f'),
+      hemiInt: 0.8,
+      glowInt: 1.3,
       lampInt: 1.4,
       starOp: 0.35,
       moonOp: 0.5,
@@ -1092,11 +1084,11 @@
       ocean: new THREE.Color('#103159'),
       sunColor: new THREE.Color('#9ec4ff'),
       sunPos: new THREE.Vector3(-42, 56, -34),
-      sunInt: 0.65,
-      hemiSky: new THREE.Color('#344a82'),
+      sunInt: 1.25,
+      hemiSky: new THREE.Color('#849fc4'),
       hemiGround: new THREE.Color('#162336'),
-      hemiInt: 0.56,
-      glowInt: 1.42,
+      hemiInt: 1.25,
+      glowInt: 2.2,
       lampInt: 2.8,
       starOp: 0.96,
       moonOp: 1.0,
@@ -1114,7 +1106,7 @@
     rafId: 0,
     mode: 'pan',       // 'pan' | 'orbit' | 'walk' | 'fp'
     cinematicMode: 'landing', // 'landing' | 'avatar' | null
-    timeMode: 'clock', // 'clock' | 'day' | 'sunset' | 'night' | 'auto'
+    timeMode: 'sunset', // 'clock' | 'day' | 'sunset' | 'night' | 'auto'
     autoPhase: 0,
     avTurntableYaw: 0.35,
     avDragging: false,
@@ -1186,7 +1178,7 @@
       this.inited = true;
 
       this.renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: 'high-performance' });
-      this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+      this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.35));
       this.renderer.shadowMap.enabled = true;
       this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
       if (this.renderer.outputColorSpace !== undefined) {
@@ -1201,7 +1193,7 @@
       this.scene.background = TOD_PRESETS.day.sky.clone();
       this.scene.fog = new THREE.FogExp2('#c9ecff', 0.0024);
 
-      this.camera = new THREE.PerspectiveCamera(45, 1, 0.25, 450);
+      this.camera = new THREE.PerspectiveCamera(45, 1, 0.25, 900);
       this.raycaster = new THREE.Raycaster();
       this.playerPos = new THREE.Vector3(-10.5, 1.04, 4.5);
 
@@ -1233,6 +1225,7 @@
       this._buildCitizens();
       this._buildContinents();
       this.rebuildPlayer();
+      this.environment = new PQWorldEnvironment(this);
       this._bindEvents();
       this._bindAvatarTurntable();
       this._resize();
@@ -1240,7 +1233,7 @@
     },
 
     _initTodState() {
-      const p = TOD_PRESETS.day;
+      const p = TOD_PRESETS[this.timeMode] || TOD_PRESETS.day;
       this.curTod = {
         sky: p.sky.clone(),
         fog: p.fog.clone(),
@@ -1694,6 +1687,7 @@
       });
 
       this.scene.add(roadGroup);
+      this.roadGroup = roadGroup;
 
       // 6 盏可发光路灯
       for (let i = 0; i < 6; i++) {
@@ -2017,13 +2011,15 @@
         renderer.setPixelRatio(1);
         renderer.setSize(w, h, false);
         if (renderer.outputColorSpace !== undefined) renderer.outputColorSpace = THREE.SRGBColorSpace;
+        renderer.toneMapping = THREE.ACESFilmicToneMapping;
+        renderer.toneMappingExposure = 1.05;
         const scene = new THREE.Scene();
         const camera = new THREE.PerspectiveCamera(32, w / h, 0.1, 40);
         camera.position.set(0, 1.98, 6.2);
         camera.lookAt(0, 1.32, 0);
 
-        scene.add(new THREE.HemisphereLight('#ffffff', '#ffdce8', 1.85));
-        const keyLight = new THREE.DirectionalLight('#fffdf8', 1.55);
+        scene.add(new THREE.HemisphereLight('#ffffff', '#b3a394', 1.2));
+        const keyLight = new THREE.DirectionalLight('#fffdf8', 2.4);
         keyLight.position.set(2, 4, 6);
         const rimLight = new THREE.DirectionalLight('#a8e6ff', 0.9);
         rimLight.position.set(-4, 3, -3);
@@ -2265,6 +2261,7 @@
           chip.textContent = `主线任务：${bName} · ${lvName}`;
         }
       }
+      if(this.environment)this.environment.refreshBuildings();
       this._ensureLabels();
     },
 
@@ -2325,8 +2322,9 @@
       if (this.cinematicMode === 'landing') {
         this.archipelago = false;
         this.camTarget = { x: 0, y: 2.2, z: 2 };
-        this.spherical.radius = 64;
-        this.spherical.polar = 0.74;
+        this.spherical.radius = innerWidth<700?112:88;
+        this.spherical.polar = 1.10;
+        this.spherical.azimuth = .65;
         this.cloudGateTarget = 0;
         if (snap) this.cloudGateOpen = 0;
       } else if (this.cinematicMode === 'avatar') {
@@ -2433,10 +2431,10 @@
       if (btn) btn.classList.toggle('active', this.archipelago);
 
       if (this.archipelago) {
-        if (this.mode === 'fp') this.setMode('pan');
+        if (this.mode === 'fp' || this.mode === 'walk') { this.archipelago = false; this.setMode('pan'); this.archipelago = true; }
         this.camTarget = { x: 18, y: 1.5, z: 6 };
-        this.spherical = { radius: 132, polar: 0.76, azimuth: 0.44 };
-        this.setStatus('群岛全览：点击「产品大陆 · 星火岛」着陆，或查看周边待开放大陆', 4000);
+        this.spherical = { radius: Math.max(152,190 / this.camera.aspect), polar: 0.76, azimuth: 0.44 };
+        this.setStatus('群岛全览：三条栈道连接四座岛屿，点击岛屿查看地标，切换漫步开始探索', 4000);
       } else {
         this.camTarget = { x: 0, y: 1.8, z: 2 };
         this.spherical = { radius: this.mode === 'walk' ? 14.5 : 54, polar: this.mode === 'walk' ? 1.02 : 0.80, azimuth: 0.56 };
@@ -2537,10 +2535,10 @@
           const el = document.createElement('button');
           el.type = 'button';
           el.className = 'isl-pin isl-cont-pin';
-          el.innerHTML = `<span class="pin-nm">${c.data.name}</span><span class="pin-badge soon">开发中</span>`;
+          el.innerHTML = `<span class="pin-nm">${c.data.name}</span><span class="pin-badge side">可探索</span>`;
           el.onclick = (e) => {
             e.stopPropagation();
-            this.setStatus(`「${c.data.name}」${c.data.sub} — 主线目前集中在「星火岛」`, 3200);
+            this.environment.focusRegion(c.data.id);
           };
           layer.appendChild(el);
           this._labelEls['c_' + c.data.id] = el;
@@ -2581,6 +2579,7 @@
         el.classList.toggle('done', !!entry.allDone);
         if (b.archive) badge = '<span class="pin-badge side">支线</span>';
         else if (entry.isCurrent) badge = '<span class="pin-badge quest">! 主线</span>';
+        else if (entry.hasLegacy) badge = '<span class="pin-badge done">✦ 成果互动</span>';
         else if (entry.allDone) badge = '<span class="pin-badge done">✔</span>';
         else if (entry.totalCount) badge = `<span class="pin-badge">${entry.doneCount}/${entry.totalCount}</span>`;
         el.innerHTML = `<span class="pin-nm">${b.name}</span>${badge}`;
@@ -2611,7 +2610,7 @@
       const isLanding = this.cinematicMode === 'landing';
       const isAvatar = this.cinematicMode === 'avatar';
       Object.values(this.buildings).forEach((entry) => {
-        project(entry.labelAnchor, this._labelEls['b_' + entry.data.id], !isLanding && !isAvatar && !this.archipelago);
+        project(entry.labelAnchor, this._labelEls['b_' + entry.data.id], !isLanding && !isAvatar && !this.archipelago && ((this.mode !== 'walk' && this.mode !== 'fp') || this.camera.position.distanceTo(entry.labelAnchor)<25));
       });
       this.continents.forEach((c) => {
         const showC = !isAvatar && (isLanding || this.archipelago || (this.mode !== 'fp' && this.curSpherical.radius > 60));
@@ -2619,7 +2618,7 @@
       });
       project(new THREE.Vector3(0, 14, 0), this._labelEls['home'], !isLanding && !isAvatar && this.archipelago);
       if (this._bustleList) {
-        const showBustle = isLanding || (!isAvatar && !this.archipelago && this.mode === 'pan');
+        const showBustle = false;
         this._bustleList.forEach((bs) => {
           project(new THREE.Vector3(bs.x, bs.y, bs.z), this._labelEls['bustle_' + bs.key], showBustle);
         });
@@ -2628,6 +2627,14 @@
 
     /* ---------- 交互事件 ---------- */
     _bindEvents() {
+      document.addEventListener('visibilitychange',()=>{
+        if(document.hidden){this._resumeOnVisible=this.running;this.onHide();this.environment?.governor.reset();}
+        else if(this._resumeOnVisible&&document.getElementById('game').classList.contains('world-mode')){
+          this._resumeOnVisible=false;this.running=true;this._lastTime=performance.now();
+          if(this.environment)this.environment.lastFrame=0;
+          this._loop(this._lastTime);
+        }
+      });
       const canvas = this.renderer.domElement;
       canvas.addEventListener('contextmenu', (e) => e.preventDefault());
 
@@ -2654,7 +2661,7 @@
           const dist = Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y);
           if (this.pinchDist > 0 && this.mode !== 'fp') {
             const delta = (this.pinchDist - dist) * 0.14;
-            this.spherical.radius = Math.max(12, Math.min(135, this.spherical.radius + delta));
+            this.spherical.radius = Math.max(12, Math.min(this.archipelago?Math.max(220,220/this.camera.aspect):135, this.spherical.radius + delta));
           }
           this.pinchDist = dist;
           return;
@@ -2669,7 +2676,7 @@
         }
 
         const isRight = prev.btn === 2 || e.shiftKey;
-        if (this.mode === 'pan' && !isRight && !this.archipelago) {
+        if (this.mode === 'pan' && !isRight && !this.archipelago && !this.cinematicMode) {
           this._panByScreenDelta(dx, dy);
         } else if (this.mode === 'orbit' && isRight) {
           this._panByScreenDelta(dx, dy);
@@ -2689,20 +2696,21 @@
         if (this.pointers.size === 0) this.dragStart = null;
       };
       canvas.addEventListener('pointerup', endPtr);
-      canvas.addEventListener('pointercancel', endPtr);
+      canvas.addEventListener('pointercancel', (e) => { this.pointers.delete(e.pointerId); this.dragStart = null; this.pinchDist = 0; });
 
       canvas.addEventListener('wheel', (e) => {
         e.preventDefault();
         if (this.mode === 'fp') return;
         const factor = e.deltaY * 0.045;
-        const maxR = this.archipelago ? 148 : 96;
+        const maxR = this.archipelago ? Math.max(220,220/this.camera.aspect) : (this.cinematicMode?150:96);
         const minR = this.mode === 'walk' ? 9 : 15;
         this.spherical.radius = Math.max(minR, Math.min(maxR, this.spherical.radius + factor));
       }, { passive: false });
 
       window.addEventListener('keydown', (e) => {
-        if (!this.running) return;
+        if (!this.running || this.cinematicMode || /INPUT|TEXTAREA|SELECT/.test(e.target.tagName) || (this.environment && !this.environment.panel.hidden)) return;
         const k = e.key.toLowerCase();
+        if (['arrowup','arrowdown','arrowleft','arrowright',' '].includes(k)) e.preventDefault();
         this.keys[k] = true;
         if (k === 'e' && (this.mode === 'walk' || this.mode === 'fp') && this.nearBuildingId) {
           this.focusBuilding(this.nearBuildingId);
@@ -2711,6 +2719,9 @@
       window.addEventListener('keyup', (e) => {
         this.keys[e.key.toLowerCase()] = false;
       });
+      const clearInput = () => { this.keys = {}; this.joyVec = {x:0,z:0}; this.pointers.clear(); this.dragStart = null; const knob = document.getElementById('isl-joy-knob'); if(knob) knob.style.transform=''; };
+      window.addEventListener('blur', clearInput);
+      document.addEventListener('visibilitychange', () => { if(document.hidden) clearInput(); });
       window.addEventListener('resize', () => this._resize());
 
       const joy = document.getElementById('isl-joy');
@@ -2748,8 +2759,8 @@
       const cosA = Math.cos(this.curSpherical.azimuth);
       this.camTarget.x -= (dx * cosA + dy * sinA) * speed;
       this.camTarget.z -= (-dx * sinA + dy * cosA) * speed;
-      this.camTarget.x = Math.max(-36, Math.min(36, this.camTarget.x));
-      this.camTarget.z = Math.max(-30, Math.min(30, this.camTarget.z));
+      this.camTarget.x = Math.max(-38, Math.min(88, this.camTarget.x));
+      this.camTarget.z = Math.max(-48, Math.min(66, this.camTarget.z));
     },
 
     _handleTap(clientX, clientY) {
@@ -2763,6 +2774,7 @@
       const hits = this.raycaster.intersectObjects(this.hitTargets, false);
       if (hits.length > 0) {
         const ud = hits[0].object.userData;
+        if (ud.expeditionId) { this.environment.inspect(ud.expeditionId); return; }
         if (ud.buildingId) { this.focusBuilding(ud.buildingId); return; }
         if (ud.milestoneId) {
           const item = this.milestones.find((m) => m.ms.id === ud.milestoneId);
@@ -2776,9 +2788,9 @@
           }
           return;
         }
-        if (ud.continentId) {
+        if (ud.continentId && this.mode !== 'walk' && this.mode !== 'fp') {
           const cont = this.continents.find((c) => c.data.id === ud.continentId);
-          if (cont) this.setStatus(`「${cont.data.name}」${cont.data.sub} — 主线目前集中在星火岛`, 3200);
+          if (cont) this.environment.focusRegion(cont.data.id);
           return;
         }
       }
@@ -2790,8 +2802,11 @@
           this.setArchipelago(false);
           return;
         }
-        if ((this.mode === 'walk' || this.mode === 'fp') && this._isOnIsland(pt.x, pt.z) < 0.88) {
-          this.walkGoal = new THREE.Vector3(pt.x, 1.04, pt.z);
+        if ((this.mode === 'walk' || this.mode === 'fp') && this._canWalkTo(pt.x, pt.z)) {
+          const path = PQWorldMap.findPath(this.playerPos, pt, PQ.buildings);
+          if (!path) { this.setStatus('这里暂时没有可通行的路径，请沿栈道探索。', 2400); return; }
+          this.walkPath = path;
+          this.walkGoal = path.shift();
           if (this.goalRing) {
             this.goalRing.position.set(pt.x, 1.09, pt.z);
             this.goalRing.visible = true;
@@ -2811,12 +2826,14 @@
       this.camera.aspect = aspect;
       this.camera.fov = aspect < 0.68 ? 62 : aspect < 1.0 ? 52 : 45;
       this.camera.updateProjectionMatrix();
+      if (this.environment) this.environment.resize(w, h);
     },
 
     /* ---------- 主循环 ---------- */
     _loop(now) {
       if (!this.running) return;
       this.rafId = requestAnimationFrame((t) => this._loop(t));
+      if(this.environment)this.environment.recordFrame(now);
       const dt = Math.min(0.05, Math.max(0.001, (now - (this._lastTime || now)) / 1000));
       this._lastTime = now;
 
@@ -2827,8 +2844,11 @@
       this._updateCitizens(dt, tSec);
       this._updateAmbient(dt, tSec);
       this._updateCamera(dt, now, tSec);
-      this.renderer.render(this.scene, this.camera);
-      this._updatePortraits(dt, tSec);
+      this.environment.update(dt, tSec);
+      this.environment.render();
+      if (now - (this._portraitTime || 0) > 66) {
+        this._updatePortraits(dt, tSec); this._portraitTime = now;
+      }
       this._updateLabels();
     },
 
@@ -2958,7 +2978,7 @@
         const kz = (dn - up) + this.joyVec.z;
 
         if (Math.hypot(kx, kz) > 0.08) {
-          this.walkGoal = null;
+          this.walkGoal = null; this.walkPath = [];
           if (this.goalRing) this.goalRing.visible = false;
           if (this.mode === 'fp') {
             const fwd = -kz;
@@ -2975,9 +2995,9 @@
         } else if (this.walkGoal) {
           const dx = this.walkGoal.x - this.playerPos.x;
           const dz = this.walkGoal.z - this.playerPos.z;
-          if (Math.hypot(dx, dz) < 0.45) {
-            this.walkGoal = null;
-            if (this.goalRing) this.goalRing.visible = false;
+          if (Math.hypot(dx, dz) < 0.28) {
+            this.walkGoal = this.walkPath && this.walkPath.shift() || null;
+            if (this.goalRing && !this.walkGoal) this.goalRing.visible = false;
           } else {
             moveX = dx;
             moveZ = dz;
@@ -2995,7 +3015,7 @@
       const moveLen = Math.hypot(moveX, moveZ);
       const isMoving = moveLen > 0.01;
       if (isMoving) {
-        const speed = 9.2;
+        const speed = this.keys['shift'] ? 11.5 : 6.8;
         const nx = this.playerPos.x + (moveX / moveLen) * speed * dt;
         const nz = this.playerPos.z + (moveZ / moveLen) * speed * dt;
         if (this._canWalkTo(nx, nz)) {
@@ -3038,15 +3058,7 @@
     },
 
     _canWalkTo(x, z) {
-      if (this._isOnIsland(x, z) > 0.87) return false;
-      if (Math.hypot((x + 13) / 4.4, (z - 12) / 3.4) < 0.95) return false;
-      if (Math.hypot(x, z) < 2.4) return false; // 避开中央喷泉水池
-      const entries = Object.values(this.buildings);
-      for (let i = 0; i < entries.length; i++) {
-        const b = entries[i].data;
-        if (Math.abs(x - b.wx) < 3.7 && Math.abs(z - b.wz) < 3.4) return false;
-      }
-      return true;
+      return PQWorldMap.canWalk(x, z, PQ.buildings);
     },
 
     _checkProximity() {
@@ -3230,8 +3242,18 @@
     },
 
     _updateCamera(dt, now, tSec) {
+      const landing=this.cinematicMode==='landing'&&!document.getElementById('landing').classList.contains('peek-island');
+      const rect=this.renderer.domElement.getBoundingClientRect(),compact=rect.width<700;
+      const shift=landing?(compact?'mobile':'desktop'):'none';
+      const key=shift+rect.width+':'+rect.height;
+      if(this._viewKey!==key){
+        this._viewKey=key;
+        if(landing)this.camera.setViewOffset(rect.width,rect.height,compact?0:-rect.width*.20,compact?-rect.height*.10:-rect.height*.02,rect.width,rect.height);
+        else this.camera.clearViewOffset();
+      }
+
       if (this.cinematicMode === 'landing') {
-        this.spherical.azimuth += dt * 0.11;
+        if(!this.environment?.reducedMotion && !this.pointers.size)this.spherical.azimuth += dt * 0.018;
       } else if (this.cinematicMode === 'avatar') {
         this.spherical.azimuth += dt * 0.06;
       }
