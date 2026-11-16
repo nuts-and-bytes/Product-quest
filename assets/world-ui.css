@@ -1,0 +1,175 @@
+/* A quiet, legible HUD leaves the world in focus. Story screens keep their original identity. */
+#game.world-mode{font-family:Inter,"PingFang SC","Microsoft YaHei",system-ui,sans-serif;--world-ink:#f0f1e9;--world-muted:#b9c9c7;--world-panel:rgba(18,35,42,.83);}
+#game.world-mode button,#game.world-mode select{font-family:inherit;}
+#isl-hud-left,#isl-toolbar,#expedition-hud{background:var(--world-panel);color:var(--world-ink);border:1px solid #c1dcd62b;box-shadow:0 8px 32px #061b2630;backdrop-filter:blur(18px);}
+#isl-hud-left{top:22px;left:24px;min-width:258px;padding:15px 17px;border-radius:13px;gap:9px;}
+#map-head h2{color:#f0f1e9;font-size:13px;letter-spacing:.6px;}
+#map-prog{color:#a4bebd;font-size:10px;white-space:nowrap;}
+#map-bar{height:3px;background:#ffffff15;border:0;}
+#map-bar i{background:#e3c38a;}
+#isl-quest-chip{border:0;border-radius:0;background:none;color:#e9d2a6;padding:0;font-size:11px;font-weight:500;}
+#isl-toolbar{top:22px;right:24px;left:auto;transform:none;border-radius:12px;max-width:calc(100% - 350px);flex-wrap:wrap;justify-content:flex-end;padding:6px;gap:2px;}
+.isl-tool{color:#d3dfdc;font-weight:500;font-size:11px;padding:8px;}
+.isl-tool:hover{background:#ffffff12;}
+.isl-tool.active{background:#d8c49c;color:#253a3d;box-shadow:none;}
+#landing .isl-tool{color:#263f4c;}
+#landing .isl-tool.active{background:#d8c49c;color:#253a3d;}
+.isl-sep{background:#ffffff25;}
+.isl-pin{border:1px solid #f5e6c660;border-radius:6px;background:#173038dc;color:#edf1e9;font-size:11px;font-weight:500;padding:5px 9px;box-shadow:0 4px 16px #12242c25;}
+.isl-pin.current{border-color:#e3bd7e;box-shadow:0 0 0 2px #e7c58620;}
+.isl-pin .pin-badge{background:#ffffff12;color:#b5c9c8;border-radius:3px;font-size:9px;}
+.isl-pin .pin-badge.quest{background:#e1bf84;color:#243839;animation:none;}
+.isl-pin .pin-badge.side{background:#89b6ad26;color:#b5e1d5;}
+#map-foot{bottom:16px;left:24px;right:24px;transform:none;justify-content:center;flex-wrap:nowrap;overflow-x:auto;max-width:none;padding:8px 12px;border-radius:12px;background:#132a34d9;border:1px solid #c1dcd625;backdrop-filter:blur(16px);scrollbar-width:none;}
+#map-foot .pxbtn{background:none;border:0;box-shadow:none;color:#c4d2d0;font-size:10px;white-space:nowrap;flex-shrink:0;padding:8px 9px;}
+#map-foot .pxbtn:hover{color:#f3dfb9;transform:none;background:#ffffff0a;}
+#expedition-hud{position:absolute;bottom:92px;left:24px;border-radius:12px;padding:14px 16px;z-index:10;min-width:275px;}
+.exp-eyebrow{font-size:9px;letter-spacing:2.5px;color:#c6b994;line-height:1.8;}
+#exp-region{font-size:17px;font-weight:500;letter-spacing:1px;margin:4px 0 14px;}
+#exp-region span{color:#97b1b2;font-size:10px;letter-spacing:.2px;}
+.exp-controls{display:flex;align-items:center;gap:14px;border-top:1px solid #e4f6f015;padding-top:10px;}
+.exp-controls button,.exp-controls label,.exp-controls select{background:none;color:#d3dfdc;font-size:10px;border:0;cursor:pointer;}
+.exp-controls button span{color:#b9c79a;margin-left:6px;}
+.exp-controls label{color:#93acae;display:flex;gap:3px;align-items:center;}
+.exp-controls select{padding:3px;max-width:60px;}
+.exp-controls option{color:#e5eadd;background:#1a3037;}
+#exp-journal-panel{position:absolute;right:24px;top:110px;width:350px;max-height:calc(100% - 200px);overflow:auto;padding:28px;background:#122a32f5;border:1px solid #b9d3c838;border-radius:16px;z-index:22;box-shadow:0 20px 60px #04141966;backdrop-filter:blur(24px);}
+#exp-journal-panel[hidden],#exp-interact[hidden]{display:none!important;}
+#exp-journal-panel h2{font-size:24px;line-height:1.6;color:#f2e6ce;font-weight:500;letter-spacing:1px;margin:18px 0 14px;}
+#exp-journal-panel p{font-size:12px;color:#a7bfbc;line-height:2;}
+.exp-close{position:absolute;right:16px;top:13px;width:28px;height:28px;border:0;border-radius:50%;color:#c4d5cf;background:#ffffff0c;font-size:20px;cursor:pointer;}
+.exp-entries{display:grid;gap:8px;margin:24px 0;}
+.exp-entry{display:flex;align-items:center;gap:14px;width:100%;padding:14px 0;background:none;border:0;border-top:1px solid #e9e0c91c;color:#e1dfca;text-align:left;cursor:pointer;}
+.exp-entry:hover{color:#f7cb87;}
+.exp-entry b{display:block;font-size:14px;font-weight:500;}
+.exp-entry small{display:block;font-size:10px;color:#8ea9aa;margin-top:7px;line-height:1.6;}
+.exp-number{font-size:20px;color:#d3b681;font-weight:300;}
+.exp-entry>span:nth-child(2){flex:1;}
+.exp-footnote{font-size:10px;line-height:2;color:#829d9e;}
+.exp-note-seal{color:#b7c99b;font-size:11px;padding:22px 0;}
+.exp-primary{width:100%;padding:12px;border:1px solid #d6c08b55;border-radius:5px;background:#d3bc8720;color:#e6d9b4;font-size:12px;cursor:pointer;}
+#exp-interact{position:absolute;bottom:126px;left:50%;transform:translateX(-50%);border:1px solid #dfc38688;background:#172e37ee;color:#f4dba6;border-radius:8px;padding:13px 24px;font-size:12px;z-index:18;cursor:pointer;white-space:nowrap;}
+#isl-status{bottom:77px;color:#e7e5d8;background:#162c35dd;border:1px solid #c4cbb722;max-width:80%;font-size:11px;}
+#isl-joy{left:25px;bottom:230px;opacity:.7;}
+#isl-prompt{bottom:130px;}
+#exp-photo-exit{display:none;}
+.photo-mode #island-labels,.photo-mode #map-screen>*{visibility:hidden;}
+.photo-mode #map-screen #exp-photo-exit{display:block;visibility:visible;position:absolute;bottom:25px;left:50%;transform:translateX(-50%);border:1px solid #ffffff25;background:#142c3488;backdrop-filter:blur(10px);color:#d1ded4;padding:8px 15px;font-size:10px;letter-spacing:1.5px;border-radius:30px;cursor:pointer;z-index:30;}
+button:focus-visible,select:focus-visible{outline:2px solid #f0ca81;outline-offset:4px;}
+@media(max-width:850px){
+  #isl-hud-left{left:14px;right:auto;top:14px;min-width:230px;padding:10px 12px;max-width:250px;}
+  #isl-toolbar{right:14px;top:14px;max-width:calc(100% - 280px);}
+  .isl-tool{font-size:10px;padding:6px;}
+  .isl-tool svg{display:none;}
+  #expedition-hud{left:14px;bottom:83px;padding:11px 13px;min-width:250px;}
+  #exp-region{font-size:15px;margin-bottom:9px;}
+  #map-foot{left:14px;right:14px;bottom:14px;justify-content:flex-start;}
+  #exp-journal-panel{right:14px;top:100px;max-height:calc(100% - 178px);}
+}
+@media(max-width:560px){
+  #isl-hud-left{width:calc(100% - 28px);max-width:none;right:14px;}
+  #isl-toolbar{top:105px;left:14px;right:14px;max-width:none;justify-content:center;padding:4px;gap:0;}
+  .isl-tool{padding:6px;font-size:10px;}
+  #expedition-hud{right:14px;bottom:79px;min-width:0;}
+  .exp-eyebrow{font-size:8px;}
+  #exp-region{font-size:14px;margin:2px 0 8px;}
+  .exp-controls{padding-top:8px;justify-content:space-between;}
+  #map-foot{bottom:12px;padding:5px 8px;}
+  #isl-joy{bottom:205px;left:16px;}
+  #isl-status{bottom:188px;font-size:10px;max-width:calc(100% - 28px);}
+  #isl-prompt,#exp-interact{bottom:215px;left:auto;right:14px;transform:none;max-width:205px;white-space:normal;padding:11px;font-size:11px;}
+  #exp-journal-panel{left:14px;right:14px;width:auto;top:152px;max-height:calc(100% - 220px);padding:24px;}
+  #bpanel{top:155px;right:14px;left:14px;bottom:auto;max-height:calc(100dvh - 225px);}
+}
+@media(prefers-reduced-motion:reduce){.isl-pin,.screen.active{animation:none!important;transition:none!important;}}
+/* The title screen shares the live scene, light and camera with the world. */
+#game[data-screen="landing"] #island-labels{display:none!important;}
+#landing{position:absolute;inset:0;display:none;overflow:hidden;padding:0;gap:0;align-items:stretch;pointer-events:none;background:linear-gradient(90deg,#071e2bec 0%,#0a2533bd 24%,#0b273150 49%,#0e293000 73%),linear-gradient(0deg,#071e2bf5 0%,transparent 26%,transparent 80%,#0a253455 100%);color:#f2f1e7;}
+#landing.active{display:block;}
+#landing .land-brand,#land-topbar,#land-story,#land-footer{pointer-events:auto;}
+.land-brand{position:absolute;left:5vw;top:32px;display:flex;align-items:center;gap:12px;color:#eef2dc;text-decoration:none;font-size:10px;letter-spacing:3px;line-height:1.6;}
+.land-brand b{font-size:15px;letter-spacing:6px;font-weight:500;}
+.brand-star{font-size:37px;color:#d7b57b;font-weight:300;}
+#land-topbar{position:absolute;right:4vw;top:34px;background:#112b355c;border:1px solid #e5e0c523;border-radius:100px;box-shadow:none;backdrop-filter:blur(12px);padding:4px 9px;gap:10px;}
+#landing #land-topbar .isl-tool{color:#e1e4d6;padding:9px 11px;font-size:11px;letter-spacing:.5px;background:transparent;}
+#landing #land-topbar .isl-tool:hover{color:#f6d59c;}
+#land-story{position:absolute;left:6.2vw;top:48%;transform:translateY(-50%);width:480px;max-width:45vw;}
+.land-eyebrow{display:flex;align-items:center;gap:12px;font-size:11px;letter-spacing:4px;color:#d2bb93;margin-bottom:25px;}
+.land-eyebrow>span{width:28px;height:1px;background:#d3b788;}
+#land-story h1{font-family:"Songti SC","Noto Serif SC",serif;font-size:clamp(38px,4.2vw,67px);font-weight:500;line-height:1.35;letter-spacing:2px;margin:0 0 24px;text-shadow:0 3px 20px #071e2b20;}
+#land-story h1 span{color:#eccb95;}
+.land-description{color:#b4c7ca;font-size:13px;font-weight:400;letter-spacing:1px;line-height:2.1;margin:0 0 34px;}
+.land-actions{display:flex;align-items:flex-start;flex-direction:column;gap:18px;}
+#land-cta{display:flex;align-items:center;justify-content:space-between;gap:42px;min-width:234px;margin:0;background:linear-gradient(110deg,#ead8b0,#d8b984);color:#273a3b;border:1px solid #f5dfb2;border-radius:3px;box-shadow:0 6px 32px #d6b36a1a;font-weight:500;font-size:14px;letter-spacing:1.5px;padding:16px 22px;animation:none;cursor:pointer;transition:background .2s,box-shadow .2s,transform .2s;}
+#land-cta span:last-child{font:24px system-ui;}
+#land-cta:hover{background:#f4dfb8;box-shadow:0 8px 38px #f2ce7c30;transform:translateY(-2px);}
+.land-explore{padding:3px 0;background:none;border:0;color:#d6dfd7;font-size:12px;letter-spacing:1px;cursor:pointer;}
+.land-explore span{margin-left:22px;color:#d5b580;}
+.land-meta{margin-top:24px;display:flex;align-items:center;gap:9px;color:#809fa5;font-size:9px;letter-spacing:.7px;}
+.land-meta i{width:2px;height:2px;border-radius:50%;background:#a9b3a0;}
+.land-world-caption{position:absolute;right:6vw;bottom:150px;font-size:11px;letter-spacing:2px;color:#f0e8ce;display:flex;align-items:center;gap:10px;text-shadow:0 2px 9px #102833;}
+.land-world-caption small{display:block;color:#bfcfc9;font-size:9px;letter-spacing:1px;border-left:1px solid #e4dfbd40;padding-left:12px;}
+.live-dot{height:5px;width:5px;border-radius:50%;background:#ffe1a1;box-shadow:0 0 10px #ffdb97;}
+#land-footer{position:absolute;left:5vw;right:5vw;bottom:28px;display:flex;align-items:center;gap:45px;border-top:1px solid #c4d7cc25;padding-top:23px;}
+.land-edition{display:grid;gap:7px;margin-right:auto;}
+.land-edition>span{font-size:9px;letter-spacing:3px;color:#a4bcb9;}
+.land-edition small{font-size:10px;letter-spacing:1px;color:#829ea0;}
+.land-stat{display:flex;gap:11px;align-items:center;}
+.land-stat b{font-size:27px;font-weight:300;font-variant-numeric:tabular-nums;color:#ded5be;}
+.land-stat span{font-size:10px;color:#97b0b0;letter-spacing:1px;}
+.land-guide{position:relative;margin-left:10px;}
+.land-guide summary{list-style:none;cursor:pointer;color:#d4dfd3;font-size:11px;letter-spacing:.8px;}
+.land-guide summary::-webkit-details-marker{display:none;}
+.land-guide summary span{margin-left:16px;font-size:18px;color:#dec597;}
+.land-guide>div{position:absolute;right:0;bottom:48px;width:320px;padding:26px;background:#132c36f5;border:1px solid #cbd9bf30;border-radius:8px;backdrop-filter:blur(20px);box-shadow:0 20px 60px #061b2944;}
+.land-guide b{font-size:17px;font-weight:400;color:#eddbb5;}
+.land-guide p{font-size:12px;line-height:1.95;color:#abc0bd;margin-top:15px;}
+.land-guide small{font-size:10px;line-height:2;color:#8faaa6;}
+#landing.peek-island{background:transparent;}
+#landing.peek-island #land-story{transform:translateY(-48%);}
+#bpanel{background:#142c35f2;border:1px solid #d9d4af38;backdrop-filter:blur(22px);padding:22px;border-radius:13px;box-shadow:0 18px 60px #061d2955;}
+#bpanel .bp-title{font-size:16px;letter-spacing:1px;color:#eed8ae;}
+#bpanel .bp-sub{font-size:11px;color:#9cb5b8;line-height:1.8;margin:10px 0 18px;}
+#bpanel .bp-close{background:#ffffff08;border:1px solid #ffffff1a;color:#bfccc5;}
+.bp-unlocked{border-top:1px solid #d9c18c35;border-bottom:1px solid #d9c18c35;padding:19px 0;margin-bottom:20px;}
+.bp-unlocked h3{font-size:16px;font-weight:500;color:#e8d2a5;margin:8px 0;}
+.bp-unlocked p{color:#9ab1aa;font-size:10px;line-height:1.8;margin-bottom:15px;}
+.bp-reward{display:flex;justify-content:space-between;gap:8px;align-items:center;width:100%;text-align:left;color:#d0dfd3;background:transparent;border:0;border-top:1px solid #dfdcb51a;padding:13px 0;font-size:11px;cursor:pointer;}
+.bp-reward span:last-child{font-size:10px;color:#d4bc83;white-space:nowrap;}
+.bp-unlocked .exp-primary{margin-top:10px;}
+#bpanel .bp-lv{border-color:#a5c2bc20;padding:11px 0;}
+#bpanel .bp-lv .nm{color:#e0e5d7;font-size:12px;}
+#bpanel .bp-lv .nm small{color:#8ea9ac;font-size:10px;line-height:1.6;}
+#bpanel .bp-ch{color:#c0ab83;font-size:11px;margin:16px 0 4px;}
+#bpanel .pxbtn{box-shadow:none;border:1px solid #b5c6b436;border-radius:4px;background:#e1c48f14;color:#dfd8bb;font-size:11px;}
+.bp-back{background:transparent;border:0;color:#b3cac6;font-size:11px;padding:7px 0;cursor:pointer;}
+.chapter-seal{width:64px;height:64px;display:grid;place-items:center;margin:26px auto;color:#e6c78e;border:1px solid #e2c08366;border-radius:50%;box-shadow:0 0 35px #efd59615;font-size:32px;}
+.chapter-title{font-family:"Songti SC",serif;font-weight:400;font-size:25px;line-height:1.5;margin:10px 0;color:#f1dfb5;}
+.chapter-desc{font-size:12px;color:#a4beb9;line-height:2;margin-bottom:20px;}
+.chapter-result{display:flex;align-items:center;gap:12px;padding:14px 0;border-top:1px solid #c6d3bc20;font-size:12px;color:#d4dfd3;}
+.chapter-result>span:nth-child(2){flex:1;line-height:1.8;}
+.chapter-result small{display:block;font-size:10px;color:#8ca6a5;line-height:1.6;}
+.chapter-rank{color:#efd193;font-size:22px;min-width:20px;font-weight:300;}
+.chapter-levels{margin-bottom:22px;}
+@media(max-width:1000px){#land-story{left:5vw;max-width:46vw;}#land-story h1{font-size:42px;}#land-footer{gap:25px;}#land-story .land-description{font-size:12px;}.land-eyebrow{font-size:10px;letter-spacing:2px;}}
+@media(max-width:699px){
+ #landing{background:linear-gradient(180deg,#081f31eb 0%,#0e2b3aba 25%,#0c293448 48%,transparent 60%,#0b2630c9 79%,#071e2bf5 100%);}
+ .land-brand{left:24px;top:24px;font-size:8px;gap:10px;}.land-brand b{font-size:12px;letter-spacing:5px;}.brand-star{font-size:29px;}
+ #land-topbar{top:27px;right:19px;gap:2px;padding:3px;}#landing #land-topbar .isl-tool{font-size:10px;padding:7px;}
+ #land-story{left:26px;top:122px;right:22px;width:auto;max-width:none;transform:none;}
+ .land-eyebrow{font-size:9px;letter-spacing:2px;margin-bottom:16px;}#land-story h1{font-size:39px;line-height:1.35;letter-spacing:1px;margin-bottom:16px;}
+ .land-description{font-size:11px!important;line-height:1.9;letter-spacing:.4px;}
+ .land-actions{position:fixed;left:26px;right:26px;bottom:123px;align-items:stretch;gap:15px;}
+ #land-cta{width:100%;min-width:0;font-size:13px;padding:12px 20px;}.land-explore{text-align:center;font-size:11px;}
+ .land-meta{position:fixed;bottom:97px;left:26px;right:26px;justify-content:center;margin:0;font-size:8px;}
+ .land-world-caption{display:none;}
+ #land-footer{left:24px;right:24px;bottom:21px;padding-top:16px;gap:20px;}.land-edition{display:none;}.land-stat{gap:6px;}.land-stat b{font-size:21px;}.land-stat span{font-size:9px;}.land-guide{margin-left:auto;}.land-guide summary{font-size:9px;}.land-guide summary span{margin-left:4px;}
+ .land-guide>div{width:calc(100vw - 48px);max-width:350px;padding:24px;box-sizing:border-box;}
+ #landing.peek-island #land-story{transform:translateY(10px);}
+}
+@media(max-height:660px) and (min-width:700px){#land-story{top:48%;}#land-story h1{font-size:36px;margin-bottom:14px;}.land-eyebrow{margin-bottom:14px;}.land-description{margin-bottom:18px;font-size:11px;}.land-actions{gap:12px;}#land-cta{padding:10px 18px;}.land-meta{margin-top:15px;}#land-footer{bottom:18px;padding-top:15px;}.land-world-caption{bottom:115px;}}
+@media(max-height:730px) and (max-width:699px){#land-story{top:100px;}#land-story h1{font-size:32px;margin-bottom:10px;}.land-description{font-size:10px!important;}.land-eyebrow{margin-bottom:10px;}.land-actions{bottom:114px;}.land-meta{bottom:90px;}}
+@media(prefers-reduced-motion:reduce){#landing *,#land-cta{animation:none!important;transition:none!important;}}
+
+/* Hidden overflow must not let keyboard focus scroll the entire 3D viewport. */
+#game.world-mode{overflow:clip;}

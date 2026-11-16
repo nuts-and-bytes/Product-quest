@@ -96,11 +96,7 @@ PQ.milestones = [
 ];
 
 /* 远景开放世界群岛（在轨道视角与群岛全览下可见） */
-PQ.continents = [
-  { id:'growth', name:'增长大陆', sub:'用户增长与运营 · 开发中', wx:60,  wz:-32, theme:'autumn' },
-  { id:'ai',     name:'AI大陆',   sub:'AI产品与提示词 · 规划中', wx:66,  wz:12,  theme:'crystal' },
-  { id:'design', name:'设计大陆', sub:'体验与交互设计 · 规划中', wx:24,  wz:46,  theme:'coral' }
-];
+PQ.continents = PQWorldMap.regions.map(r => ({id:r.id, name:r.continent, sub:r.name+' · 可自由探索', wx:r.x, wz:r.z, theme:r.id==='growth'?'autumn':r.id==='ai'?'crystal':'coral'}));
 
 /* 着陆页痛点轮播 */
 PQ.pains.push(...[

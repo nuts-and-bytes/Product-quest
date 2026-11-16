@@ -13,6 +13,7 @@
 <meta property="og:url" content="https://nuts-and-bytes.github.io/Product-quest/">
 <meta property="og:image" content="https://nuts-and-bytes.github.io/Product-quest/screenshots/06-decision.png">
 <meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='16' fill='%23172e37'/%3E%3Cpath d='M32 8 38 26 56 32 38 38 32 56 26 38 8 32 26 26Z' fill='%23e3c38a'/%3E%3C/svg%3E">
 <!-- 匿名统计（Umami，无cookie） -->
 <script defer src="https://cloud.umami.is/script.js" data-website-id="eea752ee-7951-4d33-bb04-c6041e79ab20"></script>
 
@@ -832,6 +833,7 @@
     #t-logo h1{font-size:23px;}
   }
 </style>
+<link rel="stylesheet" href="assets/world-ui.css?v=3.1">
 </head>
 <body>
 <div id="game" class="world-mode" data-screen="landing">
@@ -843,55 +845,28 @@
 
   <!-- 着陆页 -->
   <div class="screen active" id="landing">
+    <a class="land-brand" href="https://github.com/nuts-and-bytes/Product-quest" target="_blank" rel="noopener" aria-label="Product Quest 项目"><span class="brand-star">✦</span><span>PRODUCT<br><b>QUEST</b></span></a>
     <div id="land-topbar">
-      <button type="button" class="isl-tool" id="land-time-btn" onclick="PQIsland.cycleTimeOfDay()">🕒 实时</button>
-      <button type="button" class="isl-tool" id="land-peek-btn" onclick="G.toggleLandingPeek()">🔭 纯享海岛</button>
+      <button type="button" class="isl-tool" id="land-time-btn" onclick="PQIsland.cycleTimeOfDay()">黄昏</button>
+      <button type="button" class="isl-tool" id="land-peek-btn" onclick="G.toggleLandingPeek()">纯享世界 ↗</button>
     </div>
-    <div id="hero">
-      <div id="t-logo">
-        <div class="kicker">PRODUCT QUEST</div>
-        <h1>产品经理大冒险</h1>
-        <div class="sub">把「产品知识」做成一个可以通关的网页游戏</div>
+    <main id="land-story">
+      <div class="land-eyebrow"><span></span> 一场关于创造的冒险</div>
+      <h1>从一个想法，<br>到一整个<span>世界。</span></h1>
+      <p class="land-description">走进星火岛，成为产品经理。<br>在真实的选择里成长，让每一次通关，<br>都在这个世界留下你的印记。</p>
+      <div class="land-actions">
+        <button id="land-cta" onclick="G.startFromLanding()"><span>开启我的冒险</span><span aria-hidden="true">↗</span></button>
+        <button class="land-explore" onclick="G.toMap({archipelago:true})">先去世界里看看 <span aria-hidden="true">→</span></button>
       </div>
-      <div id="hero-dock">
-        <div id="cast">
-          <div class="cast-cap">— 你将在星火大陆遇到 —</div>
-          <div class="cast-row">
-            <div class="cast-item"><canvas id="cast-me"></canvas><div class="cn">你</div><div class="cr">新手PM·可DIY</div></div>
-            <div class="cast-item"><canvas id="cast-boss"></canvas><div class="cn">王总</div><div class="cr">爱拍脑袋的老板</div></div>
-            <div class="cast-item"><canvas id="cast-xiaomei"></canvas><div class="cn">小美</div><div class="cr">口是心非的用户</div></div>
-            <div class="cast-item"><canvas id="cast-lijie"></canvas><div class="cn">李姐</div><div class="cr">刀刀见血的投资人</div></div>
-          </div>
-        </div>
-        <div id="pain-ticker"><div id="pain-text"></div></div>
-        <button class="pxbtn center" id="land-cta" onclick="G.startFromLanding()">☁️ 拨开云雾 · 开启冒险 ▶</button>
-        <div class="sub" style="font-size:12px; color:#e6f0ff; text-shadow:0 2px 8px rgba(0,0,0,0.85); background:rgba(13,21,44,0.62); padding:4px 14px; border-radius:999px; border:1px solid rgba(143,167,201,0.3);">零基础可玩 · 主线全部完结：9章 · 37关 · 通关即作品集</div>
-      </div>
-    </div>
-    <div id="scroll-hint">▼ 下滑了解：这个网站是什么 & 怎么玩</div>
-    <div class="land-sec">
-      <h3>◆ 这个网站是干什么的</h3>
-      <div class="feat-grid">
-        <div class="feat"><span class="fi"><i data-pxi="grad" data-size="26" data-color="var(--blue)"></i></span><div class="ft">为零基础的你而做</div><div class="fd">文科、商科出身，没写过一行代码？没关系。这里从"什么是产品经理"讲起，一路带你走到"产品上线赚钱"。</div></div>
-        <div class="feat"><span class="fi"><i data-pxi="flag" data-size="26" data-color="var(--blue)"></i></span><div class="ft">一条完整的0→1主线</div><div class="fd">想法验证 → 用户研究 → PRD原型 → 听懂技术 → 开发上线 → 增长变现。不是知识点的堆砌，是一次完整的产品之旅。</div></div>
-        <div class="feat"><span class="fi"><i data-pxi="pad" data-size="26" data-color="var(--blue)"></i></span><div class="ft">在剧情里学，不在课本里背</div><div class="fd">你将扮演新手PM入职创业公司：老板拍脑袋、工程师怼人、用户口是心非——每个决策都来自真实工作场景。</div></div>
-        <div class="feat"><span class="fi"><i data-pxi="books" data-size="26" data-color="var(--blue)"></i></span><div class="ft">权威方法论打底</div><div class="fd">内容源自《Inspired》《精益创业》《The Mom Test》《俞军产品方法论》等中外经典，每个知识点都标注出处。</div></div>
-      </div>
-    </div>
-    <div class="land-sec">
-      <h3>◆ 怎么玩</h3>
-      <div class="play-grid">
-        <div class="play-item"><span class="pi"><i data-pxi="pad" data-size="26" data-color="var(--accent)"></i></span><b>剧情决策</b><span>三个选项都像对的，选错看"翻车后果"，次优也有讲解</span></div>
-        <div class="play-item"><span class="pi"><i data-pxi="heart" data-size="26" data-color="var(--red)"></i></span><b>老板信任度</b><span>翻车扣血，血条清零重新挑战本关</span></div>
-        <div class="play-item"><span class="pi"><i data-pxi="book" data-size="26" data-color="var(--accent)"></i></span><b>术语图鉴</b><span>PRD、MVP、TAM…在剧情中解锁收集</span></div>
-        <div class="play-item"><span class="pi"><i data-pxi="note" data-size="26" data-color="var(--accent)"></i></span><b>方法卡</b><span>通关得实战方法论卡片，随时复习</span></div>
-        <div class="play-item"><span class="pi"><i data-pxi="pencil" data-size="26" data-color="var(--accent)"></i></span><b>随堂检验</b><span>每关3题，答对才算真学会</span></div>
-        <div class="play-item"><span class="pi"><i data-pxi="trophy" data-size="26" data-color="var(--accent)"></i></span><b>通关评级</b><span>S/A/B/C评级，可重玩刷新</span></div>
-      </div>
-    </div>
-    <button class="pxbtn center" style="font-size:16px; padding:14px 46px; z-index:1" onclick="G.startFromLanding()">☁️ 拨开云雾 · 开启冒险 ▶</button>
-    <div class="sub" style="font-size:12px; color:#e6f0ff; text-shadow:0 2px 8px rgba(0,0,0,0.85); background:rgba(13,21,44,0.62); padding:4px 14px; border-radius:999px; border:1px solid rgba(143,167,201,0.3); z-index:1">产品大陆主线完结：71个术语 · 37张方法卡 · 16篇案例 · 更多大陆持续更新</div>
-    <div class="sub" style="font-size:11px; color:#e6f0ff; text-shadow:0 2px 8px rgba(0,0,0,0.85); background:rgba(13,21,44,0.62); padding:4px 14px; border-radius:999px; border:1px solid rgba(143,167,201,0.3); z-index:1; margin-top:2px">发现bug或知识点错误？<a href="https://github.com/nuts-and-bytes/Product-quest/issues" target="_blank" rel="noopener" style="color:var(--blue)">提个Issue</a> · 觉得不错就 <a href="https://github.com/nuts-and-bytes/Product-quest" target="_blank" rel="noopener" style="color:var(--accent)">点个Star ★</a></div>
+      <div class="land-meta">零基础出发 <i></i> 自由探索 <i></i> 进度自动保存</div>
+    </main>
+    <div class="land-world-caption"><span class="live-dot"></span> 星火群岛 <small>拖动环视 · 滚轮靠近</small></div>
+    <footer id="land-footer">
+      <div class="land-edition"><span>PRODUCT QUEST</span><small>产品经理大冒险 · 开放群岛</small></div>
+      <div class="land-stat"><b>09</b><span>故事章节</span></div>
+      <div class="land-stat"><b>37</b><span>成长关卡</span></div>
+      <details class="land-guide"><summary>这场冒险怎么玩 <span>＋</span></summary><div><b>选择，让世界改变。</b><p>拜访岛上的建筑，完成剧情决策与随堂检验。通关章节会点亮相关建筑，解锁成果回顾与庆典。</p><p>自由探索三座外围岛屿，寻找信标收集手记。WASD 移动，Shift 奔跑，E 互动，H 取景。</p><small>71 个术语 · 37 张方法卡 · 16 篇案例</small></div></details>
+    </footer>
   </div>
 
   <!-- 角色DIY -->
@@ -1218,6 +1193,7 @@
 window.PQ = { levels:[], terms:{}, notes:{}, cases:[], buildings:[], sprites:{}, pains:[] };
 </script>
 <script src="assets/pxicons.js?v=1.6"></script>
+<script src="assets/world-map.js?v=3.0"></script>
 <script src="content/world.js?v=1.6"></script>
 <script src="content/pm/terms.js?v=1.6"></script>
 <script src="content/pm/notes.js?v=1.6"></script>
@@ -1236,7 +1212,10 @@ const _qp = new URLSearchParams(location.search).get('player');
 if(_qp) window.OPC_SAVE_KEY = 'opc-pq-' + (/^[a-zA-Z0-9-]{1,80}$/.test(_qp) ? _qp : 'guest');
 </script>
 <script src="assets/three.min.js?v=2.0"></script>
-<script src="assets/island3d.js?v=2.5"></script>
-<script src="engine.js?v=2.5"></script>
+<script src="assets/world-quality.js?v=3.1"></script>
+<script src="assets/chapter-progress.js?v=3.1"></script>
+<script src="assets/world-environment.js?v=3.1"></script>
+<script src="assets/island3d.js?v=3.1"></script>
+<script src="engine.js?v=3.1"></script>
 </body>
 </html>

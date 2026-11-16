@@ -172,21 +172,8 @@ const G = {
     PQ.hydratePxi(document); // 像素图标注入
     this.syncMute();         // 静音状态跨会话保留，图标得跟上
     if(window.PQIsland) PQIsland.onShow({ cinematic:'landing', snap:true });
-    // 首页角色阵容
-    [['cast-me','me'],['cast-boss','boss'],['cast-xiaomei','xiaomei'],['cast-lijie','lijie']].forEach(([id,key])=>{
-      const c=document.getElementById(id); if(c&&c.getContext) drawSprite(c,key);
-    });
-    // 痛点轮播
-    const pt=document.getElementById('pain-text');
-    pt.innerHTML='<b style="color:var(--red)">◆</b> '+PAINS[0];
-    setInterval(()=>{
-      pt.classList.add('out');
-      setTimeout(()=>{
-        this.painIdx=(this.painIdx+1)%PAINS.length;
-        pt.innerHTML=(this.painIdx===PAINS.length-1?'<b style="color:var(--accent)">◆</b> ':'<b style="color:var(--red)">◆</b> ')+PAINS[this.painIdx];
-        pt.classList.remove('out');
-      },450);
-    },3400);
+    const start=document.getElementById('land-cta');
+    if(this.progress>0) start.firstElementChild.textContent='继续我的冒险';
     // 全局眨眼循环
     setInterval(()=>this.blink(),3200);
     // 术语链接点击（捕获阶段，避免触发对话推进）
@@ -236,7 +223,7 @@ const G = {
     p.innerHTML=`<div class="tp-box"><b>${PQ.pxi('book',14,'var(--accent)')} ${t.name}</b><div class="tp-def">${t.def}</div>${t.src?`<div class="tp-src">${t.src}</div>`:''}<div class="tp-close">— 点击任意处关闭 —</div></div>`;
     p.classList.add('show');
   },
-  save(){ try{ localStorage.setItem((window.OPC_SAVE_KEY || 'pmquest2'), JSON.stringify({trust:this.trust,unlocked:this.unlocked,notes:this.notes,progress:this.progress,avatar:this.avatar,stats:this.stats||{}})); }catch(e){} },
+  save(){ try{ localStorage.setItem((window.OPC_SAVE_KEY || 'pmquest2'), JSON.stringify({trust:this.trust,unlocked:this.unlocked,notes:this.notes,progress:this.progress,avatar:this.avatar,stats:this.stats||{},exploration:this.exploration||{}})); }catch(e){} },
   load(){ try{ const d=JSON.parse(localStorage.getItem((window.OPC_SAVE_KEY || 'pmquest2'))); if(d){Object.assign(this,d); this.avatar=normalizeAvatar(d.avatar);} }catch(e){} },
 
   /* ---------- 角色DIY ---------- */
@@ -266,6 +253,7 @@ const G = {
   startFromLanding(){
     if(this._diving) return;
     SFX.click();
+    if(this.progress>0){ this.toMap(); return; }
     if(window.PQIsland && PQIsland.partCloudsAndDiveTo){
       this._diving=true;
       PQIsland.partCloudsAndDiveTo('avatar',()=>{
@@ -395,7 +383,7 @@ const G = {
     if(window.PQIsland && PQIsland.setCloudOpen) PQIsland.setCloudOpen(on?0.68:0);
     if(b){
       b.classList.toggle('active', on);
-      b.textContent=on?'✕ 返回首页':'🔭 纯享海岛';
+      b.textContent=on?'返回首页 ×':'纯享世界 ↗';
     }
   },
 
@@ -414,6 +402,7 @@ const G = {
       else if(id==='avatar-screen' && !opts.keepCamera) PQIsland.onShow({ cinematic:'avatar' });
       else if(!is3d) PQIsland.onHide();
     }
+    document.getElementById('game').scrollTop=0;
     fitGame();
   },
 
@@ -449,6 +438,13 @@ const G = {
     }
     let html=`<div class="bp-head"><div class="bp-title">${PQ.pxi(PQ.bicon[b.id]||"building",16,"var(--accent)")} ${b.name}</div><button type="button" class="bp-close" aria-label="关闭" onclick="G.closeBuilding()">×</button></div>`;
     if(b.subtitle) html+=`<div class="bp-sub">${b.subtitle}</div>`;
+    const completed=this.buildingChapters(b).filter(c=>c.complete);
+    if(completed.length){
+      html+=`<div class="bp-unlocked"><div class="exp-eyebrow">✦ CHAPTER LEGACY</div><h3>这座建筑，因你而闪耀。</h3><p>已完成 ${completed.length} 个关联章节 · 成果互动已解锁</p>`;
+      completed.forEach(c=>{html+=`<button class="bp-reward" onclick="G.showChapterOutcome('${c.id}','${b.id}')"><span>${c.ch}</span><span>回顾成果 ↗</span></button>`;});
+      html+=`<button class="exp-primary" onclick="G.celebrateBuilding('${b.id}')">点亮建筑 · 重温庆典</button></div>`;
+    }
+
     if(this.progress>=LEVELS.length && b.id==='hq'){
       html+=`<div class="bp-hint" style="margin-bottom:8px;color:var(--green)">★ 现有章节全部通关！可重玩任意关卡刷新评级，或去中央广场欣赏 8 座里程碑雕塑。</div>`;
     }
@@ -465,6 +461,29 @@ const G = {
     });
     panel.innerHTML=html;
     panel.classList.add('open');
+  },
+
+  buildingChapters(b){
+    return PQChapterProgress.forBuilding(b,PQChapterProgress.chapters(LEVELS,PQ.milestones,this.progress));
+  },
+  showChapterOutcome(id,bId){
+    const b=PQ.buildings.find(b=>b.id===bId),c=b&&this.buildingChapters(b).find(c=>c.id===id&&c.complete);
+    if(!c)return;
+    const p=document.getElementById('bpanel');
+    p.innerHTML=`<div class="bp-head"><button class="bp-back" onclick="G.openBuilding(PQ.buildings.find(b=>b.id==='${bId}'))">← ${b.name}</button><button class="bp-close" aria-label="关闭" onclick="G.closeBuilding()">×</button></div>
+      <div class="chapter-seal">✦</div><div class="exp-eyebrow">${c.ch} / 已完成</div><h2 class="chapter-title">${c.title}</h2><p class="chapter-desc">${c.desc}。这段成长已成为岛上的永久印记。</p><div class="chapter-levels"></div>`;
+    const list=p.querySelector('.chapter-levels');
+    c.levels.forEach(l=>{const i=LEVELS.indexOf(l),row=document.createElement('div');row.className='chapter-result';
+      row.innerHTML=`<span class="chapter-rank">${this.stats?.[l.id]?.rank||'✓'}</span><span>${l.name}<small>${l.note&&NOTES[l.note]?NOTES[l.note].title:'章节挑战'}</small></span><button class="bp-back">重玩 ↗</button>`;
+      row.querySelector('button').onclick=()=>this.enterBuildingLevel(i,bId);list.appendChild(row);
+    });
+    const btn=document.createElement('button');btn.className='exp-primary';btn.textContent='在建筑上重温庆典';btn.onclick=()=>this.celebrateBuilding(bId);p.appendChild(btn);
+    p.classList.add('open');p.querySelector('.bp-back').focus({preventScroll:true});
+  },
+  celebrateBuilding(id){
+    const b=PQ.buildings.find(b=>b.id===id);
+    if(!b||!this.buildingChapters(b).some(c=>c.complete))return;
+    this.closeBuilding(true);PQIsland.environment.celebrate(id);SFX.unlock();
   },
 
   enterBuildingLevel(i, bId){
@@ -850,6 +869,11 @@ const G = {
     document.getElementById('end-tease').textContent =
       this.progress>=LEVELS.length ? '★ 现有章节全部通关！新章节持续更新中，敬请期待……'
       : (rank==='S'?'完美通关！':'可重玩本关刷新评级 · ')+'下一关已解锁 →';
+    const chapter=PQChapterProgress.chapters(LEVELS,PQ.milestones,this.progress).find(m=>m.bossId===lv.id);
+    if(chapter){
+      document.getElementById('end-tease').textContent=`✦ ${chapter.ch}已完成 · 返回世界，与点亮的建筑互动，回顾成果或开启庆典。`;
+      if(window.PQIsland?.environment)PQIsland.environment.pendingChapter=chapter.id;
+    }
     SFX.unlock();
     this.show('end-screen');
     if(lv.finale){ setTimeout(()=>this.showBadge({gold:true}), 900); }
@@ -891,7 +915,7 @@ const G = {
   exportSave(){
     SFX.click();
     const raw = localStorage.getItem((window.OPC_SAVE_KEY || 'pmquest2')) ||
-      JSON.stringify({trust:this.trust,unlocked:this.unlocked,notes:this.notes,progress:this.progress,avatar:this.avatar,stats:this.stats||{}});
+      JSON.stringify({trust:this.trust,unlocked:this.unlocked,notes:this.notes,progress:this.progress,avatar:this.avatar,stats:this.stats||{},exploration:this.exploration||{}});
     const blob = new Blob([raw], {type:'application/json'});
     const a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
