@@ -168,6 +168,7 @@
         transparent: op < 1,
         opacity: op
       });
+      m.userData.pqShared = true;
       TOY_MAT_CACHE.set(key, m);
     }
     return m;
@@ -680,6 +681,16 @@
     rightLeg.add(buildLeg());
     group.add(leftLeg, rightLeg);
 
+    // A consistent explorer silhouette survives every outfit and camera angle.
+    if (key === 'me') {
+      const pack = getToyMat('#d9a855', {roughness:.65, emissive:.15});
+      addToyPart(group, new THREE.BoxGeometry(.52*s,.46*s,.23*s), pack, 0,.83*s,-.26*s,0,0,0,1,1,1,true);
+      addToyPart(group, new THREE.BoxGeometry(.40*s,.14*s,.06*s), goldMat, 0,.64*s,-.40*s);
+      for (const x of [-.2,.2]) addToyPart(group,new THREE.BoxGeometry(.055*s,.49*s,.025*s),pack,x*s,.89*s,.19*s,0,0,x>0?.12:-.12);
+      addToyPart(group,new THREE.OctahedronGeometry(.08*s),getToyMat('#e6f4d9',{emissive:3}),.29*s,1.04*s,.15*s);
+      const ring = new THREE.Mesh(new THREE.RingGeometry(.56*s,.61*s,32),new THREE.MeshBasicMaterial({color:'#ffe6ad',transparent:true,opacity:.66,depthWrite:false,side:THREE.DoubleSide}));
+      ring.rotation.x=-Math.PI/2;ring.position.y=.025;group.add(ring);
+    }
     return { group, head: headPivot, torso: torsoMesh, leftArm, rightArm, leftLeg, rightLeg };
   }
 
@@ -1824,7 +1835,7 @@
           rig.group.position.set(doorX + sideX, 1.0, doorZ + sideZ);
           rig.group.lookAt(doorX + sideX + dirX * 4, 1.0, doorZ + sideZ + dirZ * 4);
           this.scene.add(rig.group);
-          this.npcRigs.push({ rig, phase: idx * 1.1 });
+          this.npcRigs.push({ rig, role:b.npcGuard, building:b.id, phase: idx * 1.1 });
         }
 
         this.buildings[b.id] = {
@@ -1980,10 +1991,14 @@
       });
     },
 
+    createCharacter(key) { return buildCharacterRig3D(key, 0.15, this.solidMat); },
+    animateCharacter: animateRig,
+
     rebuildPlayer() {
       if (!this.scene) return;
       if (this.playerRig) {
         this.scene.remove(this.playerRig.group);
+        if(window.PQStory3D)PQStory3D.disposeTree(this.playerRig.group);
       }
       this.playerRig = buildCharacterRig3D('me', 0.15, this.solidMat);
       this.playerRig.group.position.copy(this.playerPos);
@@ -2342,6 +2357,7 @@
     },
 
     onShow(opts) {
+      if(window.PQStory3D?.active)PQStory3D.exit();
       opts = opts || {};
       this.init();
       this.refreshState();
@@ -2639,6 +2655,7 @@
       canvas.addEventListener('contextmenu', (e) => e.preventDefault());
 
       canvas.addEventListener('pointerdown', (e) => {
+        if(window.PQStory3D?.active||window.PQFirstDay?.dialogOpen)return;
         canvas.setPointerCapture(e.pointerId);
         this.pointers.set(e.pointerId, { x: e.clientX, y: e.clientY, btn: e.button });
         if (this.pointers.size === 1) {
@@ -2700,7 +2717,7 @@
 
       canvas.addEventListener('wheel', (e) => {
         e.preventDefault();
-        if (this.mode === 'fp') return;
+        if (this.mode === 'fp'||window.PQStory3D?.active||window.PQFirstDay?.dialogOpen) return;
         const factor = e.deltaY * 0.045;
         const maxR = this.archipelago ? Math.max(220,220/this.camera.aspect) : (this.cinematicMode?150:96);
         const minR = this.mode === 'walk' ? 9 : 15;
@@ -2708,7 +2725,7 @@
       }, { passive: false });
 
       window.addEventListener('keydown', (e) => {
-        if (!this.running || this.cinematicMode || /INPUT|TEXTAREA|SELECT/.test(e.target.tagName) || (this.environment && !this.environment.panel.hidden)) return;
+        if (!this.running || this.cinematicMode || window.PQStory3D?.active || window.PQFirstDay?.dialogOpen || window.PQFirstDay?.transitioning || /INPUT|TEXTAREA|SELECT/.test(e.target.tagName) || (this.environment && !this.environment.panel.hidden)) return;
         const k = e.key.toLowerCase();
         if (['arrowup','arrowdown','arrowleft','arrowright',' '].includes(k)) e.preventDefault();
         this.keys[k] = true;
@@ -2764,6 +2781,7 @@
     },
 
     _handleTap(clientX, clientY) {
+      if(window.PQStory3D?.active||window.PQFirstDay?.dialogOpen||window.PQFirstDay?.transitioning)return;
       const rect = this.renderer.domElement.getBoundingClientRect();
       const ndc = new THREE.Vector2(
         ((clientX - rect.left) / rect.width) * 2 - 1,
@@ -2827,6 +2845,7 @@
       this.camera.fov = aspect < 0.68 ? 62 : aspect < 1.0 ? 52 : 45;
       this.camera.updateProjectionMatrix();
       if (this.environment) this.environment.resize(w, h);
+      if(window.PQStory3D?.active)PQStory3D.resize();
     },
 
     /* ---------- 主循环 ---------- */
@@ -2838,6 +2857,10 @@
       this._lastTime = now;
 
       const tSec = now * 0.001;
+      if(window.PQStory3D?.active){
+        PQStory3D.update(dt,tSec);this.environment.render();return;
+      }
+      if(window.PQFirstDay?.dialogOpen||window.PQFirstDay?.transitioning){this.keys={};this.walkGoal=null;this.joyVec={x:0,z:0};}
       this._updateTimeOfDay(dt, tSec);
       this._updatePlayer(dt, tSec);
       this._updateCars(dt);
@@ -2850,6 +2873,7 @@
         this._updatePortraits(dt, tSec); this._portraitTime = now;
       }
       this._updateLabels();
+      if(window.PQFirstDay&&typeof G!=='undefined'&&G.firstDay)PQFirstDay.update(dt,tSec);
     },
 
     _updatePortraits(dt, tSec) {

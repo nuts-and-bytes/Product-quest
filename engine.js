@@ -172,8 +172,9 @@ const G = {
     PQ.hydratePxi(document); // 像素图标注入
     this.syncMute();         // 静音状态跨会话保留，图标得跟上
     if(window.PQIsland) PQIsland.onShow({ cinematic:'landing', snap:true });
+    if(window.PQFirstDay)PQFirstDay.init();
     const start=document.getElementById('land-cta');
-    if(this.progress>0) start.firstElementChild.textContent='继续我的冒险';
+    if(this.progress>0||this.firstDay?.started) start.firstElementChild.textContent='继续我的冒险';
     // 全局眨眼循环
     setInterval(()=>this.blink(),3200);
     // 术语链接点击（捕获阶段，避免触发对话推进）
@@ -223,7 +224,7 @@ const G = {
     p.innerHTML=`<div class="tp-box"><b>${PQ.pxi('book',14,'var(--accent)')} ${t.name}</b><div class="tp-def">${t.def}</div>${t.src?`<div class="tp-src">${t.src}</div>`:''}<div class="tp-close">— 点击任意处关闭 —</div></div>`;
     p.classList.add('show');
   },
-  save(){ try{ localStorage.setItem((window.OPC_SAVE_KEY || 'pmquest2'), JSON.stringify({trust:this.trust,unlocked:this.unlocked,notes:this.notes,progress:this.progress,avatar:this.avatar,stats:this.stats||{},exploration:this.exploration||{}})); }catch(e){} },
+  save(){ try{ localStorage.setItem((window.OPC_SAVE_KEY || 'pmquest2'), JSON.stringify({trust:this.trust,unlocked:this.unlocked,notes:this.notes,progress:this.progress,avatar:this.avatar,stats:this.stats||{},exploration:this.exploration||{},firstDay:this.firstDay})); }catch(e){} },
   load(){ try{ const d=JSON.parse(localStorage.getItem((window.OPC_SAVE_KEY || 'pmquest2'))); if(d){Object.assign(this,d); this.avatar=normalizeAvatar(d.avatar);} }catch(e){} },
 
   /* ---------- 角色DIY ---------- */
@@ -253,7 +254,7 @@ const G = {
   startFromLanding(){
     if(this._diving) return;
     SFX.click();
-    if(this.progress>0){ this.toMap(); return; }
+    if(this.progress>0||this.firstDay?.started){ this.toMap(); return; }
     if(window.PQIsland && PQIsland.partCloudsAndDiveTo){
       this._diving=true;
       PQIsland.partCloudsAndDiveTo('avatar',()=>{
@@ -389,10 +390,13 @@ const G = {
 
   show(id, opts){
     opts=opts||{};
+    if(id!=='play-screen'){clearTimeout(this._startTimer);clearInterval(this.typeTimer);clearInterval(this.talkAnim);this.typing=false;document.getElementById('feedback').classList.remove('show');document.getElementById('quiz-panel').classList.remove('show');}
+    if(window.PQFirstDay)PQFirstDay.closeDialog();
+    if(window.PQStory3D?.active&&!['play-screen','social-screen','end-screen'].includes(id))PQStory3D.exit();
     document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
     document.getElementById(id).classList.add('active');
     const g=document.getElementById('game');
-    const is3d=(id==='landing'||id==='avatar-screen'||id==='map-screen');
+    const is3d=(id==='landing'||id==='avatar-screen'||id==='map-screen'||!!window.PQStory3D?.active);
     if(g){
       g.dataset.screen=id;
       g.classList.toggle('world-mode', is3d);
@@ -404,6 +408,7 @@ const G = {
     }
     document.getElementById('game').scrollTop=0;
     fitGame();
+    if(window.PQFirstDay&&this.firstDay)PQFirstDay.render();
   },
 
   toWorld(){ this.toMap({ archipelago: true }); },
@@ -418,6 +423,7 @@ const G = {
     if(window.PQIsland){
       PQIsland.onShow({ archipelago: !!opts.archipelago, diveFromBadge: !!opts.diveFromBadge });
     }
+    if(window.PQFirstDay)PQFirstDay.onMap();
   },
 
   closeBuilding(silent){
@@ -427,6 +433,7 @@ const G = {
   },
 
   openBuilding(b){
+    if(window.PQFirstDay?.interceptBuilding(b))return;
     SFX.click();
     if(b.archive){ this.openArchive(); return; }
     const panel=document.getElementById('bpanel');
@@ -437,6 +444,7 @@ const G = {
       return;
     }
     let html=`<div class="bp-head"><div class="bp-title">${PQ.pxi(PQ.bicon[b.id]||"building",16,"var(--accent)")} ${b.name}</div><button type="button" class="bp-close" aria-label="关闭" onclick="G.closeBuilding()">×</button></div>`;
+    if(b.id==='cafe')html+=`<button class="exp-primary" onclick="PQFirstDay.enterCafe()">进咖啡馆坐坐 · 点单 / 聊天 ↗</button>`;
     if(b.subtitle) html+=`<div class="bp-sub">${b.subtitle}</div>`;
     const completed=this.buildingChapters(b).filter(c=>c.complete);
     if(completed.length){
@@ -489,6 +497,7 @@ const G = {
   enterBuildingLevel(i, bId){
     SFX.click();
     this.closeBuilding(true);
+    if(window.PQStory3D&&['p1','c1','c2','u1'].includes(LEVELS[i].id)&&PQIsland.running){PQFirstDay.transition(bId,()=>this.startLevel(i));return;}
     if(window.PQIsland && PQIsland.running){
       PQIsland.zoomIntoBuilding(bId, ()=>this.startLevel(i));
     } else {
@@ -531,6 +540,11 @@ const G = {
     this.dScore=0; this.qOk=0;
     const lv=LEVELS[i];
     this._npcKey=lv.npc;
+    this._story3d=!!window.PQStory3D&&['p1','c1','c2','u1'].includes(lv.id);
+    if(this._story3d){
+      if(lv.id==='p1')PQFirstDay.step('enterOffice');
+      PQStory3D.enter(lv.scene==='cafe'?'cafe':'office',lv.npc,lv.scene==='night'?true:undefined);
+    }else if(window.PQStory3D?.active)PQStory3D.exit();
     this.dMax=lv.script.filter(n=>n.choices||n.forensic).length*2;
     this.qTotal=(lv.quiz||[]).length;
     document.getElementById('hud-loc').textContent=lv.ch+' — '+lv.name;
@@ -554,11 +568,16 @@ const G = {
       me.style.left = lv.solo?'40%':'20%';
       if(!lv.solo) npc.style.left='60%';
     }));
-    setTimeout(()=>this.playNode(), 500);
+    clearTimeout(this._startTimer);
+    this._startTimer=setTimeout(()=>{
+      if(lv.id==='p1'&&PQFirstDay.restoreLesson())return;
+      this.playNode();
+    },this._story3d?150:500);
   },
 
   setTalking(who){ // who: 'me'|'npc'|null
     const lv=LEVELS[this.lvIdx];
+    if(window.PQStory3D?.active){clearInterval(this.talkAnim);return;}
     const meEl=document.getElementById('sp-me'), npcEl=document.getElementById('sp-npc');
     meEl.classList.remove('talking'); npcEl.classList.remove('talking');
     clearInterval(this.talkAnim);
@@ -573,12 +592,14 @@ const G = {
     },170);
   },
   stopMouth(){
+    if(window.PQStory3D?.active)return;
     clearInterval(this.talkAnim);
     const lv=LEVELS[this.lvIdx];
     drawSprite(document.getElementById('sp-me').querySelector('canvas'),'me');
     if(!lv.solo && (this._npcKey||lv.npc)) drawSprite(document.getElementById('sp-npc').querySelector('canvas'),this._npcKey||lv.npc);
   },
   blink(){
+    if(window.PQStory3D?.active)return;
     if(!document.getElementById('play-screen').classList.contains('active'))return;
     const lv=LEVELS[this.lvIdx]; if(!lv)return;
     const targets=[['sp-me','me']]; const nk=this._npcKey||lv.npc; if(!lv.solo&&nk&&SPRITES[nk])targets.push(['sp-npc',nk]);
@@ -601,6 +622,11 @@ const G = {
     const lv=LEVELS[this.lvIdx];
     if(this.nodeIdx>=lv.script.length){ this.startQuiz(); return; }
     const node=lv.script[this.nodeIdx];
+    if(window.PQStory3D?.active){
+      if(node.sp&&node.sp!=='n'&&node.sp!=='me')PQStory3D.ensureNpc(node.sp);
+      PQStory3D.focus(node.sp||'n');
+    }
+    if(window.PQFirstDay)PQFirstDay.saveLesson('story');
     const sp=document.getElementById('speaker');
     const dtext=document.getElementById('dtext');
     document.getElementById('choices').innerHTML='';
@@ -641,7 +667,7 @@ const G = {
       sp.style.background='linear-gradient(#f08a9b,#e05a6d)'; sp.style.color='#fff'; this.setTalking('npc'); if(node.emo)this.emote('npc',node.emo); }
 
     if(node.term) this.unlock(node.term);
-    this.typeText(node.t, ()=>{
+    this.typeText(window.PQFirstDay?PQFirstDay.nodeText(node,node.t):node.t, ()=>{
       this.setTalking(null); this.stopMouth();
       if(node.choices) this.showChoices(node.choices);
       else document.getElementById('next-hint').style.display='block';
@@ -782,6 +808,7 @@ const G = {
     this.showQuizQ();
   },
   showQuizQ(){
+    if(window.PQFirstDay)PQFirstDay.saveLesson('quiz');
     const lv=LEVELS[this.lvIdx], q=lv.quiz[this.quizIdx];
     document.getElementById('quiz-idx').textContent=`第 ${this.quizIdx+1} / ${lv.quiz.length} 题`;
     document.getElementById('quiz-q').textContent=q.q;
@@ -874,6 +901,12 @@ const G = {
       document.getElementById('end-tease').textContent=`✦ ${chapter.ch}已完成 · 返回世界，与点亮的建筑互动，回顾成果或开启庆典。`;
       if(window.PQIsland?.environment)PQIsland.environment.pendingChapter=chapter.id;
     }
+    if(lv.id==='p1'&&window.PQFirstDay)PQFirstDay.step('passOffice');
+    const nextButton=document.querySelector('#end-screen>button');
+    const coffeeNext=lv.id==='p1'&&['cafe','coffee'].includes(this.firstDay?.stage);
+    nextButton.textContent=coffeeNext?'和小美去喝一杯 →':'返回世界 →';
+    nextButton.onclick=()=>this.toMap();
+    if(coffeeNext)document.getElementById('end-tease').textContent='小美在楼下等你：第一天的任务完成了，一起去蓝山坐坐。';
     SFX.unlock();
     this.show('end-screen');
     if(lv.finale){ setTimeout(()=>this.showBadge({gold:true}), 900); }
@@ -915,7 +948,7 @@ const G = {
   exportSave(){
     SFX.click();
     const raw = localStorage.getItem((window.OPC_SAVE_KEY || 'pmquest2')) ||
-      JSON.stringify({trust:this.trust,unlocked:this.unlocked,notes:this.notes,progress:this.progress,avatar:this.avatar,stats:this.stats||{},exploration:this.exploration||{}});
+      JSON.stringify({trust:this.trust,unlocked:this.unlocked,notes:this.notes,progress:this.progress,avatar:this.avatar,stats:this.stats||{},exploration:this.exploration||{},firstDay:this.firstDay});
     const blob = new Blob([raw], {type:'application/json'});
     const a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
@@ -1004,7 +1037,7 @@ const G = {
 
 document.getElementById('dialog').addEventListener('click',e=>{ if(e.target.closest('#choices')||e.target.closest('.kcard'))return; G.advance(); });
 document.addEventListener('keydown',e=>{
-  if(e.key===' '||e.key==='Enter'){
+  if((e.key===' '||e.key==='Enter')&&!/BUTTON|INPUT|TEXTAREA|SELECT/.test(e.target.tagName)){
     if(document.getElementById('play-screen').classList.contains('active')
       && !document.getElementById('feedback').classList.contains('show')
       && !document.getElementById('quiz-panel').classList.contains('show')){ e.preventDefault(); G.advance(); }
@@ -1024,12 +1057,15 @@ function fitGame(){
 window.addEventListener('resize', fitGame);
 function bootPQ(){
   fitGame();
-  try{ G.init(); }catch(e){ console.error('PQ boot error:', e); }
+  const retry=()=>{
+    const panel=document.createElement('div');panel.id='world-load-retry';panel.setAttribute('role','alert');
+    panel.innerHTML='<div><span class="journey-eyebrow">PRODUCT QUEST</span><h2>世界还没准备好。</h2><p>部分画面资源没有完整载入。重新载入后，就可以继续你的冒险。</p><button class="journey-primary">重新载入 →</button></div>';
+    panel.querySelector('button').onclick=()=>location.reload();document.getElementById('game').appendChild(panel);
+  };
+  if(!window.THREE||!window.PQIsland||!window.PQFirstDay||!window.PQStory3D){retry();return;}
+  try{ G.init(); }catch(e){ console.error('PQ boot error:', e);retry(); }
 }
 window.G = G;
 window.PLAYER_TPL = PLAYER_TPL;
-if(document.readyState === 'loading'){
-  document.addEventListener('DOMContentLoaded', bootPQ);
-} else {
-  bootPQ();
-}
+// This script follows the complete DOM and all local dependencies. Optional analytics must not delay play.
+bootPQ();
