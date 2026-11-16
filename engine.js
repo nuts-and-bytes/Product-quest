@@ -36,6 +36,18 @@ const FACE = {
 };
 function drawSprite(canvas, key, opt){
   opt=opt||{};
+  if(window.PQIsland && PQIsland.renderCharacterToCanvas){
+    const inStage = canvas && canvas.closest && canvas.closest('#stage');
+    PQIsland.renderCharacterToCanvas(canvas, key, {
+      mouthOpen: !!opt.mouthOpen,
+      blink: !!opt.blink,
+      pedestal: opt.pedestal !== undefined ? opt.pedestal : !inStage,
+      yaw: opt.yaw !== undefined ? opt.yaw : (inStage ? -0.35 : 0.25),
+      walking: !!opt.walking,
+      timeSec: opt.timeSec || 0
+    });
+    return;
+  }
   let map, pal=PAL, face=FACE[key]||{mouth:[6,7,4], eyes:[[4,5,2],[10,5,2]]}, skin='#f2c19a';
   const hasG = (typeof G!=='undefined') && G && G.avatar;
   if(key==='me'){
@@ -48,7 +60,7 @@ function drawSprite(canvas, key, opt){
   const ctx=canvas.getContext('2d');
   canvas.width=16; canvas.height=24;
   map.forEach((row,y)=>{ for(let x=0;x<16;x++){ const c=pal[row[x]]; if(c){ctx.fillStyle=c; ctx.fillRect(x,y,1,1);} } });
-  if(key==='me' && hasG && G.avatar.glasses){
+  if(key==='me' && hasG && G.avatar.glasses && G.avatar.glasses!=='none' && G.avatar.glasses!=='0'){
     ctx.fillStyle='#22344f';
     // 左镜框（空心方框，露出眼睛）
     ctx.fillRect(3,4,4,1); ctx.fillRect(3,6,4,1); ctx.fillRect(3,5,1,1); ctx.fillRect(6,5,1,1);
@@ -117,27 +129,49 @@ const SFX = {
 const QUIET=/[\s，。！？、；：""''（）《》〈〉—…·,.!?;:'"()\[\]]/; // 打字时不发声的字符
 const PAINS = PQ.pains; // 痛点文案由 content/world.js 注册
 const AV_COLORS = {
-  hair:['#2b2b2b','#5c3a21','#c8534f','#e0a63f','#8e5aa8','#9aa8b8'],
-  skin:['#f2c19a','#e3a878','#c98a5e'],
-  cloth:['#4f9df0','#3fae6b','#e05a6d','#ffcd75','#8e5aa8','#5b6b8c']
+  hair:['#ffd15c','#ff85a2','#5cc8ff','#ff9b54','#b085f5','#6cd488','#8c583a','#f4f6fc'],
+  skin:['#fff1e6','#ffe4d4','#f7d0b0'],
+  cloth:['#5cb9ff','#ff86a8','#ffd454','#5cd68d','#a57cff','#ff9248','#fff5e6']
 };
+const PM_PRESETS = [
+  { id:'rookie',     label:'🐣 奶油元气鹅', style:'short',    outfit:'hoodie',     hair:'#ffd15c', skin:'#fff1e6', cloth:'#5cb9ff', glasses:'none',  prop:'coffee' },
+  { id:'researcher', label:'🍓 草莓甜心PM', style:'long',     outfit:'sweater',    hair:'#ff85a2', skin:'#fff1e6', cloth:'#ff86a8', glasses:'none',  prop:'coffee' },
+  { id:'geek',       label:'🐱 猫耳极客PM', style:'cap',      outfit:'hoodie',     hair:'#5cc8ff', skin:'#ffe4d4', cloth:'#5cd68d', glasses:'black', prop:'headset' },
+  { id:'director',   label:'🧸 焦糖暖熊姐', style:'curly',    outfit:'suit',       hair:'#ff9b54', skin:'#fff1e6', cloth:'#ffd454', glasses:'gold',  prop:'laptop' },
+  { id:'visionary',  label:'✨ 星光独角兽', style:'bun',      outfit:'turtleneck', hair:'#b085f5', skin:'#fff1e6', cloth:'#a57cff', glasses:'gold',  prop:'laptop' },
+  { id:'hacker',     label:'🍊 阳光多巴胺', style:'ponytail', outfit:'shirt',      hair:'#f4f6fc', skin:'#ffe4d4', cloth:'#ff9248', glasses:'sun',   prop:'coffee' }
+];
+const _DEFAULT_AV = { preset:'rookie', style:'short', outfit:'hoodie', hair:'#ffd15c', skin:'#fff1e6', cloth:'#5cb9ff', glasses:'none', prop:'coffee', name:'你' };
+const _BRIGHT_UPGRADE = {
+  '#2b2b2b':'#ffd15c', '#262235':'#b085f5', '#4a3222':'#ff9b54', '#5c3a21':'#ff85a2',
+  '#8a99ad':'#f4f6fc', '#2c3e66':'#5cb9ff', '#23293a':'#a57cff', '#4f9df0':'#5cb9ff',
+  '#3fae6b':'#5cd68d', '#e05a6d':'#ff86a8', '#7c4dff':'#a57cff', '#f2c19a':'#fff1e6',
+  '#f7cbb0':'#fff1e6', '#e3a878':'#ffe4d4'
+};
+function normalizeAvatar(av){
+  const a = Object.assign({}, _DEFAULT_AV, av || {});
+  if(_BRIGHT_UPGRADE[a.hair]) a.hair = _BRIGHT_UPGRADE[a.hair];
+  if(_BRIGHT_UPGRADE[a.skin]) a.skin = _BRIGHT_UPGRADE[a.skin];
+  if(_BRIGHT_UPGRADE[a.cloth]) a.cloth = _BRIGHT_UPGRADE[a.cloth];
+  if(a.glasses === true || a.glasses === '1') a.glasses = 'black';
+  else if(!a.glasses || a.glasses === '0') a.glasses = 'none';
+  if(!['short','long','ponytail','curly','bun','cap'].includes(a.style)) a.style = 'short';
+  if(!['hoodie','suit','shirt','sweater','turtleneck'].includes(a.outfit)) a.outfit = 'hoodie';
+  if(!['coffee','laptop','headset','none'].includes(a.prop)) a.prop = 'coffee';
+  return a;
+}
 const G = {
   trust:100, unlocked:[], notes:[], progress:0, stats:{},
-  avatar:{style:'short', hair:'#2b2b2b', skin:'#f2c19a', cloth:'#4f9df0', glasses:false, name:'你'},
+  avatar:{..._DEFAULT_AV},
   lvIdx:0, nodeIdx:0, typing:false, typeTimer:null,
   dScore:0, dMax:0, qOk:0, qTotal:0, // 本关得分
   quizIdx:0, talkAnim:null, blinkTimer:null, painIdx:0,
 
   init(){
-    for(let i=0;i<46;i++){
-      const s=document.createElement('div'); s.className='star';
-      const sz=Math.random()<.8?3:5;
-      s.style.cssText=`left:${Math.random()*100}%;top:${Math.random()*100}%;width:${sz}px;height:${sz}px;animation-delay:${Math.random()*2.4}s`;
-      document.getElementById('landing').appendChild(s);
-    }
     this.load(); this.renderDex();
     PQ.hydratePxi(document); // 像素图标注入
     this.syncMute();         // 静音状态跨会话保留，图标得跟上
+    if(window.PQIsland) PQIsland.onShow({ cinematic:'landing', snap:true });
     // 首页角色阵容
     [['cast-me','me'],['cast-boss','boss'],['cast-xiaomei','xiaomei'],['cast-lijie','lijie']].forEach(([id,key])=>{
       const c=document.getElementById(id); if(c&&c.getContext) drawSprite(c,key);
@@ -202,45 +236,116 @@ const G = {
     p.innerHTML=`<div class="tp-box"><b>${PQ.pxi('book',14,'var(--accent)')} ${t.name}</b><div class="tp-def">${t.def}</div>${t.src?`<div class="tp-src">${t.src}</div>`:''}<div class="tp-close">— 点击任意处关闭 —</div></div>`;
     p.classList.add('show');
   },
-  save(){ try{ localStorage.setItem('pmquest2', JSON.stringify({trust:this.trust,unlocked:this.unlocked,notes:this.notes,progress:this.progress,avatar:this.avatar,stats:this.stats||{}})); }catch(e){} },
-  load(){ try{ const d=JSON.parse(localStorage.getItem('pmquest2')); if(d){Object.assign(this,d); if(!d.avatar)this.avatar={style:'short',hair:'#2b2b2b',skin:'#f2c19a',cloth:'#4f9df0',glasses:false,name:'你'};} }catch(e){} },
+  save(){ try{ localStorage.setItem((window.OPC_SAVE_KEY || 'pmquest2'), JSON.stringify({trust:this.trust,unlocked:this.unlocked,notes:this.notes,progress:this.progress,avatar:this.avatar,stats:this.stats||{}})); }catch(e){} },
+  load(){ try{ const d=JSON.parse(localStorage.getItem((window.OPC_SAVE_KEY || 'pmquest2'))); if(d){Object.assign(this,d); this.avatar=normalizeAvatar(d.avatar);} }catch(e){} },
 
   /* ---------- 角色DIY ---------- */
-  toAvatar(){
-    SFX.click(); this.show('avatar-screen');
+  applyPreset(id){
+    const p=PM_PRESETS.find(x=>x.id===id);
+    if(!p) return;
+    SFX.click();
+    this.avatar=normalizeAvatar({...this.avatar, preset:p.id, style:p.style, outfit:p.outfit, hair:p.hair, skin:p.skin, cloth:p.cloth, glasses:p.glasses, prop:p.prop});
+    this.toAvatarRefresh();
+  },
+  randomAvatar(){
+    SFX.click();
+    const pick=(arr)=>arr[Math.floor(Math.random()*arr.length)];
+    this.avatar=normalizeAvatar({
+      ...this.avatar,
+      preset:'',
+      style:pick(['short','long','ponytail','curly','bun','cap']),
+      outfit:pick(['hoodie','suit','shirt','sweater','turtleneck']),
+      prop:pick(['coffee','laptop','headset','none']),
+      glasses:pick(['none','black','gold','sun']),
+      hair:pick(AV_COLORS.hair),
+      skin:pick(AV_COLORS.skin),
+      cloth:pick(AV_COLORS.cloth)
+    });
+    this.toAvatarRefresh();
+  },
+  startFromLanding(){
+    if(this._diving) return;
+    SFX.click();
+    if(window.PQIsland && PQIsland.partCloudsAndDiveTo){
+      this._diving=true;
+      PQIsland.partCloudsAndDiveTo('avatar',()=>{
+        this._diving=false;
+        this.toAvatar({ keepCamera:true });
+      });
+    } else {
+      this.toAvatar();
+    }
+  },
+  toAvatar(opts){
+    opts=opts||{};
+    SFX.click(); this.show('avatar-screen', opts);
+    this.avatar=normalizeAvatar(this.avatar);
     document.getElementById('av-name').value=this.avatar.name==='你'?'':this.avatar.name;
+    // 6套预设PM形象 + 随机按钮
+    const pBox=document.getElementById('av-presets');
+    if(pBox){
+      pBox.innerHTML='';
+      PM_PRESETS.forEach(p=>{
+        const b=document.createElement('button');
+        b.type='button';
+        const match=this.avatar.preset===p.id && this.avatar.style===p.style && this.avatar.outfit===p.outfit && this.avatar.cloth===p.cloth;
+        b.className='av-preset'+(match?' on':'');
+        b.textContent=p.label;
+        b.onclick=()=>this.applyPreset(p.id);
+        pBox.appendChild(b);
+      });
+      const rb=document.createElement('button');
+      rb.type='button';
+      rb.className='av-preset rand';
+      rb.textContent='🎲 随机搭配';
+      rb.onclick=()=>this.randomAvatar();
+      pBox.appendChild(rb);
+    }
     // 色板
     [['av-hair','hair'],['av-skin','skin'],['av-cloth','cloth']].forEach(([id,key])=>{
       const box=document.getElementById(id); box.innerHTML='';
-      box.style.cssText='display:flex;gap:8px;flex-wrap:wrap';
+      box.style.cssText='display:flex;gap:7px;flex-wrap:wrap';
       AV_COLORS[key].forEach(c=>{
         const s=document.createElement('div');
         s.className='swatch'+(this.avatar[key]===c?' on':'');
         s.style.background=c;
-        s.onclick=()=>{ SFX.click(); this.avatar[key]=c; this.toAvatarRefresh(); };
+        s.onclick=()=>{ SFX.click(); this.avatar[key]=c; this.avatar.preset=''; this.toAvatarRefresh(); };
         box.appendChild(s);
       });
     });
     document.querySelectorAll('[data-style]').forEach(b=>{
       b.classList.toggle('on', b.dataset.style===this.avatar.style);
-      b.onclick=()=>{ SFX.click(); this.avatar.style=b.dataset.style; this.toAvatarRefresh(); };
+      b.onclick=()=>{ SFX.click(); this.avatar.style=b.dataset.style; this.avatar.preset=''; this.toAvatarRefresh(); };
+    });
+    document.querySelectorAll('[data-outfit]').forEach(b=>{
+      b.classList.toggle('on', b.dataset.outfit===this.avatar.outfit);
+      b.onclick=()=>{ SFX.click(); this.avatar.outfit=b.dataset.outfit; this.avatar.preset=''; this.toAvatarRefresh(); };
+    });
+    document.querySelectorAll('[data-prop]').forEach(b=>{
+      b.classList.toggle('on', b.dataset.prop===this.avatar.prop);
+      b.onclick=()=>{ SFX.click(); this.avatar.prop=b.dataset.prop; this.avatar.preset=''; this.toAvatarRefresh(); };
     });
     document.querySelectorAll('[data-gl]').forEach(b=>{
-      b.classList.toggle('on', (b.dataset.gl==='1')===this.avatar.glasses);
-      b.onclick=()=>{ SFX.click(); this.avatar.glasses=b.dataset.gl==='1'; this.toAvatarRefresh(); };
+      b.classList.toggle('on', b.dataset.gl===this.avatar.glasses);
+      b.onclick=()=>{ SFX.click(); this.avatar.glasses=b.dataset.gl; this.avatar.preset=''; this.toAvatarRefresh(); };
     });
     drawSprite(document.getElementById('av-prev'),'me');
   },
   toAvatarRefresh(){
     const v=document.getElementById('av-name').value; // 保留未确认的昵称输入
-    this.save(); this.toAvatar();
+    this.save();
+    if(window.PQIsland && PQIsland.inited) PQIsland.rebuildPlayer();
+    const cm=document.getElementById('cast-me'); if(cm) drawSprite(cm,'me');
+    this.toAvatar();
     document.getElementById('av-name').value=v;
   },
   confirmAvatar(){
     const n=document.getElementById('av-name').value.trim();
     this.avatar.name=n||'你';
     if(this.progress===0) this.track('game_start');
-    this.save(); this.showBadge();
+    this.save();
+    if(window.PQIsland && PQIsland.inited) PQIsland.rebuildPlayer();
+    this.showBadge();
   },
   showBadge(opts){
     opts=opts||{}; this._gold=!!opts.gold;
@@ -253,7 +358,7 @@ const G = {
     card.querySelector('.card-no').textContent=this._gold?'NO. SPARK-2026-PM ★ 全章通关认证':'NO. SPARK-2026-001 · 产品部';
     document.getElementById('badge-stamp').innerHTML=this._gold?'通关<br>认证':'入职<br>成功';
     document.getElementById('badge-cap').textContent=this._gold?'★ 恭喜通关 · 星火认证产品经理 ★':'✦ 欢迎加入星火科技 ✦';
-    document.getElementById('badge-go').innerHTML=this._gold?'★ 生成我的作品集 ▶':'★ 正式上岗 · 前往学习世界 ▶';
+    document.getElementById('badge-go').innerHTML=this._gold?'★ 生成我的作品集 ▶':'★ 正式上岗 · 降落星火岛 ▶';
     drawSprite(document.getElementById('badge-canvas'),'me');
     // 重置动画（支持重复观看）
     ['idcard','badge-stamp','badge-cap','badge-go'].forEach(id=>{
@@ -277,61 +382,76 @@ const G = {
   badgeGo(){ SFX.click();
     document.getElementById('badge-modal').classList.remove('show');
     if(this._gold){ this._gold=false; this.exportPortfolio(); this.toMap(); }
-    else this.toWorld();
+    else this.toMap({ archipelago:false, diveFromBadge:true });
   },
-  resetAll(){ if(confirm('确定清空全部进度？')){ try{localStorage.removeItem('pmquest2');}catch(e){} location.reload(); } },
+  resetAll(){ if(confirm('确定清空全部进度？')){ try{localStorage.removeItem((window.OPC_SAVE_KEY || 'pmquest2'));}catch(e){} location.reload(); } },
 
-  show(id){ document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active')); document.getElementById(id).classList.add('active'); },
+  toggleLandingPeek(){
+    SFX.click();
+    const l=document.getElementById('landing');
+    const b=document.getElementById('land-peek-btn');
+    if(!l) return;
+    const on=l.classList.toggle('peek-island');
+    if(window.PQIsland && PQIsland.setCloudOpen) PQIsland.setCloudOpen(on?0.68:0);
+    if(b){
+      b.classList.toggle('active', on);
+      b.textContent=on?'✕ 返回首页':'🔭 纯享海岛';
+    }
+  },
 
-  toWorld(){ SFX.click(); this.show('world-screen'); },
+  show(id, opts){
+    opts=opts||{};
+    document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+    const g=document.getElementById('game');
+    const is3d=(id==='landing'||id==='avatar-screen'||id==='map-screen');
+    if(g){
+      g.dataset.screen=id;
+      g.classList.toggle('world-mode', is3d);
+    }
+    if(window.PQIsland){
+      if(id==='landing') PQIsland.onShow({ cinematic:'landing' });
+      else if(id==='avatar-screen' && !opts.keepCamera) PQIsland.onShow({ cinematic:'avatar' });
+      else if(!is3d) PQIsland.onHide();
+    }
+    fitGame();
+  },
 
-  toMap(){
+  toWorld(){ this.toMap({ archipelago: true }); },
+
+  toMap(opts){
+    opts=opts||{};
     SFX.click();
     this.show('map-screen');
-    document.getElementById('map-prog').textContent=`主线进度 ${this.progress}/${LEVELS.length}`+(this.progress>=LEVELS.length?' · ★ 全部通关':'');
+    document.getElementById('map-prog').textContent=`主线 ${this.progress}/${LEVELS.length}`+(this.progress>=LEVELS.length?' · ★ 通关':'');
     document.getElementById('map-bar-fill').style.width=(this.progress/LEVELS.length*100)+'%';
-    const city=document.getElementById('city');
-    city.querySelectorAll('.bld').forEach(b=>b.remove());
-    const curLv = Math.min(this.progress, LEVELS.length-1);
-    const curBld = this.progress>=LEVELS.length ? 'hq' : (BUILDINGS.find(b=>b.levels&&b.levels.includes(LEVELS[curLv].id))||{}).id;
-    BUILDINGS.forEach(b=>{
-      const div=document.createElement('div');
-      const states=(b.levels||[]).map(id=>{ const i=LEVELS.findIndex(l=>l.id===id); return i<this.progress?'done':i===this.progress?'current':'locked'; });
-      const hasCurrent=states.includes('current');
-      const allDone=b.levels&&states.every(s=>s==='done');
-      div.className='bld'+(b.lock?' locked':'')+(hasCurrent?' here':'');
-      div.style.left=b.x+'%'; div.style.top=b.y+'%';
-      div.innerHTML=`<span class="bsign">${PQ.pxi(PQ.bicon[b.id]||"building",22,"#f2f4ff")}</span>
-        <div class="roof" style="width:${b.w-18}px"></div>
-        <div class="body" style="width:${b.w}px; height:${b.h}px; background-color:${b.color}"></div>
-        <div class="bname">${b.name}</div>
-        <div class="bstate">${b.lock?PQ.pxi('lock',10,'#dfe6f5'): b.archive?'支线': allDone?'✔': hasCurrent?'!任务':(b.levels?states.filter(s=>s==='done').length+'/'+b.levels.length:'')}</div>`;
-      div.onclick=()=>G.openBuilding(b);
-      city.appendChild(div);
-    });
-    // 玩家小人站在当前任务建筑旁
-    const pb=BUILDINGS.find(b=>b.id===curBld)||BUILDINGS[0];
-    const p=document.getElementById('city-player');
-    drawSprite(p,'me');
-    p.style.left=`calc(${pb.x}% + ${pb.w+10}px)`; p.style.top=`calc(${pb.y}% + ${pb.h-40}px)`;
-    // 自动展示当前任务建筑的最新状态（修复：通关后面板显示旧的锁定状态）
-    if(this.progress>=LEVELS.length){
-      document.getElementById('bpanel').innerHTML='<div class="bp-title">★ 现有章节全部通关！</div><div class="bp-hint">新章节正在快马加鞭制作中。可重玩任意关卡刷新评级，或去产品档案馆读读案例。</div>';
-    } else {
-      const curB=BUILDINGS.find(b=>b.id===curBld);
-      if(curB) this.openBuilding(curB);
+    this.closeBuilding(true);
+    if(window.PQIsland){
+      PQIsland.onShow({ archipelago: !!opts.archipelago, diveFromBadge: !!opts.diveFromBadge });
     }
+  },
+
+  closeBuilding(silent){
+    if(!silent) SFX.click();
+    const panel=document.getElementById('bpanel');
+    if(panel) panel.classList.remove('open');
   },
 
   openBuilding(b){
     SFX.click();
+    if(b.archive){ this.openArchive(); return; }
     const panel=document.getElementById('bpanel');
     if(b.lock){
-      panel.innerHTML=`<div class="bp-title">${PQ.pxi(PQ.bicon[b.id]||"building",16,"var(--accent)")} ${b.name}</div><div class="bp-hint">${PQ.pxi("lock",12,"#8fa7c9")} ${b.lock}<br>这座建筑将随完整版章节更新开放，星火市会越来越热闹。</div>`;
+      panel.innerHTML=`<div class="bp-head"><div class="bp-title">${PQ.pxi(PQ.bicon[b.id]||"building",16,"var(--accent)")} ${b.name}</div><button type="button" class="bp-close" aria-label="关闭" onclick="G.closeBuilding()">×</button></div>`
+        +`<div class="bp-hint">${PQ.pxi("lock",12,"#8fa7c9")} ${b.lock}<br>这座建筑将随完整版章节更新开放，星火岛会越来越热闹。</div>`;
+      panel.classList.add('open');
       return;
     }
-    if(b.archive){ this.openArchive(); return; }
-    let html=`<div class="bp-title">${PQ.pxi(PQ.bicon[b.id]||"building",16,"var(--accent)")} ${b.name}</div>`;
+    let html=`<div class="bp-head"><div class="bp-title">${PQ.pxi(PQ.bicon[b.id]||"building",16,"var(--accent)")} ${b.name}</div><button type="button" class="bp-close" aria-label="关闭" onclick="G.closeBuilding()">×</button></div>`;
+    if(b.subtitle) html+=`<div class="bp-sub">${b.subtitle}</div>`;
+    if(this.progress>=LEVELS.length && b.id==='hq'){
+      html+=`<div class="bp-hint" style="margin-bottom:8px;color:var(--green)">★ 现有章节全部通关！可重玩任意关卡刷新评级，或去中央广场欣赏 8 座里程碑雕塑。</div>`;
+    }
     let lastCh='';
     b.levels.forEach(id=>{
       const i=LEVELS.findIndex(l=>l.id===id), lv=LEVELS[i];
@@ -340,10 +460,21 @@ const G = {
       const nQ=(lv.quiz||[]).length, nD=lv.script.filter(n=>n.choices||n.forensic).length;
       html+=`<div class="bp-lv"><span class="st">${st==='done'?'<span style="color:var(--green)">✔</span>': st==='current'?'<span style="color:var(--accent)">★</span>': PQ.pxi('lock',12,'#8fa7c9')}</span>
         <span class="nm">${lv.isBoss?'<span style="color:var(--accent)">★</span> ':''}${lv.name}<small>${lv.loc} · ${nD}个决策 · ${nQ}题检验${lv.note?' · 方法卡×1':''}</small></span>
-        ${st!=='locked'?`<button class="pxbtn small" onclick="G.startLevel(${i})">${st==='done'?'重玩':'进入 ▶'}</button>`:''}
+        ${st!=='locked'?`<button class="pxbtn small" onclick="G.enterBuildingLevel(${i},'${b.id}')">${st==='done'?'重玩':'进入 ▶'}</button>`:''}
       </div>`;
     });
     panel.innerHTML=html;
+    panel.classList.add('open');
+  },
+
+  enterBuildingLevel(i, bId){
+    SFX.click();
+    this.closeBuilding(true);
+    if(window.PQIsland && PQIsland.running){
+      PQIsland.zoomIntoBuilding(bId, ()=>this.startLevel(i));
+    } else {
+      this.startLevel(i);
+    }
   },
 
   /* ---------- 档案馆（支线） ---------- */
@@ -759,7 +890,7 @@ const G = {
   /* ---------- 存档导出/导入（无后端的进度迁移方案） ---------- */
   exportSave(){
     SFX.click();
-    const raw = localStorage.getItem('pmquest2') ||
+    const raw = localStorage.getItem((window.OPC_SAVE_KEY || 'pmquest2')) ||
       JSON.stringify({trust:this.trust,unlocked:this.unlocked,notes:this.notes,progress:this.progress,avatar:this.avatar,stats:this.stats||{}});
     const blob = new Blob([raw], {type:'application/json'});
     const a = document.createElement('a');
@@ -777,7 +908,7 @@ const G = {
         try{
           const d = JSON.parse(r.result);
           if(typeof d.progress !== 'number' || !Array.isArray(d.unlocked)) throw 0;
-          localStorage.setItem('pmquest2', JSON.stringify(d));
+          localStorage.setItem((window.OPC_SAVE_KEY || 'pmquest2'), JSON.stringify(d));
           location.reload();
         }catch(e){ alert('存档文件无效，请选择由「导出存档」生成的 JSON 文件'); }
       };
@@ -859,7 +990,7 @@ document.addEventListener('keydown',e=>{
 function fitGame(){
   const g=document.getElementById('game');
   if(!g) return;
-  if(window.innerWidth<=720 || (window.matchMedia && window.matchMedia('(max-width: 720px)').matches)){
+  if(g.classList.contains('world-mode') || window.innerWidth<=720 || (window.matchMedia && window.matchMedia('(max-width: 720px)').matches)){
     g.style.zoom='';
     return;
   }
@@ -871,6 +1002,8 @@ function bootPQ(){
   fitGame();
   try{ G.init(); }catch(e){ console.error('PQ boot error:', e); }
 }
+window.G = G;
+window.PLAYER_TPL = PLAYER_TPL;
 if(document.readyState === 'loading'){
   document.addEventListener('DOMContentLoaded', bootPQ);
 } else {
