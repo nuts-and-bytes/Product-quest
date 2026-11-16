@@ -2807,7 +2807,9 @@
       const h = (vp && vp.clientHeight) || window.innerHeight;
       if (w <= 0 || h <= 0) return;
       this.renderer.setSize(w, h, false);
-      this.camera.aspect = w / h;
+      const aspect = w / h;
+      this.camera.aspect = aspect;
+      this.camera.fov = aspect < 0.68 ? 62 : aspect < 1.0 ? 52 : 45;
       this.camera.updateProjectionMatrix();
     },
 

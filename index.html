@@ -716,35 +716,40 @@
     #crt{background:repeating-linear-gradient(0deg, rgba(0,0,0,.06) 0 2px, transparent 2px 4px);}
 
     /* 着陆页 */
-    #landing{padding:58px 14px 26px; gap:14px;}
+    #landing{padding:52px 12px 24px; gap:12px;}
     #land-topbar{top:10px; right:10px; padding:4px;}
-    #hero{min-height:auto; gap:14px; padding-top:6px;}
+    #hero{min-height:calc(100dvh - 76px); justify-content:space-between; gap:10px; padding-top:4px;}
+    #hero-dock{gap:9px;}
     #t-logo h1{font-size:27px; letter-spacing:4px;}
-    #t-logo .kicker{font-size:11px; letter-spacing:5px;}
-    #t-logo .sub{font-size:12.5px;}
-    #cast{padding:12px 10px 10px; width:100%;}
-    #cast .cast-row{justify-content:center; flex-wrap:wrap; gap:8px;}
-    .cast-item{width:calc(50% - 8px);}
-    .cast-item canvas{width:68px; height:92px;}
-    #pain-ticker{min-height:56px; padding:10px 14px;}
-    #pain-text{font-size:13.5px;}
-    #land-cta{width:100%; font-size:16px;}
+    #t-logo .kicker{font-size:11px; letter-spacing:5px; margin-bottom:6px;}
+    #t-logo .sub{font-size:12px; margin-top:6px;}
+    #cast{padding:8px 8px 7px; width:100%;}
+    #cast .cast-cap{font-size:11px; letter-spacing:2px;}
+    #cast .cast-row{justify-content:space-between; flex-wrap:nowrap; gap:4px;}
+    .cast-item{width:24%;}
+    .cast-item canvas{width:54px; height:72px;}
+    .cast-item .cn{font-size:11px;}
+    .cast-item .cr{font-size:9.5px;}
+    #pain-ticker{min-height:50px; padding:8px 12px;}
+    #pain-text{font-size:13px; line-height:1.6;}
+    #land-cta{width:100%; font-size:15.5px; padding:13px 20px;}
     .land-sec{width:100%;}
     .feat-grid{grid-template-columns:1fr;}
     .play-grid{grid-template-columns:1fr 1fr;}
-    #scroll-hint{font-size:11.5px;}
+    #scroll-hint{font-size:11px;}
 
     /* 角色DIY */
-    #avatar-screen{padding:12px; gap:10px; overflow-y:auto; justify-content:flex-start;}
-    #av-card{padding:14px 12px; gap:10px; width:100%;}
-    #avatar-screen h2{font-size:18px;}
-    .av-preset{font-size:11.5px; padding:5px 9px;}
-    #av-wrap{flex-direction:column; gap:12px; width:100%;}
-    #av-stage{width:188px; height:226px;}
-    #av-prev{width:166px; height:186px;}
-    #av-opts{width:100%; gap:8px;}
-    #av-name{font-size:15px; flex:1;}
-    .swatch{width:30px; height:30px;}
+    #avatar-screen{padding:10px; gap:8px; overflow-y:auto; justify-content:flex-start;}
+    #av-card{padding:12px 10px; gap:8px; width:100%;}
+    #avatar-screen h2{font-size:17px;}
+    .av-preset{font-size:11px; padding:4px 8px;}
+    #av-wrap{flex-direction:column; gap:8px; width:100%;}
+    #av-stage{width:164px; height:196px; padding:6px 6px 8px;}
+    #av-prev{width:144px; height:162px;}
+    #av-opts{width:100%; gap:6px;}
+    .avbtn{font-size:11.5px; padding:4px 8px;}
+    #av-name{font-size:14px; flex:1;}
+    .swatch{width:26px; height:26px;}
 
     /* 游戏场景 */
     #hud{padding:7px 8px; gap:6px; flex-wrap:nowrap;}
@@ -781,9 +786,14 @@
     #isl-hud-left{top:10px; left:10px; right:10px; max-width:none; padding:8px 11px; border-radius:12px;}
     #map-head h2{font-size:13.5px;}
     #isl-toolbar{
-      top:104px; right:auto; left:50%; transform:translateX(-50%);
+      top:102px; right:auto; left:50%; transform:translateX(-50%);
       max-width:calc(100vw - 20px); overflow-x:auto; padding:4px;
+      scrollbar-width:none; -webkit-overflow-scrolling:touch;
     }
+    #isl-toolbar::-webkit-scrollbar, #map-foot::-webkit-scrollbar{display:none;}
+    .isl-pin{font-size:10.5px; padding:3px 8px; gap:4px;}
+    .isl-pin .pin-badge{font-size:9.5px; padding:1px 5px;}
+    .isl-bustle{font-size:10px; padding:2px 7px;}
     #game.world-mode .modal{padding:16px 14px;}
     .isl-tool{font-size:11.5px; padding:6px 9px;}
     #bpanel{
@@ -795,7 +805,7 @@
     #isl-status{bottom:62px; font-size:11px; padding:6px 12px;}
     #isl-prompt{bottom:100px; font-size:12px; padding:7px 14px;}
     #isl-joy{bottom:68px; left:14px; width:82px; height:82px;}
-    #map-foot{bottom:10px; padding:5px 8px; gap:5px;}
+    #map-foot{bottom:10px; padding:5px 8px; gap:5px; scrollbar-width:none; -webkit-overflow-scrolling:touch;}
     #world-screen{padding:14px 10px; gap:12px;}
     #world-screen h2{font-size:19px;}
     #world-scroll{width:100%;}
@@ -1226,7 +1236,7 @@ const _qp = new URLSearchParams(location.search).get('player');
 if(_qp) window.OPC_SAVE_KEY = 'opc-pq-' + (/^[a-zA-Z0-9-]{1,80}$/.test(_qp) ? _qp : 'guest');
 </script>
 <script src="assets/three.min.js?v=2.0"></script>
-<script src="assets/island3d.js?v=2.4"></script>
-<script src="engine.js?v=2.4"></script>
+<script src="assets/island3d.js?v=2.5"></script>
+<script src="engine.js?v=2.5"></script>
 </body>
 </html>
