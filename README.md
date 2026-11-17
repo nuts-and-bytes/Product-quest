@@ -1,6 +1,10 @@
 # 🎮 产品经理大冒险 · Product Quest
 
-### 开放群岛 · 电影画质版
+在剧情决策和场景探索中练习产品判断，适合想通过实际情境入门产品工作的人。
+
+[在线试玩](https://nuts-and-bytes.github.io/Product-quest/) · [咖啡馆调查](https://nuts-and-bytes.github.io/Product-quest/?experience=cafe) · [版本记录](CHANGELOG.md)
+
+### 当前版本：开放群岛
 
 **岛上的片刻（3.6）**：咖啡馆调查穿插三段实时 3D 演出——岛民清晨出门、阿晨等候后准备离开、试验之后的街头。结尾根据实际模拟结果呈现拿到咖啡或空手离开；可暂停、跳过、免费回看。[观看清晨片段](https://nuts-and-bytes.github.io/Product-quest/?experience=cafe&film=morning&release=3.6) · [演出与验证说明](docs/island-life.md)。
 
@@ -75,7 +79,7 @@ node scripts/build-single-html.mjs
 | 📝 **随堂检验** | 每关 3 题通关必答，S/A/B/C 评级，可反复挑战刷成绩 |
 | 👤 **角色 DIY** | 捏一个自己的像素形象，领取专属工牌，正式入职星火科技 |
 
-全程像素 RPG 风格，人物、场景、音效全部由代码生成——本仓库没有一张美术素材图。
+原有像素剧情与新的 3D 场景并存；以上历史截图对应原有剧情界面，当前画面以在线版本为准。
 
 ## 🗺️ 冒险进度
 
@@ -112,7 +116,9 @@ node scripts/build-single-html.mjs
 
 ```bash
 git clone https://github.com/nuts-and-bytes/Product-quest.git
-# 无需安装任何依赖，双击 index.html 即可游玩
+cd Product-quest
+python3 -m http.server 8765
+# 打开 http://localhost:8765/；无需 npm 安装
 ```
 
 项目采用**引擎与内容分离**架构：`engine.js` 是游戏引擎（不含剧情），`content/` 下每个文件就是一章内容——想新增章节或修正知识点，改 JSON 式的内容文件即可，无需碰引擎。详见 `content/pm/ch0-prologue.js` 文件头的结构说明。
@@ -123,7 +129,7 @@ git clone https://github.com/nuts-and-bytes/Product-quest.git
 
 ## 📜 许可
 
-代码 MIT 许可；剧情与知识内容采用 CC BY-NC 4.0（署名-非商业性使用）。
+现有说明声明代码采用 MIT、剧情与知识内容采用 CC BY-NC 4.0（署名-非商业性使用）。当前仓库未提供独立 LICENSE 文件；复用前应由维护者补齐对应许可与第三方内容说明。
 
 ---
 
