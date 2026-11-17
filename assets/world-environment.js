@@ -364,11 +364,12 @@
 
     refreshBuildings(){
       if(!this.rewards)return;
-      const chapters=PQChapterProgress.chapters(PQ.levels,PQ.milestones,G.progress);
+      const chapters=PQChapterProgress.chapters(PQ.levels,PQ.milestones,G.progress,G.campaign);
       this.rewards.forEach(r=>{r.group.visible=PQChapterProgress.forBuilding(r.entry.data,chapters).some(c=>c.complete);r.entry.hasLegacy=r.group.visible;});
       if(this.pendingChapter){
         const chapter=chapters.find(c=>c.id===this.pendingChapter&&c.complete);this.pendingChapter=null;
-        const b=chapter&&PQ.buildings.find(b=>b.levels?.includes(chapter.bossId));
+        const task=chapter&&window.PQChapterJourney?.def(chapter.id.replace(/^m/,''));
+        const b=chapter&&PQ.buildings.find(b=>task?b.id===task.building:b.levels?.includes(chapter.bossId));
         if(b){this.celebrate(b.id,false);this.world.setStatus(`✦ ${chapter.ch}完成 · 点亮建筑，回顾你的成长`,5000);}
       }
     }

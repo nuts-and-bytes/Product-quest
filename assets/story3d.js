@@ -78,6 +78,9 @@
     buildRoom(kind){
       const cafe=kind==='cafe';
       this.counterCups=[];
+      const custom=window.PQChapterRooms?.supports(kind);
+      if(custom)PQChapterRooms.build(this,kind);
+      if(!custom){
       this.box(0,-.2,0,16,.4,13,'#785d48');
       // Long oak boards and dark seams, simple shared geometry and materials.
       for(let i=0;i<16;i++)this.box(-7.5+i,.015,0,.975,.05,12.8,i%3===0?'#a98b63':i%3===1?'#b59770':'#bfa17a');
@@ -139,6 +142,7 @@
         this.box(-5,.55,2.7,2.6,.5,.8,'#5e5847');
         this.text(['DAY 01','欢迎来到星火'],0,3.4,-6.05,1.2,1.6,'#d7bc8a','#3a5752');
       }
+      }
       // 44 sunlit motes in one draw, paused for reduced-motion preferences.
       const p=[];for(let i=0;i<44;i++)p.push(-6+(i*1.73%12),.8+(i*.43%4),-5+(i*2.17%9));
       const g=new T.BufferGeometry();g.setAttribute('position',new T.Float32BufferAttribute(p,3));
@@ -164,6 +168,7 @@
       this.viewKey='';
     },
     update(dt,t){
+      if(window.PQCampaign?.active&&window.PQChapterScene?.active){PQChapterScene.update(dt,t);return;}
       const w=PQIsland,e=w.environment,caseMode=!!window.PQCafeScene?.active,reduced=e.reducedMotion||(caseMode&&PQCafeScene.reduced());
       if(caseMode)PQCafeScene.tick(dt);
       const active=this.speaker==='me'?this.player:this.speaker&&this.speaker!=='n'?this.npc:null;

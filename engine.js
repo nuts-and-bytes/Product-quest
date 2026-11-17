@@ -192,6 +192,7 @@ const G = {
     if(window.PQFirstDay)PQFirstDay.init();
     if(window.PQCafeCase)PQCafeCase.init();
     if(window.PQLifeFilm)PQLifeFilm.init();
+    if(window.PQCampaign)PQCampaign.init();
     const start=document.getElementById('land-cta');
     if(this.progress>0||this.firstDay?.started) start.firstElementChild.textContent='继续我的冒险';
     // 全局眨眼循环
@@ -243,7 +244,7 @@ const G = {
     p.innerHTML=`<div class="tp-box"><b>${PQ.pxi('book',14,'var(--accent)')} ${t.name}</b><div class="tp-def">${t.def}</div>${t.src?`<div class="tp-src">${t.src}</div>`:''}<div class="tp-close">— 点击任意处关闭 —</div></div>`;
     p.classList.add('show');
   },
-  save(){ try{ localStorage.setItem((window.OPC_SAVE_KEY || 'pmquest2'), JSON.stringify({trust:this.trust,unlocked:this.unlocked,notes:this.notes,progress:this.progress,avatar:this.avatar,stats:this.stats||{},exploration:this.exploration||{},firstDay:this.firstDay,cafeCase:this.cafeCase,lifeFilms:this.lifeFilms})); }catch(e){} },
+  save(){ try{ localStorage.setItem((window.OPC_SAVE_KEY || 'pmquest2'), JSON.stringify({trust:this.trust,unlocked:this.unlocked,notes:this.notes,progress:this.progress,avatar:this.avatar,stats:this.stats||{},exploration:this.exploration||{},firstDay:this.firstDay,cafeCase:this.cafeCase,lifeFilms:this.lifeFilms,campaign:this.campaign})); }catch(e){} },
   load(){ try{ const d=JSON.parse(localStorage.getItem((window.OPC_SAVE_KEY || 'pmquest2'))); if(d){Object.assign(this,d); this.avatar=normalizeAvatar(d.avatar);} }catch(e){} },
 
   /* ---------- 角色DIY ---------- */
@@ -389,7 +390,7 @@ const G = {
   },
   badgeGo(){ SFX.click();
     document.getElementById('badge-modal').classList.remove('show');
-    if(this._gold){ this._gold=false; this.exportPortfolio(); this.toMap(); }
+    if(this._gold){ this._gold=false; this.exportPortfolio(true); this.toMap(); }
     else this.toMap({ archipelago:false, diveFromBadge:true });
   },
   resetAll(){ if(confirm('确定清空全部进度？')){ try{localStorage.removeItem((window.OPC_SAVE_KEY || 'pmquest2'));}catch(e){} location.reload(); } },
@@ -413,7 +414,8 @@ const G = {
     if(id!=='play-screen'){clearTimeout(this._startTimer);clearInterval(this.typeTimer);clearInterval(this.talkAnim);this.typing=false;document.getElementById('feedback').classList.remove('show');document.getElementById('quiz-panel').classList.remove('show');}
     if(window.PQFirstDay)PQFirstDay.closeDialog();
     if(id!=='cafe-case-screen'&&window.PQCafeCase?.active)PQCafeCase.suspend();
-    if(window.PQStory3D?.active&&!['play-screen','social-screen','end-screen','cafe-case-screen'].includes(id))PQStory3D.exit();
+    if(id!=='chapter-screen'&&window.PQCampaign?.active)PQCampaign.suspend();
+    if(window.PQStory3D?.active&&!['play-screen','social-screen','end-screen','cafe-case-screen','chapter-screen'].includes(id))PQStory3D.exit();
     document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
     document.getElementById(id).classList.add('active');
     const g=document.getElementById('game');
@@ -430,6 +432,7 @@ const G = {
     document.getElementById('game').scrollTop=0;
     fitGame();
     if(window.PQFirstDay&&this.firstDay)PQFirstDay.render();
+    if(window.PQCampaign&&this.campaign)PQCampaign.mapHud();
   },
 
   toWorld(){ this.toMap({ archipelago: true }); },
@@ -445,6 +448,7 @@ const G = {
       PQIsland.onShow({ archipelago: !!opts.archipelago, diveFromBadge: !!opts.diveFromBadge });
     }
     if(window.PQFirstDay)PQFirstDay.onMap();
+    if(window.PQCampaign)PQCampaign.mapHud();
   },
 
   closeBuilding(silent){
@@ -467,6 +471,7 @@ const G = {
     let html=`<div class="bp-head"><div class="bp-title">${PQ.pxi(PQ.bicon[b.id]||"building",16,"var(--accent)")} ${b.name}</div><button type="button" class="bp-close" aria-label="关闭" onclick="G.closeBuilding()">×</button></div>`;
     if(b.id==='cafe')html+=`<button class="exp-primary" onclick="PQFirstDay.enterCafe()">进咖啡馆坐坐 · 点单 / 聊天 ↗</button>`;
     if(b.id==='cafe')html+=`<button class="exp-primary" onclick="PQCafeCase.open()">${this.cafeCase?.phase==='complete'?'查看蓝山项目手记':'蓝山调查 · 失踪的第二杯咖啡'} ↗</button>`;
+    if(window.PQCampaign)html+=PQCampaign.buildingHTML(b);
     if(b.subtitle) html+=`<div class="bp-sub">${b.subtitle}</div>`;
     const completed=this.buildingChapters(b).filter(c=>c.complete);
     if(completed.length){
@@ -478,6 +483,7 @@ const G = {
     if(this.progress>=LEVELS.length && b.id==='hq'){
       html+=`<div class="bp-hint" style="margin-bottom:8px;color:var(--green)">★ 现有章节全部通关！可重玩任意关卡刷新评级，或去中央广场欣赏 8 座里程碑雕塑。</div>`;
     }
+    html+='<details class="bp-practice"><summary>原有章节练习 · 剧情、方法卡与评级</summary>';
     let lastCh='';
     b.levels.forEach(id=>{
       const i=LEVELS.findIndex(l=>l.id===id), lv=LEVELS[i];
@@ -489,16 +495,18 @@ const G = {
         ${st!=='locked'?`<button class="pxbtn small" onclick="G.enterBuildingLevel(${i},'${b.id}')">${st==='done'?'重玩':'进入 ▶'}</button>`:''}
       </div>`;
     });
-    panel.innerHTML=html;
+    panel.innerHTML=html+'</details>';
     panel.classList.add('open');
   },
 
   buildingChapters(b){
-    return PQChapterProgress.forBuilding(b,PQChapterProgress.chapters(LEVELS,PQ.milestones,this.progress));
+    return PQChapterProgress.forBuilding(b,PQChapterProgress.chapters(LEVELS,PQ.milestones,this.progress,this.campaign));
   },
   showChapterOutcome(id,bId){
     const b=PQ.buildings.find(b=>b.id===bId),c=b&&this.buildingChapters(b).find(c=>c.id===id&&c.complete);
     if(!c)return;
+    const chapterId=id.replace(/^m/,'');
+    if(this.campaign?.records[chapterId]?.committed){PQCampaign.open(chapterId);PQCampaign.mode='complete';PQCampaign.render();return;}
     const p=document.getElementById('bpanel');
     p.innerHTML=`<div class="bp-head"><button class="bp-back" onclick="G.openBuilding(PQ.buildings.find(b=>b.id==='${bId}'))">← ${b.name}</button><button class="bp-close" aria-label="关闭" onclick="G.closeBuilding()">×</button></div>
       <div class="chapter-seal">✦</div><div class="exp-eyebrow">${c.ch} / 已完成</div><h2 class="chapter-title">${c.title}</h2><p class="chapter-desc">${c.desc}。这段成长已成为岛上的永久印记。</p><div class="chapter-levels"></div>`;
@@ -519,7 +527,7 @@ const G = {
   enterBuildingLevel(i, bId){
     SFX.click();
     this.closeBuilding(true);
-    if(window.PQStory3D&&['p1','c1','c2','u1'].includes(LEVELS[i].id)&&PQIsland.running){PQFirstDay.transition(bId,()=>this.startLevel(i));return;}
+    if(window.PQStory3D&&PQIsland.running){PQFirstDay.transition(bId,()=>this.startLevel(i));return;}
     if(window.PQIsland && PQIsland.running){
       PQIsland.zoomIntoBuilding(bId, ()=>this.startLevel(i));
     } else {
@@ -562,10 +570,12 @@ const G = {
     this.dScore=0; this.qOk=0;
     const lv=LEVELS[i];
     this._npcKey=lv.npc;
-    this._story3d=!!window.PQStory3D&&['p1','c1','c2','u1'].includes(lv.id);
+    if(window.PQCampaign?.active){PQCampaign.suspend();PQStory3D.exit();}
+    this._story3d=!!window.PQStory3D;
     if(this._story3d){
       if(lv.id==='p1')PQFirstDay.step('enterOffice');
-      PQStory3D.enter(lv.scene==='cafe'?'cafe':'office',lv.npc,lv.scene==='night'?true:undefined);
+      const room=PQChapterRooms.forLevel(lv);
+      PQStory3D.enter(room,lv.npc,['ops','roof'].includes(room)||lv.scene==='night'?true:undefined);
     }else if(window.PQStory3D?.active)PQStory3D.exit();
     this.dMax=lv.script.filter(n=>n.choices||n.forensic).length*2;
     this.qTotal=(lv.quiz||[]).length;
@@ -918,7 +928,7 @@ const G = {
     document.getElementById('end-tease').textContent =
       this.progress>=LEVELS.length ? '★ 现有章节全部通关！新章节持续更新中，敬请期待……'
       : (rank==='S'?'完美通关！':'可重玩本关刷新评级 · ')+'下一关已解锁 →';
-    const chapter=PQChapterProgress.chapters(LEVELS,PQ.milestones,this.progress).find(m=>m.bossId===lv.id);
+    const chapter=PQChapterProgress.chapters(LEVELS,PQ.milestones,this.progress,this.campaign).find(m=>m.bossId===lv.id);
     if(chapter){
       document.getElementById('end-tease').textContent=`✦ ${chapter.ch}已完成 · 返回世界，与点亮的建筑互动，回顾成果或开启庆典。`;
       if(window.PQIsland?.environment)PQIsland.environment.pendingChapter=chapter.id;
@@ -970,7 +980,7 @@ const G = {
   exportSave(){
     SFX.click();
     const raw = localStorage.getItem((window.OPC_SAVE_KEY || 'pmquest2')) ||
-      JSON.stringify({trust:this.trust,unlocked:this.unlocked,notes:this.notes,progress:this.progress,avatar:this.avatar,stats:this.stats||{},exploration:this.exploration||{},firstDay:this.firstDay,cafeCase:this.cafeCase,lifeFilms:this.lifeFilms});
+      JSON.stringify({trust:this.trust,unlocked:this.unlocked,notes:this.notes,progress:this.progress,avatar:this.avatar,stats:this.stats||{},exploration:this.exploration||{},firstDay:this.firstDay,cafeCase:this.cafeCase,lifeFilms:this.lifeFilms,campaign:this.campaign});
     const blob = new Blob([raw], {type:'application/json'});
     const a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
@@ -1039,9 +1049,10 @@ const G = {
     +'<div style="margin-top:40px;text-align:center" class="small">由《产品经理大冒险》生成 · nuts-and-bytes.github.io/Product-quest<br>方法是真的，判断力是你的。</div>'
     +'</body></html>';
   },
-  exportPortfolio(){
+  exportPortfolio(legacy=false){
     SFX.click();
-    if(this.progress < LEVELS.length){ alert('通关全部章节后，即可生成你的专属作品集'); return; }
+    if(!legacy&&this.campaign?.records['8']?.committed){PQCampaign.download();return;}
+    if(this.progress < LEVELS.length){ alert('完成岛上终章后可导出项目手记；原有 37 关全部通关后也可生成课程作品集。进行中的章节记录可以从章节地图导出。'); return; }
     this.track('portfolio_export');
     const html=this.buildPortfolio();
     const blob=new Blob([html],{type:'text/html'});
@@ -1084,8 +1095,8 @@ function bootPQ(){
     panel.innerHTML='<div><span class="journey-eyebrow">PRODUCT QUEST</span><h2>世界还没准备好。</h2><p>部分画面资源没有完整载入。重新载入后，就可以继续你的冒险。</p><button class="journey-primary">重新载入 →</button></div>';
     panel.querySelector('button').onclick=()=>location.reload();document.getElementById('game').appendChild(panel);
   };
-  if(!window.THREE||!window.PQIsland||!window.PQFirstDay||!window.PQStory3D||!window.PQCafeModel||!window.PQCafeScene||!window.PQCafeCase||!window.PQLifeState||!window.PQLifeFilm){retry();return;}
-  try{ G.init();if(new URLSearchParams(location.search).get('experience')==='cafe')PQCafeCase.open(new URLSearchParams(location.search).get('film')); }catch(e){ console.error('PQ boot error:', e);retry(); }
+  if(!window.THREE||!window.PQIsland||!window.PQFirstDay||!window.PQStory3D||!window.PQCafeModel||!window.PQCafeScene||!window.PQCafeCase||!window.PQLifeState||!window.PQLifeFilm||!window.PQChapterJourney||!window.PQChapterRooms||!window.PQChapterScene||!window.PQCampaign){retry();return;}
+  try{ G.init();const params=new URLSearchParams(location.search);if(params.get('experience')==='cafe')PQCafeCase.open(params.get('film'));else if(params.get('experience')==='chapters'){const requested=params.get('chapter');PQCampaign.open(PQChapterJourney.available(G.campaign,requested,PQCampaign.legacy())?requested:G.campaign.current);} }catch(e){ console.error('PQ boot error:', e);retry(); }
 }
 window.G = G;
 window.PLAYER_TPL = PLAYER_TPL;

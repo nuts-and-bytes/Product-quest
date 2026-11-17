@@ -2220,13 +2220,15 @@
       const curLv = Math.min(progress, Math.max(0, levels.length - 1));
       const curId = levels[curLv] && levels[curLv].id;
 
-      let curBldId = 'hq';
+      const campaign=typeof G!=='undefined'&&G.campaign&&!window.PQFirstDay?.guided()?G.campaign:null;
+      const task=campaign&&window.PQChapterJourney?.def(campaign.current);
+      let curBldId = task?.building||'hq';
       (PQ.buildings || []).forEach((b) => {
         const states = (b.levels || []).map((id) => {
           const i = levels.findIndex((l) => l.id === id);
           return i < progress ? 'done' : i === progress ? 'current' : 'locked';
         });
-        const isCurrent = progress < levels.length && (b.levels || []).includes(curId);
+        const isCurrent = task?task.building===b.id:progress < levels.length && (b.levels || []).includes(curId);
         if (isCurrent) curBldId = b.id;
         const allDone = b.levels && b.levels.length > 0 && states.every((s) => s === 'done');
 
@@ -2240,13 +2242,13 @@
           entry.ring.material.opacity = isCurrent ? 0.88 : (this.activeBuildingId === b.id ? 0.7 : 0.16);
         }
       });
-      this.currentQuestBldId = progress >= levels.length ? 'hq' : curBldId;
+      this.currentQuestBldId = task?task.building:progress >= levels.length ? 'hq' : curBldId;
 
       let unlockedCount = 0;
       let newlyUnlocked = null;
       this.milestones.forEach((m) => {
         const lvIdx = levels.findIndex((l) => l.id === m.ms.bossId);
-        const unlocked = lvIdx >= 0 && lvIdx < progress;
+        const unlocked = (lvIdx >= 0 && lvIdx < progress)||!!G.campaign?.records?.[m.ms.id.replace(/^m/,'')]?.committed;
         if (unlocked) unlockedCount++;
         const wasVisible = m.artMesh.visible;
         m.artMesh.visible = unlocked;
@@ -2875,6 +2877,7 @@
       }
       this._updateLabels();
       if(window.PQFirstDay&&typeof G!=='undefined'&&G.firstDay)PQFirstDay.update(dt,tSec);
+      if(window.PQCampaign&&typeof G!=='undefined'&&G.campaign)PQCampaign.updateWorld();
     },
 
     _updatePortraits(dt, tSec) {

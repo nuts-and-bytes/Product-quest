@@ -1,0 +1,125 @@
+/* Readable, quiet overlays keep the room and its people in view. */
+#chapter-screen{--chapter-ink:#f2e8ce;--chapter-muted:#b6c9be;--chapter-gold:#e9c990;--chapter-surface:rgba(19,46,43,.95);color:var(--chapter-ink);font-family:system-ui,-apple-system,"PingFang SC",sans-serif;pointer-events:none;background:none;position:absolute;inset:0;padding:0;overflow:hidden}
+#chapter-screen.active{display:block}
+#chapter-screen [hidden],#campaign-route[hidden]{display:none!important}
+#chapter-screen button,#campaign-route button{font:inherit;font-size:14px;line-height:1.5;cursor:pointer;border:1px solid rgba(216,224,194,.25);background:#284b46;color:var(--chapter-ink,#f2e8ce);border-radius:10px;padding:11px 15px;min-height:44px;transition:background .14s,border-color .14s}
+#chapter-screen button:hover,#campaign-route button:hover{background:#365d54;border-color:#d7bf8e}
+#chapter-screen button:focus-visible,#campaign-route button:focus-visible{outline:3px solid #f6d690;outline-offset:3px}
+#chapter-screen button:disabled{opacity:.45;cursor:default}
+#chapter-screen button[aria-pressed="true"]{background:#466454;border-color:var(--chapter-gold);box-shadow:inset 3px 0 var(--chapter-gold)}
+#chapter-screen button.chapter-primary,#campaign-go{background:#e5c993;color:#203d35;border-color:#e5c993;font-weight:650}
+#chapter-top{position:absolute;left:24px;right:24px;top:22px;display:flex;align-items:flex-start;gap:22px;pointer-events:auto;z-index:5}
+#chapter-top>div{padding:7px 0;text-shadow:0 2px 14px #072b29;flex:1;min-width:0}
+#chapter-top span{display:block;font-size:10px;font-weight:600;letter-spacing:2px;color:#e6d3ad;margin-bottom:5px}
+#chapter-top strong{font-family:Georgia,"Songti SC",serif;font-size:22px;font-weight:500;letter-spacing:1px}
+#chapter-top nav{display:flex;gap:6px}
+#chapter-top button{background:rgba(21,50,46,.88);backdrop-filter:blur(8px)}
+#chapter-explore,#chapter-talk,#chapter-panel{pointer-events:auto;background:var(--chapter-surface);border:1px solid rgba(218,212,172,.3);box-shadow:0 12px 48px #041e202e;border-radius:16px}
+#chapter-explore{position:absolute;bottom:26px;left:50%;transform:translateX(-50%);width:min(730px,calc(100% - 48px));padding:20px 24px;box-sizing:border-box}
+.chapter-eyebrow{display:block;color:var(--chapter-gold);font-size:11px;line-height:1.6;letter-spacing:1.7px}
+#chapter-explore h2{font-size:19px;line-height:1.6;font-weight:500;margin:8px 0 16px}
+.chapter-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:16px}
+#chapter-explore .chapter-row{margin:0}
+#chapter-pins{position:absolute;inset:0;pointer-events:none}
+#chapter-pins button{position:absolute;transform:translate(-50%,-100%);pointer-events:auto;min-width:100px;background:rgba(20,48,44,.88);box-shadow:0 3px 18px #092d2c38;border-color:#cfc79a80;text-align:left;padding:8px 13px}
+#chapter-pins span{display:block;font-weight:650;font-size:14px}
+#chapter-pins small{display:block;font-size:10px;letter-spacing:.5px;color:#c0d0bf}
+#chapter-pins .chapter-object{border-style:dashed}
+#chapter-talk{position:absolute;bottom:24px;left:50%;transform:translateX(-50%);width:min(860px,calc(100% - 48px));max-height:47%;overflow:auto;box-sizing:border-box;padding:20px 28px}
+#chapter-talk header{display:flex;justify-content:space-between;align-items:center;gap:16px}
+#chapter-talk header strong{font-size:17px;color:#eed09d;margin-right:12px}
+#chapter-talk header span{font-size:12px;color:var(--chapter-muted)}
+#chapter-talk header button{background:transparent;border:none;color:var(--chapter-muted);padding:4px 0}
+#chapter-line{font-size:19px;line-height:1.85;margin:12px 0;outline:0}
+#chapter-talk .chapter-recall{font-size:12px;color:var(--chapter-muted);line-height:1.8;margin:0 0 12px}
+.chapter-replies{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.chapter-replies button{text-align:left}
+.chapter-replies small{display:block;color:var(--chapter-muted);font-size:10px;margin-top:4px}
+#chapter-talk footer{display:flex;justify-content:space-between;gap:8px;margin-top:8px}
+#chapter-talk footer button{border:none;background:transparent;padding:6px 0;color:#e8d2a3;font-size:12px}
+#chapter-panel{position:absolute;top:104px;bottom:24px;right:24px;width:min(430px,41vw);box-sizing:border-box;overflow:auto;overscroll-behavior:contain;scrollbar-width:thin;scrollbar-color:#7a9b84 transparent}
+#chapter-content{padding:22px 26px 28px}
+.chapter-sheet-top{display:flex;justify-content:space-between;align-items:center;gap:8px;padding-bottom:22px}
+.chapter-sheet-top span{color:var(--chapter-muted);font-size:11px}
+#chapter-screen .chapter-sheet-top button{padding:0;background:none;border:0;color:var(--chapter-muted);font-size:12px}
+#chapter-content h1{font-family:Georgia,"Songti SC",serif;font-size:29px;font-weight:500;line-height:1.5;margin:12px 0 18px;outline:0;color:#f4e3be}
+#chapter-content p{font-size:14px;line-height:1.85;margin:12px 0;color:#cfdbcf}
+#chapter-content fieldset{border:0;border-top:1px solid #64857355;padding:20px 0 12px;margin:24px 0 0;min-width:0}
+#chapter-content legend{font-size:14px;padding-right:10px;color:#e9cf9c}
+.chapter-options,.chapter-cards{display:grid;gap:9px;margin:10px 0}
+.chapter-options button,.chapter-cards button{text-align:left;width:100%;box-sizing:border-box}
+#chapter-content b{font-weight:600;font-size:14px}
+#chapter-content button small{display:block;font-size:12px;color:#b4c9b8;margin-top:6px;font-weight:400}
+.chapter-sequence{padding:0;list-style:none;counter-reset:step;display:grid;gap:7px;margin:0 0 12px}
+.chapter-sequence li{counter-increment:step;display:flex;align-items:center;gap:10px;font-size:13px;background:#31594e66;padding:9px 12px;border-radius:8px}
+.chapter-sequence li:before{content:counter(step);font:12px Georgia;color:#e8c991}
+#chapter-content details{padding:16px 0;border-block:1px solid #96ad8e33;margin:22px 0}
+#chapter-content summary{cursor:pointer;font-size:13px;color:#dfcea9;line-height:1.8;min-height:24px}
+.chapter-metrics{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:24px 0}
+.chapter-metrics>div{padding:13px 10px;border:1px solid #6c8f7955;border-radius:10px;background:#42614e44}
+.chapter-metrics dt{font-size:11px;color:#b9cab7;line-height:1.7}
+.chapter-metrics dd{margin:8px 0 0;font:26px Georgia;color:#eed09e}
+.chapter-metrics dd small{font:11px system-ui;color:#b9cab7}
+.chapter-events{list-style:none;padding:0 0 0 18px;border-left:1px solid #cbb68366}
+.chapter-events li{position:relative;margin:24px 0}
+.chapter-events li:before{content:"";position:absolute;left:-22px;top:7px;width:7px;height:7px;background:#cbb683;border-radius:50%}
+#chapter-content .chapter-events p{font-size:13px}
+#chapter-content .chapter-small{font-size:11px;color:#a6bca9}
+#chapter-content .chapter-reflection{display:block;margin:8px 0;width:100%;text-align:left}
+#chapter-content blockquote{margin:22px 0;padding:14px 18px;border-left:2px solid #d8bc86;color:#dfcda4;font-size:14px;line-height:1.8;background:#35584c66}
+.chapter-chart{margin:20px 0;padding:15px;background:#35574c66;border-radius:10px}
+.chapter-chart figcaption{font-size:12px;color:#d2c299;margin-bottom:14px}
+.chapter-chart>div{background:#173a33;height:13px;border-radius:4px;overflow:hidden}
+.chapter-chart>div>span{display:block;width:var(--share);height:100%;background:#c6bd88;transition:width .2s}
+.chapter-pending{opacity:0;pointer-events:none!important}
+#chapter-motion{position:absolute;left:50%;bottom:34px;transform:translateX(-50%);display:flex;align-items:center;gap:18px;pointer-events:auto;background:#183d37eb;border:1px solid #e8cf9e44;border-radius:12px;padding:10px 14px;color:#e3d0a8;white-space:nowrap;font-size:12px}
+#chapter-notice{position:absolute;top:100px;left:24px;max-width:40%;font-size:13px;color:#e8d3aa}
+#campaign-route{position:absolute;top:24px;left:24px;width:290px;padding:20px;box-sizing:border-box;border-radius:14px;border:1px solid #bcb79155;background:#163c34ed;color:#eee4c6;z-index:6;pointer-events:auto;font-family:system-ui,-apple-system,"PingFang SC",sans-serif}
+#campaign-route>span{font-size:10px;color:#d7c28a;letter-spacing:1.5px;display:flex;justify-content:space-between}
+#campaign-route h2{font:22px/1.4 Georgia,"Songti SC",serif;margin:12px 0}
+#campaign-route p{font-size:12px;color:#c2d3c0;line-height:1.7;margin:10px 0 18px}
+#campaign-route>div{display:grid;gap:8px}
+#campaign-route button{font-size:12px}
+.campaign-map #isl-hud-left{display:none!important}
+.campaign-mode #isl-player-label,.campaign-mode #player-marker,.campaign-mode #guide-marker,.campaign-mode #world-chapter-toast{display:none!important}
+.photo-mode #campaign-route{visibility:hidden}
+.bp-practice{margin-top:16px;border-top:1px solid #b5c8ad44;padding-top:15px}
+.bp-practice>summary{font-size:12px;line-height:1.8;color:#bfcbb7;cursor:pointer;padding:6px 0}
+#bpanel button:disabled{opacity:.45;cursor:default}
+@media(max-width:700px){
+  #chapter-top{top:12px;left:12px;right:12px;gap:10px;align-items:flex-start}
+  #chapter-top>button{padding:8px 10px;font-size:12px}
+  #chapter-top>div{padding:2px 0}
+  #chapter-top span{font-size:8px;letter-spacing:1px;line-height:1.5;margin:2px 0}
+  #chapter-top strong{font-size:17px;line-height:1.5;display:block}
+  #chapter-top nav{gap:4px;flex-direction:column}
+  #chapter-top nav button{font-size:11px;min-height:36px;padding:6px 10px}
+  #chapter-top nav button:last-child{font-size:10px}
+  #chapter-explore{width:calc(100% - 24px);bottom:14px;padding:16px}
+  #chapter-explore h2{font-size:16px;margin:6px 0 12px}
+  #chapter-screen button{font-size:12px;padding:10px 12px}
+  #chapter-explore .chapter-row{display:grid;grid-template-columns:1fr 1fr}
+  #chapter-explore .chapter-row button:first-child{grid-column:1/-1}
+  #chapter-pins button{min-width:84px;padding:7px 10px}
+  #chapter-pins span{font-size:12px}
+  #chapter-pins small{font-size:9px}
+  #chapter-talk{width:calc(100% - 20px);bottom:10px;padding:14px 18px;max-height:48%}
+  #chapter-talk header{gap:6px}
+  #chapter-talk header strong{font-size:15px;margin-right:7px}
+  #chapter-talk header span{font-size:10px}
+  #chapter-talk header button{font-size:11px}
+  #chapter-line{font-size:16px;line-height:1.8}
+  .chapter-replies{grid-template-columns:1fr;gap:6px}
+  #chapter-panel{top:auto;left:10px;right:10px;bottom:10px;width:auto;height:50%;border-radius:16px}
+  #chapter-content{padding:14px 20px 24px}
+  .chapter-sheet-top{padding-bottom:12px}
+  #chapter-content h1{font-size:24px;margin:10px 0 16px}
+  #chapter-content p{font-size:13px}
+  #campaign-route{left:12px;top:12px;width:220px;padding:13px 15px}
+  #campaign-route h2{font-size:18px;margin:8px 0}
+  #campaign-route p{font-size:11px;margin:8px 0 12px}
+  #campaign-route>div{grid-template-columns:1fr;gap:6px}
+  #campaign-route button{font-size:11px;min-height:37px;padding:7px 9px}
+  #chapter-motion{bottom:18px;gap:10px;padding:8px 10px}
+}
+@media(prefers-reduced-motion:reduce){#chapter-screen *,#campaign-route *{transition:none!important}}

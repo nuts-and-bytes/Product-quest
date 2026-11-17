@@ -30,6 +30,7 @@
     play(kind){
       if(this.active||!PQCafeCase.active||!PQStory3D.active)return false;
       const film=L.film(kind,G.cafeCase);if(!film)return false;
+      this.owner=null;
       const w=PQIsland,r=PQStory3D;
       PQCafeScene.finishTransition();r.update(0,performance.now()/1000);
       this.film=film;this.clock=new L.Clock(film.shots);this.reduced=PQCafeScene.reduced();
@@ -53,6 +54,32 @@
       $('life-title').textContent=film.title;this.enterShot();$('life-skip').focus({preventScroll:true});
       w.environment.lastFrame=0;w.environment.warmup=performance.now()+1000;
       return true;
+    },
+    playChapter(id,kind='arrival'){
+      if(this.active||!window.PQCampaign?.active||!PQStory3D.active||!['arrival','outcome'].includes(kind))return false;
+      const c=PQChapterJourney.def(id),result=PQChapterJourney.result(G.campaign,id);
+      if(!c||(kind==='outcome'&&!result))return false;
+      const w=PQIsland,r=PQStory3D;PQChapterScene.finish();
+      this.owner={type:'chapter',kind,id};
+      this.film={id:'chapter-'+id+'-'+kind,title:c.name,result,shots:kind==='arrival'?[
+        {stage:'chapter-street',world:true,duration:4.2,place:c.place,caption:c.arrival},
+        {stage:'chapter-meet',world:false,duration:4.8,place:c.npcs[0].name+'的约定',caption:c.objective}
+      ]:[
+        {stage:'chapter-result',world:false,duration:5.4,place:'刚才的选择，落在生活里',caption:result.line},
+        {stage:'chapter-after',world:true,duration:4.8,place:c.place+' · 稍后',caption:result.good?c.next:'问题还没有消失。把这次经历记下来，岛上的日子仍然继续。'}
+      ]};
+      this.clock=new L.Clock(this.film.shots);this.reduced=PQCafeScene.reduced();this.room=r.scene;this.world=r.saved.scene;this.temp=new T.Vector3();
+      this.actors={hero:r.player,lead:r.npcs[c.npcs[0].key],friend:r.npcs[c.npcs[1].key]};
+      this.saved={scene:w.scene,position:w.camera.position.clone(),quaternion:w.camera.quaternion.clone(),view:w.camera.view?{...w.camera.view}:null,cinematic:w.cinematicMode,timeMode:w.timeMode,tod:w.curTod,
+        actors:Object.values(this.actors).map(rig=>({rig,parent:rig.group.parent,position:rig.group.position.clone(),visible:rig.group.visible,rotations:['group','head','leftArm','rightArm','leftLeg','rightLeg'].map(k=>[k,rig[k].rotation.clone()])})),
+        hidden:[w.playerRig?.group,PQFirstDay.guide?.group,...w.npcRigs.map(n=>n.rig.group),...w.citizens.map(c=>c.rig.group)].filter(Boolean).map(o=>[o,o.visible]),
+        cups:[],roomProps:[],ui:[...$('game').children].filter(el=>!['island-viewport','life-film','crt','vig'].includes(el.id)).map(el=>[el,el.inert]),focus:document.activeElement};
+      this.saved.hidden.forEach(([o])=>o.visible=false);this.saved.ui.forEach(([el])=>el.inert=true);
+      w.scene=this.world;w.timeMode=['5','8'].includes(String(id))?'night':'day';w._initTodState();w._updateTimeOfDay(0,performance.now()/1000);
+      this.buildProps();PQChapterScene.buildFilmProps(this);this.saved.roomProps=PQChapterScene.props.map(p=>[p.group,p.group.visible]);
+      this.active=true;w.cinematicMode='life';w.diveAnim=null;w.keys={};w.walkGoal=null;w.walkPath=[];w.joyVec={x:0,z:0};
+      $('game').classList.add('life-mode');$('life-film').hidden=false;$('life-film').classList.toggle('life-reduced',this.reduced);$('life-title').textContent=c.name;
+      this.enterShot();$('life-skip').focus({preventScroll:true});w.environment.lastFrame=0;w.environment.warmup=performance.now()+1000;return true;
     },
     buildProps(){
       this.props=new T.Group();
@@ -115,6 +142,8 @@
       Object.values(this.actors).forEach(rig=>rig.group.visible=false);
       [this.cup,this.otherCup,this.paper].forEach(o=>o.visible=false);
       switch(shot.stage){
+        case 'chapter-street':case 'chapter-meet':case 'chapter-result':case 'chapter-after':
+          PQChapterScene.filmFrame(this,shot,u,t);break;
         case 'coast':
           this.camera([-43,19,32],[-33,15,24],[-13,1,8],[-17,2,6],u);
           break;
@@ -172,7 +201,7 @@
           break;
         }
       }
-      const fade=this.reduced?0:Math.max(1-this.clock.time/.16,(this.clock.time-shot.duration+.16)/.16,0);
+      const fade=this.reduced||this.clock.paused?0:Math.max(1-this.clock.time/.16,(this.clock.time-shot.duration+.16)/.16,0);
       $('life-veil').style.opacity=clamp(fade).toFixed(3);
       if(!this.reduced&&!this.clock.paused&&['community','street','leave','after'].includes(shot.stage)&&this.clock.time-this.lastStep>.42){this.lastStep=this.clock.time;SFX.foley('step');}
     },
@@ -191,7 +220,7 @@
     },
     finish(mark=true){
       if(!this.active)return;
-      const w=PQIsland,r=PQStory3D,s=this.saved;this.active=false;
+      const w=PQIsland,r=PQStory3D,s=this.saved,owner=this.owner;this.active=false;
       [this.cup,this.otherCup,this.paper].forEach(o=>this.props.add(o));this.props.removeFromParent();r.disposeTree(this.props);
       s.actors.forEach(a=>{a.parent.add(a.rig.group);a.rig.group.position.copy(a.position);a.rig.group.visible=a.visible;a.rotations.forEach(([key,rotation])=>a.rig[key].rotation.copy(rotation));});
       s.hidden.forEach(([o,v])=>o.visible=v);s.cups.forEach(([o,v])=>o.visible=v);s.roomProps.forEach(([o,v])=>o.visible=v);s.ui.forEach(([el,inert])=>el.inert=inert);
@@ -199,11 +228,13 @@
       w.scene=s.scene;w.cinematicMode=s.cinematic;w.camera.position.copy(s.position);w.camera.quaternion.copy(s.quaternion);
       if(s.view?.enabled)w.camera.setViewOffset(s.view.fullWidth,s.view.fullHeight,s.view.offsetX,s.view.offsetY,s.view.width,s.view.height);else w.camera.clearViewOffset();
       $('game').classList.remove('life-mode');$('life-film').hidden=true;
-      if(mark){G.lifeFilms=L.remember(G.lifeFilms,this.film.id);G.save();}
-      this.clock=null;this.props=null;this.actors=null;this.saved=null;this.world=null;this.room=null;this.cup=null;this.otherCup=null;this.paper=null;
+      if(mark&&!owner){G.lifeFilms=L.remember(G.lifeFilms,this.film.id);G.save();}
+      this.owner=null;
+      this.clock=null;this.props=null;this.demo=null;this.actors=null;this.saved=null;this.world=null;this.room=null;this.cup=null;this.otherCup=null;this.paper=null;
       r.viewKey='';if(r.active)r.update(0,performance.now()/1000);
       w.environment.lastFrame=0;w.environment.warmup=performance.now()+1000;
-      if(PQCafeCase.active){PQCafeCase.render();PQCafeCase.reveal();}
+      if(owner?.type==='chapter')PQCampaign.filmFinished(mark,owner.kind);
+      else if(PQCafeCase.active){PQCafeCase.render();PQCafeCase.reveal();}
       else if(s.focus?.isConnected)s.focus.focus({preventScroll:true});
     }
   };

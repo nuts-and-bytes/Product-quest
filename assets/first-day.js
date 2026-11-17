@@ -163,6 +163,7 @@
         button(G.cafeCase?.phase==='complete'?'蓝山 · 查看项目手记':G.cafeCase?.phase==='intro'?'蓝山 · 熟客为什么走了？':'蓝山 · 继续我的调查',()=>PQCafeCase.open());
         button('小美 · 聊聊她的纸信封',()=>this.chatMei());button('李姐 · 打个招呼',()=>this.chatLi());button('窗边 · 坐一会儿',()=>this.rest());
         button(s.stage==='coffee'?'结束第一天，去探索 →':'继续探索 →',()=>this.finish());
+        if(window.PQCampaign)button('去赴下一个约 · '+PQChapterJourney.def(G.campaign.current).name,()=>{this.finish();this.closeDialog();PQCampaign.travel(G.campaign.current);});
       }
       if(!s.drink)button('先看看柜台前发生了什么',()=>PQCafeCase.open());
     },
@@ -179,14 +180,14 @@
       this.say('蓝山咖啡馆 · 认识一个真实的人','小美',[
         G.firstDay.clues.includes('envelopes')?'你还记得我的纸信封呀。我现在还是会用它，手写的金额总比手机数字更有感觉。':'你问这个信封？发工资那天，我就把周末能花的钱放进去。剩下的先转给妈妈保管。',
         '也试过记账。忙两天忘了，再打开就是一堆要补的记录……索性不打开了。纸信封笨一点，但空了我就知道该停。',
-        '改天你想听我讲上个月怎么买东西买超了，我给你翻翻订单。今天先好好喝完这杯。'
+        G.campaign?.records['2'].committed?(PQChapterJourney.result(G.campaign,'2',G.campaign.records['2'].committed).good?'你看过我完整的一个月了。上次到账以后就能确认分配，确实赶上了。我把新记录夹回信封了。':'你还记得上次那张生活时间线吗？我们试的办法还有没接住的地方。下个月，再陪我看看它出现在什么时候吧。'):'改天你想听我讲上个月怎么买东西买超了，我给你翻翻订单。今天先好好喝完这杯。'
       ],()=>{this.clue('envelopes');PQStory3D.focus(null);this.renderCafe();});
     },
     chatLi(){
       PQStory3D.ensureNpc('lijie');PQStory3D.focus('lijie');
       this.say('蓝山咖啡馆 · 窗边的老朋友','李姐',[
         G.firstDay.clues.includes('investor')?'又见面了。还是那句话，先把咖啡喝完。':'你是王总的新同事？我是李姐。他没事就爱给我发“绝妙想法”。来，坐。',
-        '我每周三都坐这里。今天不聊项目。你如果真去听过几个人的故事，下次带来，我更愿意听那个。',
+        G.campaign?.records['7'].committed?(G.campaign.records['7'].committed.plan.consent==='checked'?'上次默认勾选的报价，我没有算进收入。下次先让人自己确认，好吗？':G.campaign.records['7'].committed.plan.access==='wall'?'上次小美连原来的记录都看不了了。收费之前，要想想我们先前答应过她什么。':'上次集市那份记录我还留着。愿意买的人和拒绝的人，都值得听听。那只是一次小试验，别急着给它写个大结论。'):'我每周三都坐这里。今天不聊项目。你如果真去听过几个人的故事，下次带来，我更愿意听那个。',
         '这个位置看得见进出的人，很适合发呆。也很适合留意：大家说想要什么，和实际在做什么。'
       ],()=>{this.clue('investor');PQStory3D.focus(null);this.renderCafe();});
     },
@@ -213,8 +214,8 @@
       const first=G.firstDay.stage==='coffee';this.step('finishCoffee');this.closeDialog();G.toMap();
       if(first)this.say('DAY 01 / 从今天起，这也是你的岛','第一天，完成了。',[
         '你认识了小美，接到了第一个项目，也有了一家可以随时回来的咖啡馆。',
-        '接下来可以去总部继续“第一性原理：拆解问题”，也可以沿栈道探索。左上角的主线任务会一直等你。'
-      ],()=>this.render());
+        '小美约你在波波奶茶店见面。这次，她会带来信封和收据。左上角的任务可以带路，走累了也可以回来喝一杯。'
+      ],()=>{this.render();PQCampaign.mapHud();});
     },
     saveLesson(phase='story'){
       if(G.lvIdx!==0||G.firstDay.stage!=='office')return;
