@@ -808,10 +808,11 @@ const G = {
     const card=document.getElementById('fb-card');
     const cls = c.s===2?'good': c.s===1?'mid':'bad';
     card.className=cls;
-    document.getElementById('fb-title').textContent = c.s===2?'◎ 最优判断！': c.s===1?'◑ 可行，但不是最优':'✖ 翻车了！';
+    document.getElementById('fb-title').textContent = c.open?(c.head||'✦ 你的选择'): c.s===2?'◎ 破局': c.s===1?'◑ 妥协的代价':'✖ 踩坑的回响';
     document.getElementById('fb-text').innerHTML=this.linkify(c.fb);
     document.getElementById('fb-lesson').innerHTML=this.linkify(c.lesson||'');
     const btn=document.getElementById('fb-btn');
+    const oldAlt=document.getElementById('fb-alt-btn'); if(oldAlt) oldAlt.remove();
     const flash=document.getElementById('flash');
     if(c.s===2){ SFX.ok(); flash.className='good'; }
     else if(c.s===1){ SFX.mid(); this.updateTrust(-5); }
@@ -820,22 +821,31 @@ const G = {
     setTimeout(()=>{ flash.className=''; document.getElementById('stage').classList.remove('shake'); document.getElementById('trust-heart').classList.remove('hurt'); },600);
 
     this.dScore += c.s;
+    if(c.ending){ this.endingChoice=c.ending; this.save(); }
     const dead=this.trust<=0;
     if(c.s===0){
       if(dead) this.track('trust_crash',{id:LEVELS[this.lvIdx].id});
-      btn.textContent=dead?'💀 信任崩塌…重新挑战本关':'⏪ 时光倒流，重新选择';
+      btn.textContent=dead?'💀 信任耗尽 · 重新开始本章':'⏪ 换个方式应对';
       btn.onclick=()=>{ SFX.click(); this.hideFb();
         if(dead){ this.trust=60; this.updateTrust(0); this.startLevel(this.lvIdx); }
-        else{ this.dScore-=0; const node=LEVELS[this.lvIdx].script[this.nodeIdx];
+        else{ const node=LEVELS[this.lvIdx].script[this.nodeIdx];
           if(node.forensic) this.showForensic(node.forensic); else this.showChoices(node.choices); }
       };
+      if(!dead){
+        const alt=document.createElement('button');
+        alt.id='fb-alt-btn'; alt.className='pxbtn';
+        alt.style.cssText='margin-left:10px;opacity:.85';
+        alt.textContent='带着代价继续 ▶';
+        alt.onclick=()=>{ SFX.click(); this.hideFb(); if(c.term)this.unlock(c.term); this.nodeIdx++; this.playNode(); };
+        btn.parentNode.appendChild(alt);
+      }
     }else{
       btn.textContent='继续 ▶';
       btn.onclick=()=>{ SFX.click(); this.hideFb(); if(c.term)this.unlock(c.term); this.nodeIdx++; this.playNode(); };
     }
     document.getElementById('feedback').classList.add('show');
   },
-  hideFb(){ document.getElementById('feedback').classList.remove('show'); },
+  hideFb(){ const alt=document.getElementById('fb-alt-btn'); if(alt) alt.remove(); document.getElementById('feedback').classList.remove('show'); },
 
   /* ---------- 随堂检验 ---------- */
   startQuiz(){
