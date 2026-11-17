@@ -21,8 +21,8 @@
   const actions={
     observe:{name:'观察一次早高峰',type:'现场观察',focus:'door',desc:'看见顾客从进门到离开的过程。'},
     orders:{name:'翻看十张订单',type:'记录',focus:'counter',desc:'比较点单、出杯和取走的时间。'},
-    recent:{name:'问阿晨上次怎么走的',type:'近期行为',focus:'guest',desc:'从最近一次真实经历问起。'},
-    opinion:{name:'问阿晨想不想要 App',type:'态度',focus:'guest',desc:'听听他的期待；期待不等于实际采用。'},
+    recent:{name:'阿晨没拿咖啡的经过',type:'阿晨的讲述',focus:'guest',desc:'他赶车前在柜台遇到的事。'},
+    opinion:{name:'阿晨聊起预点单',type:'谈话记录',focus:'guest',desc:'听听他以前用过什么。'},
     staff:{name:'请店员带你走一遍',type:'工作过程',focus:'counter',desc:'看看忙碌时被忽略的那一步。'}
   };
   const phases=['intro','investigate','plan','result','review','complete'];
@@ -57,13 +57,13 @@
     const texts={
       observe:morning?'你看见三只杯子留在吧台。阿晨又看了一眼门外，没拿咖啡就走了。出杯和拿到手，并不是同一个时刻。':'取餐牌清清楚楚，顾客拿到杯子就走。更多人还在等店员完成手冲。',
       orders:`十张连续订单：点单到出杯平均 ${b.prep} 分钟。成功取走的订单中，出杯后还等了约 ${b.pickup} 分钟。这里只覆盖${cfg.day}，不是一整周。`,
-      recent:morning?'阿晨：“上次我等了三分多钟。台上有杯咖啡，但我没听清是谁的。公交快来了，我就先走了。不是每次都这样。”':'阿晨：“今天我看得见取餐牌。店员还在冲上一单，下一班车快到了，我就没等。这次是没做完。”',
-      opinion:'阿晨：“App？听起来方便，我应该会用吧。”他还没有真正下过预订单。这是一份意愿，不是采用记录。',
+      recent:morning?'阿晨：“台上是有杯咖啡，可我没听清是谁的。公交快来了，我就先走了。”':'阿晨：“取餐牌我看见了，可店员还在冲上一单。下一班车快到了，我就没等。”',
+      opinion:'阿晨：“提前点？听起来挺方便，我应该会用吧。不过早上出门连钥匙都经常找半天。”',
       staff:morning?'店员：“机器来得及。我忙着接下一单，喊名字的声音被磨豆机盖住。顾客问杯子是谁的，我又得停下来找。”':'店员：“两个人都在手冲就能快些。现在只有一个制作位，单杯要两分多钟。改成快取菜单会省事，但有人专程来喝特调。”'
     };
     return {id,title:item.name,type:item.type,text:texts[id],supports:id==='opinion'?'unknown':cfg.root};
   }
-  function fresh(scenario=0,legacy=null){return {version:1,scenario:scenario===1?1:0,phase:'intro',actions:[],hypothesis:null,pins:[],unknown:null,plan:[],trials:[],selected:0,reflection:null,legacy};}
+  function fresh(scenario=0,legacy=null){return {version:1,scenario:scenario===1?1:0,phase:'intro',actions:[],hypothesis:null,pins:[],unknown:null,plan:[],trials:[],selected:0,reflection:null,legacy,dialogue:{node:'hello',history:[]}};}
   function normalTrial(t,scenario){
     if(!t||!Array.isArray(t.plan))return null;
     const plan=uniq(t.plan,plans);if(!plan.length||cost(plan)>BUDGET)return null;
@@ -74,6 +74,7 @@
     if(!raw||raw.version!==1)return fresh();
     const s=fresh(raw.scenario);
     s.phase=phases.includes(raw.phase)?raw.phase:'intro';s.actions=uniq(raw.actions,actions);
+    s.dialogue=root.PQCafeDialogue?root.PQCafeDialogue.normalize(raw.dialogue,s.actions,s.scenario):{node:'hello',history:[]};
     s.hypothesis=Object.hasOwn(hypotheses,raw.hypothesis)?raw.hypothesis:null;
     s.pins=uniq(raw.pins,actions,3).filter(id=>s.actions.includes(id));s.unknown=Object.hasOwn(unknowns,raw.unknown)?raw.unknown:null;
     s.plan=uniq(raw.plan,plans);if(cost(s.plan)>BUDGET)s.plan=[];
