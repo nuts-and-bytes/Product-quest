@@ -37,6 +37,12 @@ test('legacy checkpoints unlock matching chapters without inventing any new choi
  for(const [id,n] of [['boss',2],['uboss',3],['eboss',4],['tboss',5],['lboss',6],['gboss',7],['bboss',8]]){const i=ctx.PQ.levels.findIndex(l=>l.id===id);assert.equal(M.legacyLimit(i,ctx.PQ.levels),n-1);assert.equal(M.legacyLimit(i+1,ctx.PQ.levels),n);}
  const s=M.normalize();assert.ok(M.available(s,'8',M.legacyLimit(37,ctx.PQ.levels)));assert.equal(M.evidence('8','history',s).body.length,1);assert.equal(M.result(plan(s,'8',good[8]),'8'),null);
 });
+test('a legacy player can continue beyond the migrated checkpoint without replaying earlier chapters',()=>{
+ let s=complete(M.normalize(),'3');assert.equal(s.records['1'].committed,null);assert.equal(s.records['2'].committed,null);
+ assert.equal(M.available(s,'4',3),true);assert.equal(M.available(s,'5',3),false);
+ s=complete(s,'4');assert.equal(M.available(s,'5',3),true);assert.equal(M.available(s,'6',3),false);
+ assert.equal(M.available(s,'4',1),false);
+});
 test('malformed imports cannot insert script, scores, duplicate sequence cards or unlimited history',()=>{
  const raw={current:'evil',records:{1:{notes:['evil','envelope','envelope'],plan:{tool:'envelope',setup:'together'},trials:Array(10).fill({plan:good[1],notes:[],score:99999}),focus:{npc:'evil',topic:'evil'},committed:{plan:good[1],reflection:'invented'},view:'<script>'},2:{plan:{...good[2],journey:['payday','payday','evil']}}}};
  const s=M.normalize(raw);assert.equal(s.current,'1');assert.equal(s.records['1'].trials.length,3);assert.equal(s.records['1'].focus,null);assert.equal(s.records['1'].committed,null);assert.equal(s.records['1'].view,'explore');assert.equal(M.ready(M.def('2'),s.records['2'].plan),false);assert.equal(s.records['1'].trials[0].score,undefined);

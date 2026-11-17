@@ -35,8 +35,10 @@
     return n;
   }
   function available(s,id,legacy=1){
-    if(!def(id))return false;let n=1;while(n<8&&s.records[String(n)]?.committed)n++;
-    return Number(id)<=Math.max(n,Math.min(8,legacy));
+    if(!def(id))return false;
+    let n=Math.max(1,Math.min(8,Math.floor(Number(legacy)||1)));
+    while(n<8&&s.records[String(n)]?.committed)n++;
+    return Number(id)<=n;
   }
   function next(s,legacy=1){return chapters.find(c=>available(s,c.id,legacy)&&!s.records[c.id].committed)?.id||'8';}
   function advance(raw,id,event,value,legacy=1){
