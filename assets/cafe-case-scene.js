@@ -58,9 +58,9 @@
     },
     setView(view,stage='guest'){
       if(!this.active)return;
-      const key=view+':'+stage;if(this.stageKey===key)return;
-      this.stageKey=key;this.view=view;this.stage=stage;PQStory3D.viewKey='';
-      const counter=stage==='counter'&&(view==='talk'||view==='evidence');
+      const counter=(stage==='counter'||this.atCounter)&&(view==='talk'||view==='evidence');
+      const framing=counter?'counter':stage,key=view+':'+framing;if(this.stageKey===key)return;
+      this.atCounter=!!counter;this.stageKey=key;this.view=view;this.stage=framing;PQStory3D.viewKey='';
       this.playerGoal=new T.Vector3(-1.8,.08,counter?-.8:1.7);
       this.guestGoal=new T.Vector3(1,.08,counter?-1.45:1);
       this.customers.forEach(c=>c.label.hidden=true);

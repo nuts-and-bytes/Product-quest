@@ -43,3 +43,17 @@ test('imported dialogue IDs and history are bounded and cannot inject speech or 
   const valid=M.normalize({...s,actions:['recent'],dialogue:{node:'recent',history:Array(80).fill({node:'hello',choice:'recent',text:'injected'})}});
   assert.equal(valid.dialogue.history.length,24);assert.ok(D.history(valid).every(l=>!l.text.includes('injected')));
 });
+test('counter positions remain stable through follow-ups and evidence until exploration resumes',()=>{
+  const vm=require('node:vm'),fs=require('node:fs');
+  class Vector3{constructor(x,y,z){Object.assign(this,{x,y,z});}}
+  const context={window:{},THREE:{Vector3},PQCafeModel:M,PQStory3D:{}};
+  vm.runInNewContext(fs.readFileSync(require.resolve('../assets/cafe-case-scene.js'),'utf8'),context);
+  const scene=context.window.PQCafeScene;scene.active=true;scene.customers=[];
+  scene.setView('talk','counter');const positions=[scene.playerGoal.z,scene.guestGoal.z];
+  for(const view of ['talk','evidence','talk']){
+    scene.setView(view,'guest');assert.equal(scene.stage,'counter');
+    assert.deepEqual([scene.playerGoal.z,scene.guestGoal.z],positions);
+  }
+  scene.setView('explore','guest');scene.setView('talk','guest');
+  assert.equal(scene.stage,'guest');assert.equal(scene.atCounter,false);
+});
