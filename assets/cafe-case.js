@@ -6,6 +6,7 @@
   const C={active:false,detail:null,help:false,mode:'explore',history:false,textSize:18,
     init(){
       G.cafeCase=M.normalize(G.cafeCase);
+      try{this.reduceMotion=localStorage.getItem('pq-cafe-reduce-motion')==='1';}catch(e){this.reduceMotion=false;}
       $('game').insertAdjacentHTML('beforeend',`<section class="screen" id="cafe-case-screen" aria-label="蓝山咖啡馆调查">
         <header id="case-topbar"><button data-act="exit">← 咖啡馆</button><div><span class="case-kicker">BLUE MOUNTAIN / FIELD NOTES</span><strong id="case-name"></strong></div><nav aria-label="调查工具"><button data-act="journal">手记 <span id="case-note-count">0</span></button><button data-act="help" aria-label="玩法与帮助">帮助</button></nav></header>
         <div id="case-scene-note"><span id="case-scene-mode">窗边观察</span><p id="case-scene-status">阿晨正在往柜台走。</p><div><button data-act="pause" id="case-pause">暂停画面</button><button data-act="replay">重看这一段</button></div></div>
@@ -13,6 +14,7 @@
         <div id="case-hotspots" aria-label="店里的人与物"><button data-act="talk" id="case-achen" class="case-hotspot case-hotspot-main"><span>阿晨</span><small>聊聊刚才的事</small></button><button data-act="read" data-value="orders" id="case-orders" class="case-hotspot">柜台订单 <small>查看</small></button><button data-act="read" data-value="staff" id="case-staff" class="case-hotspot">小美 <small>聊聊工作</small></button></div>
         <div id="case-explore"></div><section id="case-dialogue" aria-label="与阿晨交谈" hidden></section>
         <aside id="case-panel" aria-label="手记与试验"><div id="case-content"></div></aside>
+        <div id="case-transition" hidden><span id="case-transition-label"></span><button data-act="skip-motion">跳过动作 ↵</button></div>
         <div id="case-notice" role="status" aria-live="polite"></div>
       </section>`);
       $('cafe-case-screen').addEventListener('click',e=>{const b=e.target.closest('button[data-act]');if(b&&!b.disabled)this.act(b.dataset.act,b.dataset.value);});
@@ -27,7 +29,7 @@
     },
     suspend(){
       if(!this.active)return;
-      this.active=false;PQCafeScene.detach();$('game').classList.remove('case-mode');
+      this.active=false;this.clearPresentation();PQCafeScene.detach();$('game').classList.remove('case-mode');
       if(PQStory3D.active)PQStory3D.viewKey='';
     },
     close(){this.suspend();G.show('social-screen');PQFirstDay.renderCafe();},
@@ -41,6 +43,11 @@
     },
     act(event,value){
       const s=G.cafeCase;
+      if(event==='skip-motion'){PQCafeScene.finishTransition();return;}
+      PQCafeScene.finishTransition();
+      if(!SFX.muted)SFX.ac();
+      if(event==='sound'){G.toggleMute();this.render();return;}
+      if(event==='motion'){this.reduceMotion=!this.reduceMotion;if(this.reduceMotion){PQCafeScene.paused=true;$('case-pause').textContent='播放画面';}try{localStorage.setItem('pq-cafe-reduce-motion',this.reduceMotion?'1':'0');}catch(e){}this.render();return;}
       if(event==='exit'){this.close();return;}
       if(event==='talk'){
         if(s.phase!=='investigate')return;
@@ -93,7 +100,8 @@
       panel.hidden=['talk','explore','observe'].includes(view);
       $('case-hotspots').hidden=view!=='explore';$('case-explore').hidden=view!=='explore'&&view!=='observe';
       $('case-dialogue').hidden=view!=='talk';$('case-scene-note').hidden=view!=='observe'&&view!=='replay';
-      PQCafeScene.setView(view,D.current(s).stage||'guest');
+      const dialogue=D.current(s);
+      PQCafeScene.setView(view,dialogue.stage||'guest',dialogue.id,this.help?'help':this.mode==='journal'?'journal':this.detail||'');
       if(view==='explore'||view==='observe')$('case-explore').innerHTML=this.exploration(view);
       if(view==='talk')this.renderDialogue();
       let html=`<div class="case-meta"><span>${cfg.day}</span><span>${phase==='intro'?'随时可离开':phase==='complete'?'已存入项目手记':`行动余量 ${left} / ${M.LIMIT}`}</span></div>`;
@@ -110,9 +118,33 @@
       else html+=this.complete();
       const focus=document.activeElement?.dataset?.act,focusValue=document.activeElement?.dataset?.value;
       $('case-content').innerHTML=html;
-      if(this.lastPhase!==phase||this.lastDetail!==this.detail||this.lastHelp!==this.help||this.lastView!==view){panel.scrollTop=0;if(!panel.hidden)$('case-content').querySelector('h1')?.focus({preventScroll:true});else if(view==='talk')$('case-line')?.focus({preventScroll:true});else $('case-explore').querySelector('button')?.focus({preventScroll:true});}
+      if(PQCafeScene.motion?.pending){panel.scrollTop=0;}
+      else if(this.lastPhase!==phase||this.lastDetail!==this.detail||this.lastHelp!==this.help||this.lastView!==view){panel.scrollTop=0;if(!panel.hidden)$('case-content').querySelector('h1')?.focus({preventScroll:true});else if(view==='talk')$('case-line')?.focus({preventScroll:true});else $('case-explore').querySelector('button')?.focus({preventScroll:true});}
       else{panel.scrollTop=scroll;for(const b of $('case-content').querySelectorAll('button'))if(b.dataset.act===focus&&b.dataset.value===focusValue){b.focus({preventScroll:true});break;}}
       this.lastPhase=phase;this.lastDetail=this.detail;this.lastHelp=this.help;this.lastView=view;
+      this.present();
+    },
+    clearPresentation(){
+      for(const id of ['case-dialogue','case-panel','case-explore','case-hotspots']){const el=$(id);el.classList.remove('case-pending');el.inert=false;el.removeAttribute('aria-hidden');}
+      $('case-transition').hidden=true;
+    },
+    present(){
+      this.clearPresentation();
+      $('cafe-case-screen').classList.toggle('case-reduced',PQCafeScene.reduced());
+      const motion=PQCafeScene.motion;
+      if(!motion?.pending)return;
+      for(const id of ['case-dialogue','case-panel','case-explore','case-hotspots']){const el=$(id);if(!el.hidden){el.classList.add('case-pending');el.inert=true;el.setAttribute('aria-hidden','true');}}
+      $('case-transition-label').textContent={arrive:'阿晨转过身来',lead:'阿晨示意你跟上',evidence:'翻开手记',return:'回到刚才',farewell:'先聊到这里'}[motion.kind]||'';
+      $('case-transition').hidden=false;
+      $('case-transition').querySelector('button').focus({preventScroll:true});
+    },
+    reveal(){
+      if(!this.active)return;
+      this.clearPresentation();
+      const view=this.lastView;
+      if(view==='talk')$('case-line')?.focus({preventScroll:true});
+      else if(!$('case-panel').hidden)$('case-content').querySelector('h1')?.focus({preventScroll:true});
+      else $('case-explore').querySelector('button')?.focus({preventScroll:true});
     },
     exploration(view){
       const s=G.cafeCase;
@@ -124,7 +156,7 @@
       const options=n.choices.map(c=>{const fresh=c.evidence&&!s.actions.includes(c.evidence);return this.button(`<span>${esc(c.text)}</span>${fresh?'<small>新线索 · −1 格</small>':''}`,'say',c.id,'case-reply',fresh&&M.remaining(s)<=2);}).join('');
       el.style.setProperty('--dialogue-size',this.textSize+'px');
       el.innerHTML=`<div class="case-dialogue-head"><div><span class="case-speaker-dot"></span><strong>阿晨</strong><span>赶早班车的熟客</span></div><button data-act="explore" aria-label="结束交谈，回到咖啡馆">先聊到这里 ↗</button></div><p id="case-line" tabindex="-1" aria-live="polite">${esc(n.text)}</p><div class="case-replies">${options}</div><footer><div>${this.button('刚才说了什么','history','','',false,this.history)}${this.button(this.textSize===18?'放大台词':'标准字号','text-size')}</div>${this.button(s.actions.includes('orders')?'翻看柜台订单':'看看柜台订单 · −1 格','read','orders','',!s.actions.includes('orders')&&M.remaining(s)<=2)}</footer>${M.remaining(s)<=2?'<p class="case-budget-note">还留了 2 格试验行动。已获得的线索可以继续聊、反复看。</p>':''}<div id="case-history"${this.history?'':' hidden'} aria-label="刚才的谈话">${this.history?D.history(s).map(l=>`<p><b>${l.speaker}</b>${esc(l.text)}</p>`).join(''):''}</div>`;
-      if(this.lastNode!==n.id){el.scrollTop=0;$('case-line').focus({preventScroll:true});}
+      if(this.lastNode!==n.id){el.scrollTop=0;if(!PQCafeScene.motion?.pending)$('case-line').focus({preventScroll:true});}
       else if(oldFocus?.act)for(const b of el.querySelectorAll('button'))if(b.dataset.act===oldFocus.act&&b.dataset.value===oldFocus.value){b.focus({preventScroll:true});break;}
       this.lastNode=n.id;
     },
@@ -179,7 +211,7 @@
         this.metrics(r.before,r.after)+`<div class="case-callout"><b>留在店里的改变</b><p>${t.plan.map(id=>M.plans[id].name).join('、')}。之后再来，仍能看见这次尝试留下的物件。</p><p>${s.reflection==='uncertain'?'你保留了不确定性，尚未作长期承诺。':s.reflection==='change'?'你准备重新判断问题，继续尝试。':'你会保留有效部分，并扩大观察范围。'}</p></div>`+
         `<div class="case-row">${this.button('坐一会儿，喝杯咖啡','exit','','case-primary')}${this.button(s.scenario===0?'换个情境：周末手冲日 →':'再访周三早高峰 →','next')}</div><p class="case-small">下一次菜单和约束会改变。上次有效的办法，不一定仍是最合适的。主线章节和老板信任度没有被这个项目改写。</p>`;
     },
-    handbook(){return this.head('随时可查 / 不扣行动','你可以怎样玩？')+`<p>调查一次花 1 格，试营业一次花 2 格。总共 8 格，并保留至少一次试验的机会。</p><p>查看旧证据、整理思路、暂停或离开不会花行动。所有选择自动保存，回到咖啡馆可以接着做。</p><p>“事实”是看过、听过或记录过的事；“猜测”是你对原因的解释；“未知”决定接下来值得验证什么。</p><p>每次方案最多投入 6 枚预算。它是单次试验的上限，比较第二个方案时重新分配。</p><p>画面只重放少量代表性顾客，表格与结果覆盖全部 10 人。不同方案的顾客顺序保持一致。</p><p>方法卡：选择能减少当前不确定性的行动。结果与判断依据分开看，允许承认还不知道。</p><div class="case-row">${this.button('回到刚才的地方 →','back','','case-primary')}</div>`;}
+    handbook(){return this.head('随时可查 / 不扣行动','你可以怎样玩？')+`<p>调查一次花 1 格，试营业一次花 2 格。总共 8 格，并保留至少一次试验的机会。</p><p>查看旧证据、整理思路、暂停或离开不会花行动。所有选择自动保存，回到咖啡馆可以接着做。</p><p>“事实”是看过、听过或记录过的事；“猜测”是你对原因的解释；“未知”决定接下来值得验证什么。</p><p>每次方案最多投入 6 枚预算。它是单次试验的上限，比较第二个方案时重新分配。</p><p>画面只重放少量代表性顾客，表格与结果覆盖全部 10 人。不同方案的顾客顺序保持一致。</p><p>方法卡：选择能减少当前不确定性的行动。结果与判断依据分开看，允许承认还不知道。</p><p>人物与镜头过渡可随时跳过。减少动态效果会让走位与镜头直接就位，阅读时间始终由你掌握。</p><div class="case-row">${this.button(SFX.muted?'开启音效':'关闭音效','sound','','',false,!SFX.muted)}${this.button(PQIsland.environment.reducedMotion?'减少动态效果 · 跟随系统':this.reduceMotion?'恢复动作衔接':'减少动态效果','motion','','',PQIsland.environment.reducedMotion,PQCafeScene.reduced())}</div><div class="case-row">${this.button('回到刚才的地方 →','back','','case-primary')}</div>`;}
   };
   window.PQCafeCase=C;
 })();

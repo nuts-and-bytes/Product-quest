@@ -100,6 +100,23 @@ const SFX = {
       o.connect(g); g.connect(ac.destination); o.start(t); o.stop(t+(dur||.06));
     }catch(e){}
   },
+  // Room foley shares the existing audio context and global mute preference.
+  foley(kind){
+    if(this.muted)return;
+    try{
+      const ac=this.ctx;if(!ac||ac.state!=='running')return;
+      const t=ac.currentTime,g=ac.createGain(),filter=ac.createBiquadFilter();
+      let source,duration;
+      if(kind==='paper'){
+        if(!this.paperNoise){this.paperNoise=ac.createBuffer(1,Math.ceil(ac.sampleRate*.13),ac.sampleRate);const data=this.paperNoise.getChannelData(0);for(let i=0;i<data.length;i++)data[i]=(Math.random()*2-1)*.5;}
+        source=ac.createBufferSource();source.buffer=this.paperNoise;duration=.13;
+        filter.type='bandpass';filter.frequency.value=1400;filter.Q.value=.5;
+      }else{source=ac.createOscillator();source.type='sine';source.frequency.setValueAtTime(100,t);source.frequency.exponentialRampToValueAtTime(48,t+.065);duration=.085;filter.type='lowpass';filter.frequency.value=260;}
+      g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(kind==='paper'?.025:.014,t+.008);g.gain.exponentialRampToValueAtTime(.0001,t+duration);
+      source.connect(filter);filter.connect(g);g.connect(ac.destination);
+      source.onended=()=>{source.disconnect();filter.disconnect();g.disconnect();};source.start(t);source.stop(t+duration+.01);
+    }catch(e){}
+  },
   // 打字音是全局唯一每秒响十几次的音效，别的音效响一次就完了，它不行——
   // 方波在 880Hz 的谐波全落在人耳最敏感的 2-5kHz，且 setValueAtTime 瞬间起音是 DC 跳变，
   // 每一声开头都带爆音。低频三角波 + 低通削谐波 + 4ms 淡入磨掉攻击边缘："哒"，不是"哔"。

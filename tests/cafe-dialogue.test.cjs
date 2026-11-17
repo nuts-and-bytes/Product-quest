@@ -46,7 +46,9 @@ test('imported dialogue IDs and history are bounded and cannot inject speech or 
 test('counter positions remain stable through follow-ups and evidence until exploration resumes',()=>{
   const vm=require('node:vm'),fs=require('node:fs');
   class Vector3{constructor(x,y,z){Object.assign(this,{x,y,z});}}
-  const context={window:{},THREE:{Vector3},PQCafeModel:M,PQStory3D:{}};
+  const context={window:{},THREE:{Vector3},PQCafeModel:M,PQStory3D:{},PQIsland:{environment:{}},PQCafeCase:{}};
+  vm.runInNewContext(fs.readFileSync(require.resolve('../assets/cafe-motion.js'),'utf8'),context);
+  context.PQCafeMotion=context.window.PQCafeMotion;
   vm.runInNewContext(fs.readFileSync(require.resolve('../assets/cafe-case-scene.js'),'utf8'),context);
   const scene=context.window.PQCafeScene;scene.active=true;scene.customers=[];
   scene.setView('talk','counter');const positions=[scene.playerGoal.z,scene.guestGoal.z];
