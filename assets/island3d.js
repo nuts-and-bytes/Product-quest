@@ -1973,7 +1973,7 @@
         const rig = buildCharacterRig3D(role, 0.14, this.solidMat);
         this.scene.add(rig.group);
         return {
-          rig,
+          rig, role,
           angle: (idx / roles.length) * Math.PI * 2,
           speed: (idx % 2 === 0 ? 1 : -1) * (0.16 + (idx % 4) * 0.035),
           radius: rings[idx % rings.length] + (idx % 2) * 0.35,
@@ -2854,6 +2854,8 @@
     _loop(now) {
       if (!this.running) return;
       this.rafId = requestAnimationFrame((t) => this._loop(t));
+      // Hidden game tabs keep their checkpoint without competing for GPU time.
+      if(document.hidden){this._lastTime=now;if(this.environment)this.environment.lastFrame=0;return;}
       if(this.environment)this.environment.recordFrame(now);
       const dt = Math.min(0.05, Math.max(0.001, (now - (this._lastTime || now)) / 1000));
       this._lastTime = now;
@@ -2868,6 +2870,7 @@
       this._updatePlayer(dt, tSec);
       this._updateCars(dt);
       this._updateCitizens(dt, tSec);
+      if(window.PQNightMarketScene&&typeof G!=='undefined'&&G.nightMarket)PQNightMarketScene.worldUpdate(dt);
       this._updateAmbient(dt, tSec);
       this._updateCamera(dt, now, tSec);
       this.environment.update(dt, tSec);

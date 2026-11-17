@@ -81,6 +81,28 @@
       $('game').classList.add('life-mode');$('life-film').hidden=false;$('life-film').classList.toggle('life-reduced',this.reduced);$('life-title').textContent=c.name;
       this.enterShot();$('life-skip').focus({preventScroll:true});w.environment.lastFrame=0;w.environment.warmup=performance.now()+1000;return true;
     },
+    playMarket(kind='arrival'){
+      if(this.active||!window.PQNightMarket?.active||!PQStory3D.active||!['arrival','break','closing'].includes(kind))return false;
+      const w=PQIsland,r=PQStory3D,C=PQNightMarket,q=PQNightMarketModel.result(C.run);
+      this.owner={type:'market',kind};this.film={id:'market-'+kind,title:kind==='arrival'?'赴一场海风里的约':kind==='break'?'灯亮起来，歇一会儿':'收摊以后，故事还在',shots:kind==='arrival'?[
+        {stage:'market-arrive',world:false,duration:5,place:'周六 · 蓝山旁的海岸小摊',caption:'小美把周末信封放上桌。阿晨今天没有看表。'},
+        {stage:'market-open',world:false,duration:4.5,place:'这一晚，由你经营',caption:'摆好台面，招呼客人。让一杯饮品真正交到人手里。'}
+      ]:kind==='break'?[
+        {stage:'market-open',world:false,duration:5,place:'中场 · 时间已经停下',caption:'小美去收空杯。阿晨把目光投向海面。先看看刚才哪里忙不过来。'}
+      ]:[
+        {stage:'market-close',world:false,duration:6,place:'收摊 · 零钱回到信封里',caption:'交付了 '+q.served+' 杯。'+(q.space==='bench'?'人散了，长凳还可以留下。':'灯暗下来，取餐架明早还能用。')}
+      ]};
+      this.clock=new L.Clock(this.film.shots);this.reduced=PQCafeScene.reduced();this.room=r.scene;this.world=r.saved.scene;this.temp=new T.Vector3();
+      this.actors={hero:r.player,lead:r.npcs.xiaomei,friend:r.npcs.citizen2};
+      this.saved={scene:w.scene,position:w.camera.position.clone(),quaternion:w.camera.quaternion.clone(),view:w.camera.view?{...w.camera.view}:null,cinematic:w.cinematicMode,timeMode:w.timeMode,tod:w.curTod,
+        actors:Object.values(this.actors).map(rig=>({rig,parent:rig.group.parent,position:rig.group.position.clone(),visible:rig.group.visible,rotations:['group','head','leftArm','rightArm','leftLeg','rightLeg'].map(k=>[k,rig[k].rotation.clone()])})),
+        hidden:[],cups:[],roomProps:[...r.actors.filter(rig=>!Object.values(this.actors).includes(rig)).map(rig=>rig.group),PQNightMarketScene.cup,PQNightMarketScene.deliveryCup].map(o=>[o,o.visible]),
+        ui:[...$('game').children].filter(el=>!['island-viewport','life-film','crt','vig'].includes(el.id)).map(el=>[el,el.inert]),focus:document.activeElement};
+      this.saved.roomProps.forEach(([o])=>o.visible=false);this.saved.ui.forEach(([el])=>el.inert=true);
+      this.buildProps();this.active=true;w.cinematicMode='life';w.keys={};w.walkGoal=null;w.walkPath=[];
+      $('game').classList.add('life-mode');$('life-film').hidden=false;$('life-film').classList.toggle('life-reduced',this.reduced);$('life-title').textContent=this.film.title;
+      this.enterShot();$('life-skip').focus({preventScroll:true});return true;
+    },
     buildProps(){
       this.props=new T.Group();
       const cream=new T.MeshStandardMaterial({color:'#eee0be',roughness:.8}),coffee=new T.MeshStandardMaterial({color:'#594232',roughness:.85});
@@ -142,6 +164,7 @@
       Object.values(this.actors).forEach(rig=>rig.group.visible=false);
       [this.cup,this.otherCup,this.paper].forEach(o=>o.visible=false);
       switch(shot.stage){
+        case 'market-arrive':case 'market-open':case 'market-close':PQNightMarketScene.filmFrame(this,shot,u);break;
         case 'chapter-street':case 'chapter-meet':case 'chapter-result':case 'chapter-after':
           PQChapterScene.filmFrame(this,shot,u,t);break;
         case 'coast':
@@ -233,7 +256,8 @@
       this.clock=null;this.props=null;this.demo=null;this.actors=null;this.saved=null;this.world=null;this.room=null;this.cup=null;this.otherCup=null;this.paper=null;
       r.viewKey='';if(r.active)r.update(0,performance.now()/1000);
       w.environment.lastFrame=0;w.environment.warmup=performance.now()+1000;
-      if(owner?.type==='chapter')PQCampaign.filmFinished(mark,owner.kind);
+      if(owner?.type==='market')PQNightMarket.filmFinished(mark,owner.kind);
+      else if(owner?.type==='chapter')PQCampaign.filmFinished(mark,owner.kind);
       else if(PQCafeCase.active){PQCafeCase.render();PQCafeCase.reveal();}
       else if(s.focus?.isConnected)s.focus.focus({preventScroll:true});
     }

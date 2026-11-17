@@ -161,6 +161,7 @@
       if(!s.drink){button('☕ 来杯手冲',()=>this.order('coffee'));button('♨ 想喝热茶',()=>this.order('tea'));}
       else{
         button(G.cafeCase?.phase==='complete'?'蓝山 · 查看项目手记':G.cafeCase?.phase==='intro'?'蓝山 · 熟客为什么走了？':'蓝山 · 继续我的调查',()=>PQCafeCase.open());
+        if(window.PQNightMarket)button('周末夜市 · 和小美去摆摊',()=>PQNightMarket.open());
         button('小美 · 聊聊她的纸信封',()=>this.chatMei());button('李姐 · 打个招呼',()=>this.chatLi());button('窗边 · 坐一会儿',()=>this.rest());
         button(s.stage==='coffee'?'结束第一天，去探索 →':'继续探索 →',()=>this.finish());
         if(window.PQCampaign)button('去赴下一个约 · '+PQChapterJourney.def(G.campaign.current).name,()=>{this.finish();this.closeDialog();PQCampaign.travel(G.campaign.current);});
@@ -179,7 +180,7 @@
       PQStory3D.ensureNpc('xiaomei');PQStory3D.focus('xiaomei');
       this.say('蓝山咖啡馆 · 认识一个真实的人','小美',[
         G.firstDay.clues.includes('envelopes')?'你还记得我的纸信封呀。我现在还是会用它，手写的金额总比手机数字更有感觉。':'你问这个信封？发工资那天，我就把周末能花的钱放进去。剩下的先转给妈妈保管。',
-        '也试过记账。忙两天忘了，再打开就是一堆要补的记录……索性不打开了。纸信封笨一点，但空了我就知道该停。',
+        G.nightMarket?.legacy?('夜市那晚，我们卖出了 '+PQNightMarketModel.result(G.nightMarket.legacy.run).served+' 杯。'+(G.nightMarket.legacy.run.plan.space==='bench'?'长凳搬到蓝山旁边了。下次周末，来那儿坐坐。':'取餐架搬到蓝山旁边了，早上赶车的人也能用。')):'也试过记账。忙两天忘了，再打开就是一堆要补的记录……索性不打开了。纸信封笨一点，但空了我就知道该停。',
         G.campaign?.records['2'].committed?(PQChapterJourney.result(G.campaign,'2',G.campaign.records['2'].committed).good?'你看过我完整的一个月了。上次到账以后就能确认分配，确实赶上了。我把新记录夹回信封了。':'你还记得上次那张生活时间线吗？我们试的办法还有没接住的地方。下个月，再陪我看看它出现在什么时候吧。'):'改天你想听我讲上个月怎么买东西买超了，我给你翻翻订单。今天先好好喝完这杯。'
       ],()=>{this.clue('envelopes');PQStory3D.focus(null);this.renderCafe();});
     },

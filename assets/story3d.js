@@ -78,8 +78,8 @@
     buildRoom(kind){
       const cafe=kind==='cafe';
       this.counterCups=[];
-      const custom=window.PQChapterRooms?.supports(kind);
-      if(custom)PQChapterRooms.build(this,kind);
+      const custom=kind==='nightmarket'||window.PQChapterRooms?.supports(kind);
+      if(kind==='nightmarket')PQNightMarketScene.buildRoom(this);else if(custom)PQChapterRooms.build(this,kind);
       if(!custom){
       this.box(0,-.2,0,16,.4,13,'#785d48');
       // Long oak boards and dark seams, simple shared geometry and materials.
@@ -168,6 +168,7 @@
       this.viewKey='';
     },
     update(dt,t){
+      if(window.PQNightMarket?.active&&window.PQNightMarketScene?.active){PQNightMarketScene.update(dt,t);return;}
       if(window.PQCampaign?.active&&window.PQChapterScene?.active){PQChapterScene.update(dt,t);return;}
       const w=PQIsland,e=w.environment,caseMode=!!window.PQCafeScene?.active,reduced=e.reducedMotion||(caseMode&&PQCafeScene.reduced());
       if(caseMode)PQCafeScene.tick(dt);
