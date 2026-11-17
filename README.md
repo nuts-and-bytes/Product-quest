@@ -1,148 +1,74 @@
-# 🎮 产品经理大冒险 · Product Quest
+# 产品经理大冒险 · Product Quest
 
-在剧情决策和场景探索中练习产品判断，适合想通过实际情境入门产品工作的人。
+在 3D 开放群岛里探索、交谈和调查，用证据尝试解决问题，再观察选择带来的后果。原有产品经理剧情闯关仍可继续游玩。
 
-[在线试玩](https://nuts-and-bytes.github.io/Product-quest/) · [咖啡馆调查](https://nuts-and-bytes.github.io/Product-quest/?experience=cafe) · [版本记录](CHANGELOG.md)
+[进入开放群岛](https://nuts-and-bytes.github.io/Product-quest/) · [直接进入蓝山调查](https://nuts-and-bytes.github.io/Product-quest/?experience=cafe) · [观看岛上清晨](https://nuts-and-bytes.github.io/Product-quest/?experience=cafe&film=morning) · [版本记录](CHANGELOG.md) · [English](#english)
 
-### 当前版本：开放群岛
+## 当前可以玩什么
 
-**岛上的片刻（3.6）**：咖啡馆调查穿插三段实时 3D 演出——岛民清晨出门、阿晨等候后准备离开、试验之后的街头。结尾根据实际模拟结果呈现拿到咖啡或空手离开；可暂停、跳过、免费回看。[观看清晨片段](https://nuts-and-bytes.github.io/Product-quest/?experience=cafe&film=morning&release=3.6) · [演出与验证说明](docs/island-life.md)。
+| 入口 | 玩法 |
+| --- | --- |
+| 开放群岛 | 漫游星火岛、琥珀林地、星潮观测站与珊瑚花园；行走、交互、收集手记，查看章节成果 |
+| 入职第一天 | 创建角色，跟随引导进入总部与咖啡馆，继续原有序章 |
+| 蓝山调查 | 交谈、读取订单和现场线索，圈出依据，组合试营业方案，再比较结果与复盘 |
+| 岛上的片刻 · 3.6 | 观看与调查状态关联的实时 3D 演出；可暂停、跳过或重看，结尾依据实际试验结果变化 |
+| 原有主线 | 保留从想法验证到商业化的章节、术语、方法卡、案例与作品集；未将全部章节改造成新调查玩法 |
 
-**新增蓝山调查（3.3）**：咖啡馆里可以接一个独立项目，自选调查顺序、圈出证据、组合试营业方案，观察顾客与店员的变化，再把改动留在店里。周三早高峰与周末手冲日具有不同瓶颈；没有答题评分，失败的尝试也能继续复盘。[直接体验](https://nuts-and-bytes.github.io/Product-quest/?experience=cafe) · [玩法与模型说明](docs/cafe-case.md)。
+这已经包含实时 3D 场景和人物交谈。旧像素剧情仍是产品的一部分，`screenshots/` 下的历史截图不能代表所有当前场景。
 
-原有 37 关玩法保留。星火岛通过三条栈道连接琥珀林地、星潮观测站和珊瑚花园，点击首页「先去世界里看看」即可探索。WASD / 手机摇杆移动，Shift 奔跑，E 互动，J 手记，H 取景。
+## 第一次怎么玩
 
-首页重构为实时 3D 入口。完成序章或章节最终关卡后，相关建筑出现金色标记，可以回顾成果、查看评级、重玩关卡与重温粒子庆典。旧存档继续可用。
+打开首页后创建角色或继续已有进度。电脑可用 WASD / 方向键行走、Shift 奔跑、E 互动、J 手记、H 取景；手机使用界面摇杆与触屏按钮。
 
-HDR 辉光、深度光束、环境遮蔽、水面反光、风动草叶和 GPU 粒子共同构成新光影。默认自动画质按帧耗时升降档，兼有电影 / 均衡 / 流畅三档手动模式。远景角色与静态道路均做了网格优化。
+想直接试调查，可以打开蓝山调查入口。先看现场和交谈，再选择你想验证的猜测与试验。每个情境有行动和预算限制，阅读与整理不扣行动。周三早高峰和周末手冲日的瓶颈不同，没有跨情境通吃的方案。
 
-```bash
+## 本地运行与单文件版本
+
+需要 Python 3；测试和打包还需要 Node.js。
+
+```sh
+git clone https://github.com/nuts-and-bytes/Product-quest.git
+cd Product-quest
 python3 -m http.server 8765
+```
+
+打开 <http://localhost:8765/>。可分别执行现有检查与打包：
+
+```sh
 node --test tests/*.test.cjs
 node scripts/build-single-html.mjs
 ```
 
-构建产生约 1.53 MiB 的 `dist/Product-Quest.html`，内含引擎、场景和完整剧情，无 CDN 依赖；离线版移除网络统计。存档仍在浏览器本地，换浏览器或从在线版转离线版时请先导出存档。当前是四岛连续区域，详细实现与验证边界见 [开放世界说明](docs/open-world.md)。
+单文件产物为 `dist/Product-Quest.html`。打包工具内联本地脚本、样式和剧情，并移除远程统计；实际产物大小以本次构建为准。
 
-[![zread doc](https://img.shields.io/badge/zread-AI%20Deep%20Read-black?style=for-the-badge)](https://zread.ai/nuts-and-bytes/Product-quest)
+## 存档、模型与边界
 
-> **把「产品知识」做成一个可以通关的网页游戏。**
-> 你将扮演一名零基础的新手产品经理，入职创业公司「星火科技」，在爱拍脑袋的老板、毒舌的工程师、口是心非的用户之间做出一个个真实决策——通关，就是学完一遍从想法到商业化的完整 0→1。
+- 进度保存在当前浏览器；换设备、浏览器、域名或改用单文件版本前，先使用导出和导入存档。
+- 咖啡馆使用确定性排队模型比较方案，顾客与经营情境为虚构。没有联网 AI 评分，结果不是现实经营预测。
+- 当前是四岛连续区域，没有无限世界、联网多人或完整新增大陆课程。
+- 自动画质会按帧耗时调整；低性能设备可选择流畅档。历史桌面验证不能替代真实手机验收，也不保证所有设备的帧率。
+- 章节与调查是学习机制原型，尚不能据此声称已证明学习效果或真实工作能力。
 
-**🕹️ 在线试玩：<https://nuts-and-bytes.github.io/Product-quest/>**（无需注册，打开即玩，进度自动保存）
+## 代码与玩法说明
 
-**🖥️📱 多端支持，一个链接玩遍所有设备：**
+| 内容 | 入口 |
+| --- | --- |
+| 原有剧情与章节 | `engine.js`、`content/` |
+| 群岛、导航与画质 | [开放世界说明](docs/open-world.md)、`assets/world-map.js`、`assets/island3d.js` |
+| 调查模型与预算 | [蓝山调查](docs/cafe-case.md)、`assets/cafe-case-state.js` |
+| 阿晨交谈与线索 | [3D 对话说明](docs/cafe-dialogue.md) |
+| 任务关联演出 | [岛上的片刻](docs/island-life.md)、`assets/island-life-state.js` |
 
-| 设备 | 怎么玩 | 体验 |
-|---|---|---|
-| 💻 电脑浏览器 | 直接打开链接 | 完整桌面布局，键盘空格/回车可推进对话 |
-| 📱 手机浏览器 | 同一链接，Safari/Chrome 均可 | 竖屏专属布局，触屏优化，城市地图滑动探索 |
-| 💬 微信内 | 把链接发到聊天/群里，点开即玩 | 无需跳出微信，方便分享给学习搭子 |
-| 📲 平板 | 横竖屏均可 | 自动匹配对应布局 |
+问题、玩法反馈或知识引用纠错可提交 [Issue](https://github.com/nuts-and-bytes/Product-quest/issues)。
 
-进度保存在各设备本地；换设备时用游戏内「导出存档 → 导入存档」即可无缝迁移。
+## 许可
 
----
+原有说明声明代码采用 MIT，剧情与知识内容采用 CC BY-NC 4.0。当前仓库没有独立 LICENSE 文件；维护者仍需补齐对应许可与第三方内容说明。本次不代选或更改许可。
 
-## 📷 原有剧情与功能界面（历史截图）
+## English
 
-![剧情决策：老板拍脑袋，你来接招](screenshots/06-decision.png)
+Product Quest combines an explorable 3D island world with product-decision gameplay. Explore, talk to characters, investigate the Blue Mountain café and compare deterministic experiments. Task-linked realtime scenes reflect the selected experiment; the original product-management chapters remain playable.
 
-| | |
-|:---:|:---:|
-| ![着陆页](screenshots/01-landing.png) 痛点直击的着陆页 | ![翻车现场](screenshots/07-crash.png) 选错不批评，直接看后果 |
-| ![城市探索](screenshots/05-city.png) 星火市：每栋建筑一段剧情 | ![世界地图](screenshots/04-world.png) 持续扩张的学习大陆 |
-| ![角色DIY](screenshots/02-avatar.png) 捏一个自己的像素形象 | ![入职工牌](screenshots/03-badge.png) 专属工牌，仪式感拉满 |
+[Play](https://nuts-and-bytes.github.io/Product-quest/) or [start the café investigation](https://nuts-and-bytes.github.io/Product-quest/?experience=cafe). Serve the repository with `python3 -m http.server 8765`; run existing checks with `node --test tests/*.test.cjs` and build the standalone HTML with `node scripts/build-single-html.mjs`.
 
----
-
-## 为什么做这个游戏？
-
-- 你是文科/商科出身，对做产品心动，却被"技术门槛"三个字劝退
-- 你收藏了几十篇产品干货，还是不知道第一步该干嘛
-- PRD、MVP、AARRR……每个字都认识，连起来全懵
-- **AI 时代，写代码越来越便宜——"判断该做什么"越来越值钱**
-
-看书太枯燥，上课太贵，实习没门路？那就来玩一局。
-
-## 🌟 它不是课程，是一场冒险
-
-| 玩法 | 说明 |
-|---|---|
-| 🎭 **剧情闯关** | 每一关都是真实工作场景：老板深夜拍脑袋、投资人刀刀见血、用户嘴上说"会用呀"身体却很诚实 |
-| ⚖️ **三级决策** | 选项没有一眼假：最优 ◎ / 次优 ◑（听着专业，藏着坑）/ 翻车 ✖（对应真实世界的失败案例） |
-| 🔍 **数据法医** | 进阶章节里，选项不再是文字按钮——直接在仪表盘上点出北极星指标、在漏斗图上切开流失、在白板上划定付费墙 |
-| 💥 **翻车剧场** | 选错不扣课时费，直接看后果：留存崩了、老板怒了、工程师把电脑合上了 |
-| 📖 **术语图鉴** | MVP、JTBD、KANO、RICE……71 个术语在剧情中解锁收集，每条都标注权威出处 |
-| 📒 **方法卡** | 通关掉落实战方法论：Mom Test 访谈手册、优先级三板斧、PRD 评审生存指南…… |
-| 📚 **产品档案馆** | 微信红包、Duolingo、麦当劳奶昔、Instagram、拼多多百元券事故……真实案例拆解 |
-| 📝 **随堂检验** | 每关 3 题通关必答，S/A/B/C 评级，可反复挑战刷成绩 |
-| 👤 **角色 DIY** | 捏一个自己的像素形象，领取专属工牌，正式入职星火科技 |
-
-原有像素剧情与新的 3D 场景并存；以上历史截图对应原有剧情界面，当前画面以在线版本为准。
-
-## 🗺️ 冒险进度
-
-| 章节 | 主题 | 状态 |
-|---|---|---|
-| 序章 | 入职第一天：产品经理到底是干嘛的 | ✅ 可玩 |
-| 第1章 | 想法值不值得做：第一性原理 · 市场测算 · Mom Test 访谈 | ✅ 可玩 |
-| 第2章 | 用户与需求：种子用户 · JTBD · 旅程地图 · KANO/RICE | ✅ 可玩 |
-| 第3章 | PRD与原型：用户故事 · 异常流 · 埋点 · 评审辩护 | ✅ 可玩 |
-| 第4章 | 听懂工程师说话：技术地图 · 成本冰山 · 站会黑话 · AI能力边界 | ✅ 可玩 |
-| 第5章 | 上线冲刺：测试验收 · 灰度发布 · 深夜P0危机 · 无责复盘 | ✅ 可玩 |
-| 第6章 | 数据与增长：北极星 · AARRR漏斗 · 留存曲线 · A/B测试 · LTV/CAC | ✅ 可玩 |
-| 第7章 | 怎么赚钱：变现模式 · 定价心理战 · 付费墙 · 单位经济 · 融资路演 | ✅ 可玩 |
-| 终章 | 复盘与作品集：STAR 面试特训 · 金色工牌 · 一键生成作品集 | ✅ 可玩 |
-| 更远处 | 增长大陆 · AI大陆 · 设计大陆——一个持续扩张的学习世界 | 🌍 敬请期待 |
-
-> 🎉 **产品大陆主线已全部完结！** 约 **8 小时**剧情量：37 个关卡、80 个决策点、111 道检验题、71 个术语、37 张方法卡、16 篇案例拆解。通关后可一键生成**专属产品作品集**（独立 HTML，附诚实声明与面试叙事模板）。全站图标为手绘像素风，与画面风格统一。
-
-## 📖 知识从哪来？
-
-所有知识点均改写自公认的权威来源，游戏内每个术语、每张方法卡都逐条标注出处：
-
-**产品经典**：Marty Cagan《Inspired（启示录）》（SVPG）· Eric Ries《精益创业》· Rob Fitzpatrick《The Mom Test》· Clayton Christensen《创新者的任务》（JTBD/奶昔研究）· Teresa Torres《Continuous Discovery Habits》· Melissa Perri《Escaping the Build Trap》· Geoffrey Moore《跨越鸿沟》· Alan Cooper《About Face》· Steve Mulder《赢在用户》（Persona）· Giles Colborne《简约至上》
-
-**中文经典**：《俞军产品方法论》· 苏杰《人人都是产品经理》· 王坚《结网》· 张小龙微信公开课演讲（公开实录）
-
-**方法与框架**：狩野纪昭 KANO 模型（1984）· Intercom RICE 打分法 · DSDM MoSCoW 法则 · BJ Fogg《Tiny Habits》行为模型 B=MAP（斯坦福行为设计实验室）· Sean Ellis《增长黑客》· Barbara Minto《金字塔原理》· Al Ries & Jack Trout《定位》· 贝索斯致股东信（双向门决策）· Mike Cohn《User Stories Applied》· BDD/Gherkin 验收标准 · Steve Krug《Don't Make Me Think》
-
-**行业研究与案例**：Alexander Osterwalder《商业模式新生代》· Costco/Spotify 公开财报 · CB Insights 创业失败原因研究 · Nielsen Norman Group 可用性研究 · Lenny's Newsletter · Sarah Frier《No Filter》（Instagram 创业史）· 微信红包/拼多多百元券等公开报道与财报资料
-
-发现引用错误或有更权威的来源？欢迎提 Issue 指正——**专业性是这个项目的生命线。**
-
-## 🚀 本地运行 / 参与共建
-
-```bash
-git clone https://github.com/nuts-and-bytes/Product-quest.git
-cd Product-quest
-python3 -m http.server 8765
-# 打开 http://localhost:8765/；无需 npm 安装
-```
-
-项目采用**引擎与内容分离**架构：`engine.js` 是游戏引擎（不含剧情），`content/` 下每个文件就是一章内容——想新增章节或修正知识点，改 JSON 式的内容文件即可，无需碰引擎。详见 `content/pm/ch0-prologue.js` 文件头的结构说明。
-
-发现 bug、知识点错误，或想要某个新章节？欢迎提 [Issue](../../issues)。
-
-每一版改了什么、为什么这么改，见 [CHANGELOG.md](CHANGELOG.md)。
-
-## 📜 许可
-
-现有说明声明代码采用 MIT、剧情与知识内容采用 CC BY-NC 4.0（署名-非商业性使用）。当前仓库未提供独立 LICENSE 文件；复用前应由维护者补齐对应许可与第三方内容说明。
-
----
-
-**⭐ 如果这个项目帮到了你，点个 Star 让更多想入行的人看到它。**
-*每个决策，都会改变他们对你的态度——在游戏里，也在真实的职场里。*
-
-### 入职第一天 · 3.2
-
-新玩家从主角定位、小美接待和单目标带路开始，进入 3D 总部完成原有序章，再到蓝山咖啡馆点单、聊天与休息。角色背包、定位环和「找到自己」在自由探索时也可用。高级角色定制默认折叠。
-
-- 总部、咖啡馆共用原来的 WebGLRenderer 和自适应后处理；室内运行时暂停外部模拟，退出时释放室内几何体、纹理和阴影贴图。共享的角色材质与脸部纹理保留。
-- `assets/first-day-state.js` 定义独立存档状态。`firstDay.lesson` 保存序章对话/测验检查点；`clues` 与 `drink` 保存相遇和饮品。旧存档不强制重做引导；地图底部可以主动重温，已有章节进度保留。
-- 咖啡馆的纸信封与投资人相遇，会在 `u1` / `c2` 的对白中得到回应。没有收集线索也能正常通关。
-- 当前 3D 章节为 `p1`、`c1`、`c2`、`u1`；后续章节保留原有玩法与呈现。社交场景是可选的叙事活动。
-
-验证：`node --test tests/*.test.cjs`。单文件打包：`node scripts/build-single-html.mjs`。测试账号可使用 `?player=firstday-qa`，独立于默认存档。
+Progress is browser-local; export before moving to another device or origin. The café is a fictional, simplified simulation, not a business forecast or validated learning-outcome claim. Performance depends on the device. The repository still needs standalone license files matching its stated code/content licenses.
