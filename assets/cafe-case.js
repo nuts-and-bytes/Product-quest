@@ -1,22 +1,26 @@
 /* One authored investigation: free order of inquiry, editable plans and visible consequences. */
 (function(){
   'use strict';
-  const M=PQCafeModel,$=id=>document.getElementById(id);
+  const M=PQCafeModel,D=PQCafeDialogue,$=id=>document.getElementById(id);
   const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-  const C={active:false,detail:null,help:false,
+  const C={active:false,detail:null,help:false,mode:'explore',history:false,textSize:18,
     init(){
       G.cafeCase=M.normalize(G.cafeCase);
       $('game').insertAdjacentHTML('beforeend',`<section class="screen" id="cafe-case-screen" aria-label="蓝山咖啡馆调查">
-        <header id="case-topbar"><button data-act="exit">← 先喝杯咖啡</button><div><span class="case-kicker">BLUE MOUNTAIN / FIELD NOTES</span><strong id="case-name"></strong></div><button data-act="help">随身手册</button></header>
+        <header id="case-topbar"><button data-act="exit">← 咖啡馆</button><div><span class="case-kicker">BLUE MOUNTAIN / FIELD NOTES</span><strong id="case-name"></strong></div><nav aria-label="调查工具"><button data-act="journal">手记 <span id="case-note-count">0</span></button><button data-act="help" aria-label="玩法与帮助">帮助</button></nav></header>
         <div id="case-scene-note"><span id="case-scene-mode">窗边观察</span><p id="case-scene-status">阿晨正在往柜台走。</p><div><button data-act="pause" id="case-pause">暂停画面</button><button data-act="replay">重看这一段</button></div></div>
-        <div id="case-people" aria-hidden="true"></div><aside id="case-panel" aria-label="调查与试验"><div id="case-content"></div></aside>
+        <div id="case-people" aria-hidden="true"></div>
+        <div id="case-hotspots" aria-label="店里的人与物"><button data-act="talk" id="case-achen" class="case-hotspot case-hotspot-main"><span>阿晨</span><small>聊聊刚才的事</small></button><button data-act="read" data-value="orders" id="case-orders" class="case-hotspot">柜台订单 <small>查看</small></button><button data-act="read" data-value="staff" id="case-staff" class="case-hotspot">小美 <small>聊聊工作</small></button></div>
+        <div id="case-explore"></div><section id="case-dialogue" aria-label="与阿晨交谈" hidden></section>
+        <aside id="case-panel" aria-label="手记与试验"><div id="case-content"></div></aside>
         <div id="case-notice" role="status" aria-live="polite"></div>
       </section>`);
       $('cafe-case-screen').addEventListener('click',e=>{const b=e.target.closest('button[data-act]');if(b&&!b.disabled)this.act(b.dataset.act,b.dataset.value);});
+      $('cafe-case-screen').addEventListener('keydown',e=>{if(e.key==='Escape'){e.preventDefault();this.act(this.detail||this.help||this.mode==='journal'?'back':this.history&&this.mode==='talk'?'history':'explore');}});
       G.save();
     },
     open(){
-      this.active=true;this.detail=null;this.help=false;
+      this.active=true;this.detail=null;this.help=false;this.mode='explore';this.returnMode='explore';this.history=false;this.lastView=null;
       PQFirstDay.closeDialog();PQStory3D.enter('cafe','xiaomei');G.show('cafe-case-screen');
       $('game').classList.add('case-mode');PQStory3D.viewKey='';
       PQCafeScene.attach();this.render();this.preview();
@@ -38,23 +42,43 @@
     act(event,value){
       const s=G.cafeCase;
       if(event==='exit'){this.close();return;}
+      if(event==='talk'){
+        if(s.phase!=='investigate')return;
+        this.mode='talk';this.detail=null;this.help=false;this.history=false;this.render();return;
+      }
+      if(event==='say'){
+        G.cafeCase=D.choose(s,value);G.save();this.history=false;this.render();return;
+      }
+      if(event==='explore'){this.mode='explore';this.detail=null;this.help=false;this.history=false;this.render();return;}
+      if(event==='history'){this.history=!this.history;this.render();return;}
+      if(event==='text-size'){this.textSize=this.textSize===18?22:18;this.render();return;}
+      if(event==='compare'){
+        if(s.phase!=='investigate'){this.notice('这次调查已经进入试验阶段。回到现场后可以继续交谈。');return;}
+        G.cafeCase=D.choose(s,'compare');G.save();this.mode='talk';this.detail=null;this.help=false;this.history=false;this.render();return;
+      }
+      if(event==='journal'){this.returnMode=this.mode==='journal'?this.returnMode:this.mode;this.mode='journal';this.detail=null;this.help=false;this.render();return;}
       if(event==='pause'){PQCafeScene.paused=!PQCafeScene.paused;$('case-pause').textContent=PQCafeScene.paused?'播放画面':'暂停画面';return;}
       if(event==='replay'){this.preview();return;}
-      if(event==='help'){this.help=!this.help;this.detail=null;this.render();return;}
-      if(event==='back'){this.detail=null;this.help=false;this.render();return;}
+      if(event==='help'){if(!this.help){this.helpReturn={mode:this.mode,detail:this.detail};this.help=true;this.detail=null;}else this.restoreHelp();this.render();return;}
+      if(event==='back'){if(this.help)this.restoreHelp();else if(this.detail){this.detail=null;this.mode=this.readReturn||'explore';}else if(this.mode==='journal')this.mode=this.returnMode||'explore';this.render();return;}
       if(event==='read'){
+        if(value==='recent'||value==='opinion'){if(s.phase==='investigate'&&!s.actions.includes(value)){this.act('talk');return;}}
         if(!s.actions.includes(value)&&M.remaining(s)<=2){this.notice('留下的 2 格可以完成一次试验。已读材料仍可免费查看。');return;}
-        this.save('observe',value);this.detail=value;this.help=false;
-        if(value==='observe')this.preview();this.render();return;
+        this.save('observe',value);
+        if(!G.cafeCase.actions.includes(value))return;
+        this.readReturn=this.mode;this.detail=value;this.help=false;
+        if(value==='observe'&&this.mode!=='journal'){this.mode='observe';this.detail=null;this.preview();}
+        this.render();return;
       }
       if(event==='toggle'&&!s.plan.includes(value)&&M.cost([...s.plan,value])>M.BUDGET){this.notice('这次最多投入 6 枚预算。先收起一项改动，再比较取舍。');return;}
       if(event==='pin'&&!s.pins.includes(value)&&s.pins.length>=3){this.notice('最多圈出 3 份关键证据；可以先取消一份。');return;}
       this.save(event,event==='select'?Number(value):value);
-      if(event==='start'||event==='investigate'||event==='plan'||event==='review'||event==='next'){this.detail=null;this.help=false;}
+      if(event==='start'||event==='investigate'||event==='plan'||event==='review'||event==='next'){this.detail=null;this.help=false;this.mode='explore';this.history=false;}
       this.render();
       if(['trial','select','next','finish'].includes(event))this.preview();
       if(event==='finish')PQCafeScene.applyLegacy();
     },
+    restoreHelp(){this.help=false;if(this.helpReturn){this.mode=this.helpReturn.mode;this.detail=this.helpReturn.detail;}this.helpReturn=null;},
     notice(text){$('case-notice').textContent=text;clearTimeout(this.noticeTimer);this.noticeTimer=setTimeout(()=>$('case-notice').textContent='',4000);},
     button(text,act,value='',style='',disabled=false,pressed){return `<button class="${style}" data-act="${act}" data-value="${esc(value)}"${disabled?' disabled':''}${pressed===undefined?'':` aria-pressed="${pressed}"`}>${text}</button>`;},
     head(kicker,title,text=''){return `<div class="case-kicker">${kicker}</div><h1 tabindex="-1">${title}</h1>${text?`<p class="case-lead">${text}</p>`:''}`;},
@@ -62,39 +86,62 @@
       if(!this.active)return;
       const s=G.cafeCase,cfg=M.scenarios[s.scenario],left=M.remaining(s),panel=$('case-panel'),scroll=panel.scrollTop,phase=s.phase;
       $('case-name').textContent=cfg.name;
+      $('case-note-count').textContent=s.actions.length;
+      for(const id of ['orders','staff']){const b=$('case-'+id),seen=s.actions.includes(id);b.querySelector('small').textContent=seen?'已读 · 免费':'新线索 · −1 格';b.disabled=!seen&&left<=2;}
+      const view=this.help||this.detail||this.mode==='journal'?'evidence':phase==='intro'?'intro':phase==='investigate'?this.mode:['result','review','complete'].includes(phase)?'replay':'workbench';
+      const screen=$('cafe-case-screen');screen.dataset.view=view;
+      panel.hidden=['talk','explore','observe'].includes(view);
+      $('case-hotspots').hidden=view!=='explore';$('case-explore').hidden=view!=='explore'&&view!=='observe';
+      $('case-dialogue').hidden=view!=='talk';$('case-scene-note').hidden=view!=='observe'&&view!=='replay';
+      PQCafeScene.setView(view,D.current(s).stage||'guest');
+      if(view==='explore'||view==='observe')$('case-explore').innerHTML=this.exploration(view);
+      if(view==='talk')this.renderDialogue();
       let html=`<div class="case-meta"><span>${cfg.day}</span><span>${phase==='intro'?'随时可离开':phase==='complete'?'已存入项目手记':`行动余量 ${left} / ${M.LIMIT}`}</span></div>`;
+      if(view==='evidence')html=`<div id="case-sheet-tools">${this.button(this.help?'← 返回刚才':this.detail&&this.readReturn==='talk'?'← 返回对话':'← 返回','back')}<span>随身手记</span></div>`+html;
       if(phase!=='intro'&&phase!=='complete')html+=`<div class="case-clock" aria-label="剩余 ${left} 格行动">${Array.from({length:M.LIMIT},(_,i)=>`<i class="${i<left?'on':''}"></i>`).join('')}</div>`;
       if(this.help)html+=this.handbook();
       else if(this.detail)html+=this.reading(this.detail);
+      else if(this.mode==='journal')html+=this.journal();
       else if(phase==='intro')html+=this.intro();
-      else if(phase==='investigate')html+=this.investigation();
+      else if(phase==='investigate')html='';
       else if(phase==='plan')html+=this.planning();
       else if(phase==='result')html+=this.results();
       else if(phase==='review')html+=this.reflection();
       else html+=this.complete();
       const focus=document.activeElement?.dataset?.act,focusValue=document.activeElement?.dataset?.value;
       $('case-content').innerHTML=html;
-      if(this.lastPhase!==phase||this.lastDetail!==this.detail||this.lastHelp!==this.help){panel.scrollTop=0;$('case-content').querySelector('h1')?.focus({preventScroll:true});}
+      if(this.lastPhase!==phase||this.lastDetail!==this.detail||this.lastHelp!==this.help||this.lastView!==view){panel.scrollTop=0;if(!panel.hidden)$('case-content').querySelector('h1')?.focus({preventScroll:true});else if(view==='talk')$('case-line')?.focus({preventScroll:true});else $('case-explore').querySelector('button')?.focus({preventScroll:true});}
       else{panel.scrollTop=scroll;for(const b of $('case-content').querySelectorAll('button'))if(b.dataset.act===focus&&b.dataset.value===focusValue){b.focus({preventScroll:true});break;}}
-      this.lastPhase=phase;this.lastDetail=this.detail;this.lastHelp=this.help;
+      this.lastPhase=phase;this.lastDetail=this.detail;this.lastHelp=this.help;this.lastView=view;
+    },
+    exploration(view){
+      const s=G.cafeCase;
+      if(view==='observe')return `<div class="case-observe-tools">${this.button('回到店里 →','explore','','case-primary')}${this.button('整理方案','plan')}</div>`;
+      return `<div class="case-explore-caption"><span class="case-kicker">${M.scenarios[s.scenario].day} · 行动 ${M.remaining(s)} / ${M.LIMIT}</span><h1>先听听，阿晨怎么说。</h1><p>${s.dialogue.node==='hello'?'他还在门边，手里没有咖啡。':'你们刚才聊到的事，都记在手记里。'}也可以去柜台看看。</p><div class="case-row">${this.button(s.dialogue.node==='hello'?'和阿晨聊聊':'继续和阿晨聊','talk','','case-primary')}${this.button(`观察现场${s.actions.includes('observe')?'':' · −1 格'}`,'read','observe','',!s.actions.includes('observe')&&M.remaining(s)<=2)}${this.button('整理方案','plan','', '',M.remaining(s)<2)}${s.trials.length?this.button('已有结果，去复盘','review'):''}</div></div>`;
+    },
+    renderDialogue(){
+      const s=G.cafeCase,n=D.current(s),el=$('case-dialogue'),oldFocus=document.activeElement?.dataset;
+      const options=n.choices.map(c=>{const fresh=c.evidence&&!s.actions.includes(c.evidence);return this.button(`<span>${esc(c.text)}</span>${fresh?'<small>新线索 · −1 格</small>':''}`,'say',c.id,'case-reply',fresh&&M.remaining(s)<=2);}).join('');
+      el.style.setProperty('--dialogue-size',this.textSize+'px');
+      el.innerHTML=`<div class="case-dialogue-head"><div><span class="case-speaker-dot"></span><strong>阿晨</strong><span>赶早班车的熟客</span></div><button data-act="explore" aria-label="结束交谈，回到咖啡馆">先聊到这里 ↗</button></div><p id="case-line" tabindex="-1" aria-live="polite">${esc(n.text)}</p><div class="case-replies">${options}</div><footer><div>${this.button('刚才说了什么','history','','',false,this.history)}${this.button(this.textSize===18?'放大台词':'标准字号','text-size')}</div>${this.button(s.actions.includes('orders')?'翻看柜台订单':'看看柜台订单 · −1 格','read','orders','',!s.actions.includes('orders')&&M.remaining(s)<=2)}</footer>${M.remaining(s)<=2?'<p class="case-budget-note">还留了 2 格试验行动。已获得的线索可以继续聊、反复看。</p>':''}<div id="case-history"${this.history?'':' hidden'} aria-label="刚才的谈话">${this.history?D.history(s).map(l=>`<p><b>${l.speaker}</b>${esc(l.text)}</p>`).join(''):''}</div>`;
+      if(this.lastNode!==n.id){el.scrollTop=0;$('case-line').focus({preventScroll:true});}
+      else if(oldFocus?.act)for(const b of el.querySelectorAll('button'))if(b.dataset.act===oldFocus.act&&b.dataset.value===oldFocus.value){b.focus({preventScroll:true});break;}
+      this.lastNode=n.id;
+    },
+    journal(){
+      const s=G.cafeCase;
+      return this.head('随身手记 / 随时可回看','把线索留在这里。','已读材料不重复消耗行动。')+`<div class="case-action-list">${s.actions.map(id=>this.button(`<span>${M.actions[id].name}</span><small>已记录 ↗</small>`,'read',id,'case-action')).join('')||'<p>手记还是空的。可以先和阿晨聊聊，或去柜台看看订单。</p>'}</div><div class="case-row">${this.button(this.returnMode==='talk'?'回到刚才的对话 →':'回到刚才的地方 →','back','','case-primary')}</div>`;
     },
     intro(){
       const cfg=M.scenarios[G.cafeCase.scenario];
-      return this.head('一个小项目 / 可以慢慢做',cfg.subtitle,cfg.owner)+`<div class="case-callout"><b>这次想做到</b><p>${cfg.goal}</p></div><p class="case-small">8 格行动。调查花 1 格，试营业花 2 格。阅读、暂停和喝咖啡都不花时间，随时离开也会保存。</p><div class="case-row">${this.button('我来看看发生了什么 →','start','','case-primary')}${this.button('今天只想喝咖啡','exit')}</div>`;
-    },
-    investigation(){
-      const s=G.cafeCase;
-      return this.head('01 / 看见发生的事','下一步，由你来选。','先选一个你想弄清的问题。也可以直接做一个小试验，再回来调查。')+
-        `<div class="case-action-list">${Object.entries(M.actions).map(([id,a])=>this.button(`<span><b>${a.name}</b><small>${a.desc}</small></span><em>${s.actions.includes(id)?'查看 · 免费':'−1 格'}</em>`,'read',id,'case-action',!s.actions.includes(id)&&M.remaining(s)<=2)).join('')}</div>`+
-        `<div class="case-callout"><b>桌上的证据 · ${s.actions.length} 份</b><p>已读材料可反复打开，不扣行动。故事里的熟人并不是唯一线索来源。</p></div>`+
-        `<div class="case-row">${this.button('整理判断，做一次试验 →','plan','','case-primary',M.remaining(s)<2)}${s.trials.length?this.button('已有结果，去复盘','review'):''}</div>`;
+      return this.head('蓝山咖啡馆 / 店长的小困惑',cfg.subtitle,cfg.owner)+`<p class="case-small">先去听听阿晨怎么说。8 格行动，随时离开也会保存。</p><div class="case-row">${this.button('走进店里 →','start','','case-primary')}${this.button('今天只想喝咖啡','exit')}</div>`;
     },
     reading(id){
       const s=G.cafeCase,e=M.evidence(s.scenario,id),b=M.simulate(s.scenario);
       let h=this.head(e.type,e.title)+`<blockquote>${e.text}</blockquote>`;
       if(id==='orders')h+=`<div class="case-table-wrap"><table><caption>同一个早高峰的 10 张订单 · 分钟</caption><thead><tr><th>单号</th><th>到店</th><th>出杯</th><th>结果 / 时刻</th></tr></thead><tbody>${b.orders.map(o=>`<tr><td>#${String(o.id).padStart(2,'0')}</td><td>${o.arrival.toFixed(1)}</td><td>${o.ready.toFixed(1)}</td><td>${o.served?'取走':'离开'} ${o.leave.toFixed(1)}</td></tr>`).join('')}</tbody></table></div><p class="case-small">从开店后第 0 分钟计时。已做好的杯子，也可能没有被取走。记录只覆盖这一次早高峰。</p>`;
-      if(id==='opinion')h+='<p class="case-small">这份材料能告诉你期待；要知道实际采用，还需要观察一次真实选择。</p>';
-      h+=`<div class="case-row">${this.button(s.pins.includes(id)?'已圈为关键证据 ✓':'圈为关键证据','pin',id,'',false,s.pins.includes(id))}${this.button('回到调查桌 →','back','','case-primary')}</div>`;
+      if(id==='opinion'&&s.dialogue.history.some(h=>h.choice==='used'))h+='<blockquote>“附近那家发过一个下单链接，我存了，后来就忘了。真要用，得试一次才知道。”</blockquote>';
+      h+=`<div class="case-row">${['investigate','plan'].includes(s.phase)?this.button(s.pins.includes(id)?'已圈为关键证据 ✓':'圈为关键证据','pin',id,'',false,s.pins.includes(id)):''}${id==='orders'&&s.phase==='investigate'?this.button('带着这张订单问阿晨','compare','','case-primary'):''}${this.button(this.readReturn==='talk'?'回到刚才的对话 →':'合上手记，回到刚才 →','back','',id==='orders'?'':'case-primary')}</div>`;
       return h;
     },
     planning(){

@@ -164,13 +164,14 @@
     update(dt,t){
       const w=PQIsland,e=w.environment,reduced=e.reducedMotion;
       const active=this.speaker==='me'?this.player:this.speaker&&this.speaker!=='n'?this.npc:null;
-      this.focusTarget.set((w.camera.aspect<.8&&this.kind==='cafe'?-.65:0)+(active?active.group.position.x*.25:0),1.25,.5);
+      if(window.PQCafeScene?.active)PQCafeScene.frame(this.focusTarget,this.cameraGoal);
+      else this.focusTarget.set((w.camera.aspect<.8&&this.kind==='cafe'?-.65:0)+(active?active.group.position.x*.25:0),1.25,.5);
       this.lookTarget.lerp(this.focusTarget,reduced?1:1-Math.exp(-dt*3));
       this.camPosition.lerp(this.cameraGoal,reduced?1:1-Math.exp(-dt*3));
       w.camera.position.copy(this.camPosition);w.camera.lookAt(this.lookTarget);
       const caseMode=!!window.PQCafeCase?.active;
-      const el=w.renderer.domElement,key=el.clientWidth+':'+el.clientHeight+':'+caseMode;
-      if(this.viewKey!==key){this.viewKey=key;const mobile=el.clientWidth<=700;w.camera.setViewOffset(el.clientWidth,el.clientHeight,caseMode&&!mobile?el.clientWidth*.18:0,el.clientHeight*(caseMode?(mobile?.23:.06):(w.camera.aspect<.8&&this.kind==='office'?.10:.14)),el.clientWidth,el.clientHeight);}
+      const el=w.renderer.domElement,key=el.clientWidth+':'+el.clientHeight+':'+caseMode+':'+(caseMode?PQCafeScene.view:'');
+      if(this.viewKey!==key){this.viewKey=key;const offset=caseMode?PQCafeScene.offset(el.clientWidth,el.clientHeight):{x:0,y:el.clientHeight*(w.camera.aspect<.8&&this.kind==='office'?.10:.14)};w.camera.setViewOffset(el.clientWidth,el.clientHeight,offset.x,offset.y,el.clientWidth,el.clientHeight);}
       this.actors.forEach((rig,i)=>{
         w.animateCharacter(rig,false,reduced?0:t,i);
         if(rig===active&&!reduced){rig.rightArm.rotation.x=-.2+Math.sin(t*2.2)*.12;rig.head.rotation.y=Math.sin(t*1.4)*.07;}

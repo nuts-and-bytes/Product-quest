@@ -83,3 +83,84 @@
 }
 @media(max-height:500px) and (min-width:701px){#case-topbar{top:10px;}#case-panel{top:74px;bottom:10px;}#case-scene-note{bottom:12px;}}
 @media(prefers-reduced-motion:reduce){#cafe-case-screen *{transition:none!important;}}
+
+/* One reading focus at a time: room, conversation, or the open notebook. */
+#cafe-case-screen [hidden]{display:none!important;}
+#case-topbar nav{display:flex;gap:7px;}
+#case-note-count{margin-left:5px;color:#e7cb91;font-variant-numeric:tabular-nums;}
+#case-hotspots{position:absolute;inset:0;pointer-events:none;}
+#cafe-case-screen .case-hotspot{position:absolute;transform:translate(-50%,-100%);pointer-events:auto;padding:8px 12px;border-radius:8px;background:#193b38eb;box-shadow:0 5px 22px #09232030;white-space:nowrap;}
+.case-hotspot small{display:block;font-size:10px;color:#b5cbb8;}
+#cafe-case-screen .case-hotspot-main{border-color:#e4c68e;background:#d8bd88;color:#1b3935;}
+#cafe-case-screen .case-hotspot-main small{color:#314b3c;}
+#case-explore{position:absolute;inset:0;pointer-events:none;}
+.case-explore-caption{position:absolute;bottom:26px;left:32px;max-width:600px;width:calc(100% - 64px);padding:20px 24px;background:linear-gradient(110deg,#143632ed,#143632d9);border-left:2px solid #d4bb85;border-radius:3px 12px 12px 3px;pointer-events:auto;}
+.case-explore-caption h1{font:500 25px/1.5 "Songti SC",serif;color:#f5e6c5;margin:7px 0;}
+.case-explore-caption p{font-size:12px;line-height:1.8;color:#cad4c5;}
+.case-explore-caption .case-row{margin-top:15px;}
+.case-observe-tools{position:absolute;top:100px;left:28px;display:flex;gap:8px;pointer-events:auto;}
+#case-dialogue{position:absolute;left:50%;transform:translateX(-50%);bottom:24px;width:min(840px,calc(100% - 64px));padding:22px 28px 17px;max-height:55%;overflow:auto;overscroll-behavior:contain;pointer-events:auto;border:1px solid #d8d1aa40;border-radius:15px;background:linear-gradient(120deg,#143632f7,#203c39f7);box-shadow:0 16px 60px #061e292e;scrollbar-width:thin;scrollbar-color:#9cae8f66 transparent;}
+.case-dialogue-head{display:flex;align-items:center;justify-content:space-between;gap:12px;}
+.case-dialogue-head>div{display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+.case-dialogue-head strong{font-size:16px;font-weight:500;color:#ecd09b;letter-spacing:2px;}
+.case-dialogue-head span:not(.case-speaker-dot){font-size:11px;color:#b2c3b6;}
+.case-speaker-dot{width:6px;height:6px;background:#e3c88e;border-radius:50%;}
+#cafe-case-screen .case-dialogue-head button{font-size:11px;padding:6px 9px;min-height:36px;background:transparent;border-color:transparent;color:#bdcbbd;white-space:nowrap;}
+#case-line{font:500 var(--dialogue-size,18px)/1.85 "Songti SC","Noto Serif SC",serif;color:#f2e9d4;margin:12px 0 18px;letter-spacing:.3px;outline:none;}
+.case-replies{display:grid;gap:8px;}
+#cafe-case-screen .case-reply{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:11px 15px;background:#f1e2b509;border-color:#bbccb33b;border-radius:7px;font-size:13px;min-height:46px;}
+.case-reply span:before{content:'›';margin-right:10px;color:#dabd88;}
+.case-reply small{font-size:10px;color:#b6c3aa;white-space:nowrap;}
+#case-dialogue footer{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;margin-top:10px;}
+#case-dialogue footer>div{display:flex;gap:5px;}
+#cafe-case-screen #case-dialogue footer button{background:transparent;border-color:transparent;color:#b9c8b8;font-size:11px;padding:6px 8px;min-height:38px;}
+#cafe-case-screen #case-dialogue footer button:hover{color:#f2dfb7;background:#ffffff0a;}
+#case-history{border-top:1px solid #b2c6ae33;margin-top:14px;padding-top:9px;}
+#case-history p{font-size:12px;line-height:1.9;color:#cfdbca;margin:8px 0;}
+#case-history b{display:inline-block;margin-right:12px;color:#e3c792;font-weight:500;}
+.case-budget-note{font-size:11px;color:#cccca9;margin-top:8px;}
+#cafe-case-screen[data-view=intro] #case-panel{top:auto;left:32px;right:auto;bottom:28px;width:620px;max-width:calc(100% - 64px);max-height:54%;}
+#cafe-case-screen[data-view=intro] .case-meta{display:none;}
+#cafe-case-screen[data-view=intro] #case-content{padding:22px 28px;}
+#cafe-case-screen[data-view=intro] #case-content h1{font-size:24px;margin:8px 0;}
+#cafe-case-screen[data-view=evidence] #case-panel{width:510px;max-width:45%;}
+#cafe-case-screen[data-view=evidence] .case-clock{display:none;}
+#cafe-case-screen[data-view=evidence] #case-content h1{font-size:24px;}
+#case-sheet-tools{position:sticky;top:-25px;display:flex;align-items:center;justify-content:space-between;gap:12px;margin:-25px -25px 18px;padding:12px 18px;background:#193b3b;z-index:1;border-bottom:1px solid #b9c9aa33;}
+#case-sheet-tools>span{font-size:11px;color:#b5c8b6;}
+#cafe-case-screen[data-view=observe] #case-scene-note{width:calc(100% - 56px);max-width:580px;}
+@media(max-width:700px){
+  #case-topbar{gap:5px;}
+  #case-topbar>div{flex:1;}
+  #case-topbar nav{gap:3px;}
+  #case-topbar nav button{padding:7px!important;}
+  #case-name{font-size:12px;}
+  #case-dialogue{bottom:12px;width:calc(100% - 24px);padding:14px 16px 10px;max-height:59%;border-radius:12px;}
+  .case-dialogue-head{gap:5px;}
+  .case-dialogue-head>div{gap:5px;}
+  .case-dialogue-head strong{font-size:14px;letter-spacing:1px;}
+  .case-dialogue-head span:not(.case-speaker-dot){font-size:10px;}
+  #cafe-case-screen .case-dialogue-head button{font-size:10px;min-height:44px;}
+  #case-line{margin:7px 0 12px;line-height:1.65;}
+  #cafe-case-screen .case-reply{padding:10px;font-size:12px;gap:5px;min-height:46px;}
+  .case-reply small{font-size:9px;}
+  #case-dialogue footer{gap:0;margin-top:7px;}
+  #cafe-case-screen #case-dialogue footer button{min-height:44px;font-size:10px;padding:6px;}
+  .case-explore-caption{left:12px;bottom:14px;width:calc(100% - 24px);padding:16px 18px;}
+  .case-explore-caption h1{font-size:22px;}
+  .case-explore-caption p{font-size:11px;}
+  .case-explore-caption .case-row{gap:6px;}
+  #cafe-case-screen .case-hotspot{padding:6px 9px;font-size:11px;}
+  .case-hotspot small{font-size:9px;}
+  #cafe-case-screen #case-orders,#cafe-case-screen #case-staff{top:78px!important;left:auto!important;transform:none;}
+  #cafe-case-screen #case-orders{right:12px;}
+  #cafe-case-screen #case-staff{right:126px;}
+  #cafe-case-screen[data-view=evidence] #case-panel{top:84px;bottom:12px;left:12px;right:12px;width:auto;max-width:none;}
+  #case-sheet-tools{top:-20px;margin:-20px -20px 15px;padding:10px 14px;}
+  #cafe-case-screen[data-view=intro] #case-panel{left:12px;bottom:12px;width:calc(100% - 24px);max-width:none;max-height:55%;}
+  #cafe-case-screen[data-view=intro] #case-content{padding:18px 20px;}
+  #cafe-case-screen[data-view=intro] #case-content h1{font-size:22px;}
+  #cafe-case-screen[data-view=observe] #case-scene-note{bottom:12px;top:auto;width:calc(100% - 24px);left:12px;right:12px;}
+  .case-observe-tools{top:85px;left:12px;}
+}
+@media(max-height:540px){#case-dialogue{max-height:56%;bottom:10px;padding:12px 18px;}#case-line{margin:5px 0 10px;}#case-dialogue .case-replies{grid-template-columns:1fr 1fr;}#cafe-case-screen[data-view=evidence] #case-panel{top:70px;}#case-topbar{top:10px;}}
