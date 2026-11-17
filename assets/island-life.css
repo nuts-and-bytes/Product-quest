@@ -1,0 +1,28 @@
+#life-film[hidden]{display:none!important;}
+#game.life-mode>:not(#island-viewport):not(#life-film):not(#crt):not(#vig){visibility:hidden!important;pointer-events:none!important;}
+#game.life-mode #island-labels{visibility:hidden!important;}
+#life-film{position:absolute;inset:0;z-index:80;isolation:isolate;pointer-events:auto;color:#f6e8cc;font-family:Inter,"PingFang SC",system-ui,sans-serif;}
+.life-letterbox{position:absolute;left:0;right:0;z-index:-1;pointer-events:none;background:#102522;}
+.life-top{top:0;height:76px;background:linear-gradient(#0b1e20e8,#0b1e20a8,transparent);}
+.life-bottom{bottom:0;height:160px;background:linear-gradient(transparent,#0b1e20c9 40%,#0b1e20ef);}
+#life-film header{position:absolute;left:32px;right:32px;top:24px;display:flex;align-items:flex-start;justify-content:space-between;gap:15px;}
+#life-film header span{font-size:9px;letter-spacing:2px;color:#d9c497;text-shadow:0 1px 8px #173733;}
+#life-title{font:500 20px/1.6 "Songti SC",serif;letter-spacing:1px;margin:3px 0;text-shadow:0 2px 12px #102321;text-wrap:balance;}
+#life-film button{font-family:inherit;font-size:12px;line-height:1.7;color:#eddec0;border:1px solid #ead2a34d;background:#143734d9;border-radius:24px;min-height:44px;padding:9px 16px;cursor:pointer;}
+#life-film button:hover{background:#345b51;}#life-film button:focus-visible{outline:2px solid #f3d290;outline-offset:4px;}
+#life-caption{position:absolute;bottom:82px;left:50%;transform:translateX(-50%);width:min(880px,calc(100% - 64px));text-align:center;text-shadow:0 2px 9px #071e1b;pointer-events:none;}
+#life-place{font-size:11px;letter-spacing:2px;color:#dac597;}
+#life-line{font:500 20px/1.8 "Songti SC",serif;letter-spacing:.4px;margin:10px 0 0;min-height:36px;}
+#life-film footer{position:absolute;bottom:22px;left:32px;right:32px;display:flex;justify-content:space-between;align-items:center;gap:14px;}
+#life-count{font-size:11px;letter-spacing:2px;color:#c3cbbb;font-variant-numeric:tabular-nums;}
+#life-film footer>div{display:flex;gap:8px;}
+#life-veil{position:absolute;inset:0;background:#0b1c1f;pointer-events:none;opacity:0;z-index:-1;}
+@media(max-width:700px){
+  #life-film header{left:16px;right:16px;top:18px;gap:8px;}
+  #life-film header span{font-size:8px;letter-spacing:.7px;}#life-title{font-size:17px;max-width:190px;}
+  #life-film button{font-size:11px;padding:8px 12px;white-space:nowrap;}
+  #life-caption{bottom:90px;width:calc(100% - 36px);}#life-line{font-size:18px;line-height:1.8;}#life-place{font-size:10px;letter-spacing:1px;}
+  #life-film footer{left:18px;right:18px;bottom:24px;}#life-count{font-size:10px;}
+  .life-bottom{height:210px;}#case-topbar>div{min-width:0;}
+}
+@media(max-height:500px){#life-film header{top:12px;}#life-caption{bottom:65px;}#life-line{font-size:16px;margin:4px 0;}#life-film footer{bottom:12px;}.life-bottom{height:130px;}}

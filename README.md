@@ -2,6 +2,8 @@
 
 ### 开放群岛 · 电影画质版
 
+**岛上的片刻（3.6）**：咖啡馆调查穿插三段实时 3D 演出——岛民清晨出门、阿晨等候后准备离开、试验之后的街头。结尾根据实际模拟结果呈现拿到咖啡或空手离开；可暂停、跳过、免费回看。[观看清晨片段](https://nuts-and-bytes.github.io/Product-quest/?experience=cafe&film=morning&release=3.6) · [演出与验证说明](docs/island-life.md)。
+
 **新增蓝山调查（3.3）**：咖啡馆里可以接一个独立项目，自选调查顺序、圈出证据、组合试营业方案，观察顾客与店员的变化，再把改动留在店里。周三早高峰与周末手冲日具有不同瓶颈；没有答题评分，失败的尝试也能继续复盘。[直接体验](https://nuts-and-bytes.github.io/Product-quest/?experience=cafe) · [玩法与模型说明](docs/cafe-case.md)。
 
 原有 37 关玩法保留。星火岛通过三条栈道连接琥珀林地、星潮观测站和珊瑚花园，点击首页「先去世界里看看」即可探索。WASD / 手机摇杆移动，Shift 奔跑，E 互动，J 手记，H 取景。
@@ -16,7 +18,7 @@ node --test tests/*.test.cjs
 node scripts/build-single-html.mjs
 ```
 
-构建产生约 1.45 MiB 的 `dist/Product-Quest.html`，内含引擎、场景和完整剧情，无 CDN 依赖；离线版移除网络统计。存档仍在浏览器本地，换浏览器或从在线版转离线版时请先导出存档。当前是四岛连续区域，详细实现与验证边界见 [开放世界说明](docs/open-world.md)。
+构建产生约 1.53 MiB 的 `dist/Product-Quest.html`，内含引擎、场景和完整剧情，无 CDN 依赖；离线版移除网络统计。存档仍在浏览器本地，换浏览器或从在线版转离线版时请先导出存档。当前是四岛连续区域，详细实现与验证边界见 [开放世界说明](docs/open-world.md)。
 
 [![zread doc](https://img.shields.io/badge/zread-AI%20Deep%20Read-black?style=for-the-badge)](https://zread.ai/nuts-and-bytes/Product-quest)
 

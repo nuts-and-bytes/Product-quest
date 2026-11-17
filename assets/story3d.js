@@ -71,11 +71,13 @@
       for(const dx of [-.42,.42])for(const dz of [-.36,.36])this.box(x+dx,.32,z+dz,.09,.65,.09,'#574e46');
     },
     cup(x,y,z){
-      this.cylinder(x,y,z,.13,.22,'#ede2c8');this.cylinder(x,y+.115,z,.105,.012,'#553f31');
+      const body=this.cylinder(x,y,z,.13,.22,'#ede2c8'),coffee=this.cylinder(x,y+.115,z,.105,.012,'#553f31');
       const handle=new T.Mesh(new T.TorusGeometry(.09,.025,6,12),this.mat('#ede2c8'));handle.position.set(x+.14,y+.02,z);this.group.add(handle);
+      return [body,coffee,handle];
     },
     buildRoom(kind){
       const cafe=kind==='cafe';
+      this.counterCups=[];
       this.box(0,-.2,0,16,.4,13,'#785d48');
       // Long oak boards and dark seams, simple shared geometry and materials.
       for(let i=0;i<16;i++)this.box(-7.5+i,.015,0,.975,.05,12.8,i%3===0?'#a98b63':i%3===1?'#b59770':'#bfa17a');
@@ -109,7 +111,7 @@
         this.box(2,1,-3.7,6.8,2,1.65,'#6b6654');this.box(2,2.05,-3.7,7.1,.15,1.85,'#dfc9a0');
         for(let i=0;i<18;i++)this.box(-1.25+i*.38,.98,-2.84,.065,1.75,.06,'#c3a46e');
         this.box(3.9,2.48,-3.7,1.25,.74,.85,'#3f615c',{metalness:.35});this.box(3.9,2.49,-3.2,.92,.22,.12,'#c6cfbd',{metalness:.6});
-        for(let i=0;i<3;i++)this.cup(.4+i*.7,2.22,-3.5);
+        for(let i=0;i<3;i++)this.counterCups.push(...this.cup(.4+i*.7,2.22,-3.5));
         this.text(['今日手冲','山风 / 坚果 / 巧克力'],6.2,3.5,-6.07,2.1,1.5,'#304842');
         this.cylinder(-3.8,.9,0,1.3,.15,'#c8ab7e');this.cylinder(-3.8,.45,0,.13,.9,'#465b52');
         this.chair(-3.8,-1.15);this.chair(-3.8,1.25);this.cup(-3.6,1.09,0);

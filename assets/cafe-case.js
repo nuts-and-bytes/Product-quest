@@ -8,7 +8,7 @@
       G.cafeCase=M.normalize(G.cafeCase);
       try{this.reduceMotion=localStorage.getItem('pq-cafe-reduce-motion')==='1';}catch(e){this.reduceMotion=false;}
       $('game').insertAdjacentHTML('beforeend',`<section class="screen" id="cafe-case-screen" aria-label="蓝山咖啡馆调查">
-        <header id="case-topbar"><button data-act="exit">← 咖啡馆</button><div><span class="case-kicker">BLUE MOUNTAIN / FIELD NOTES</span><strong id="case-name"></strong></div><nav aria-label="调查工具"><button data-act="journal">手记 <span id="case-note-count">0</span></button><button data-act="help" aria-label="玩法与帮助">帮助</button></nav></header>
+        <header id="case-topbar"><button data-act="exit">← 咖啡馆</button><div><span class="case-kicker">BLUE MOUNTAIN / FIELD NOTES</span><strong id="case-name"></strong></div><nav aria-label="调查工具"><button data-act="journal">手记 <span id="case-note-count">0</span></button><button data-act="films" aria-label="回看岛上生活">故事</button><button data-act="help" aria-label="玩法与帮助">帮助</button></nav></header>
         <div id="case-scene-note"><span id="case-scene-mode">窗边观察</span><p id="case-scene-status">阿晨正在往柜台走。</p><div><button data-act="pause" id="case-pause">暂停画面</button><button data-act="replay">重看这一段</button></div></div>
         <div id="case-people" aria-hidden="true"></div>
         <div id="case-hotspots" aria-label="店里的人与物"><button data-act="talk" id="case-achen" class="case-hotspot case-hotspot-main"><span>阿晨</span><small>聊聊刚才的事</small></button><button data-act="read" data-value="orders" id="case-orders" class="case-hotspot">柜台订单 <small>查看</small></button><button data-act="read" data-value="staff" id="case-staff" class="case-hotspot">小美 <small>聊聊工作</small></button></div>
@@ -18,18 +18,20 @@
         <div id="case-notice" role="status" aria-live="polite"></div>
       </section>`);
       $('cafe-case-screen').addEventListener('click',e=>{const b=e.target.closest('button[data-act]');if(b&&!b.disabled)this.act(b.dataset.act,b.dataset.value);});
-      $('cafe-case-screen').addEventListener('keydown',e=>{if(e.key==='Escape'){e.preventDefault();this.act(this.detail||this.help||this.mode==='journal'?'back':this.history&&this.mode==='talk'?'history':'explore');}});
+      $('cafe-case-screen').addEventListener('keydown',e=>{if(e.key==='Escape'){e.preventDefault();this.act(this.detail||this.help||['journal','films'].includes(this.mode)?'back':this.history&&this.mode==='talk'?'history':'explore');}});
       G.save();
     },
-    open(){
+    open(film){
       this.active=true;this.detail=null;this.help=false;this.mode='explore';this.returnMode='explore';this.history=false;this.lastView=null;
       PQFirstDay.closeDialog();PQStory3D.enter('cafe','xiaomei');G.show('cafe-case-screen');
       $('game').classList.add('case-mode');PQStory3D.viewKey='';
       PQCafeScene.attach();this.render();this.preview();
+      if(typeof film==='string'&&PQLifeFilm.play(film))return;
+      if(!PQLifeFilm.seen('morning'))PQLifeFilm.play('morning');
     },
     suspend(){
       if(!this.active)return;
-      this.active=false;this.clearPresentation();PQCafeScene.detach();$('game').classList.remove('case-mode');
+      this.active=false;if(window.PQLifeFilm?.active)PQLifeFilm.finish(false);this.clearPresentation();PQCafeScene.detach();$('game').classList.remove('case-mode');
       if(PQStory3D.active)PQStory3D.viewKey='';
     },
     close(){this.suspend();G.show('social-screen');PQFirstDay.renderCafe();},
@@ -43,6 +45,8 @@
     },
     act(event,value){
       const s=G.cafeCase;
+      if(event==='film'){PQLifeFilm.play(value);return;}
+      if(event==='films'){this.returnMode=['journal','films'].includes(this.mode)?this.returnMode:this.mode;this.mode='films';this.detail=null;this.help=false;this.render();return;}
       if(event==='skip-motion'){PQCafeScene.finishTransition();return;}
       PQCafeScene.finishTransition();
       if(!SFX.muted)SFX.ac();
@@ -67,7 +71,7 @@
       if(event==='pause'){PQCafeScene.paused=!PQCafeScene.paused;$('case-pause').textContent=PQCafeScene.paused?'播放画面':'暂停画面';return;}
       if(event==='replay'){this.preview();return;}
       if(event==='help'){if(!this.help){this.helpReturn={mode:this.mode,detail:this.detail};this.help=true;this.detail=null;}else this.restoreHelp();this.render();return;}
-      if(event==='back'){if(this.help)this.restoreHelp();else if(this.detail){this.detail=null;this.mode=this.readReturn||'explore';}else if(this.mode==='journal')this.mode=this.returnMode||'explore';this.render();return;}
+      if(event==='back'){if(this.help)this.restoreHelp();else if(this.detail){this.detail=null;this.mode=this.readReturn||'explore';}else if(['journal','films'].includes(this.mode))this.mode=this.returnMode||'explore';this.render();return;}
       if(event==='read'){
         if(value==='recent'||value==='opinion'){if(s.phase==='investigate'&&!s.actions.includes(value)){this.act('talk');return;}}
         if(!s.actions.includes(value)&&M.remaining(s)<=2){this.notice('留下的 2 格可以完成一次试验。已读材料仍可免费查看。');return;}
@@ -84,6 +88,8 @@
       this.render();
       if(['trial','select','next','finish'].includes(event))this.preview();
       if(event==='finish')PQCafeScene.applyLegacy();
+      if(event==='start'&&s.phase==='intro'&&G.cafeCase.phase==='investigate'&&!PQLifeFilm.seen('incident'))PQLifeFilm.play('incident');
+      if(event==='trial'&&G.cafeCase.trials.length>s.trials.length)PQLifeFilm.play('outcome');
     },
     restoreHelp(){this.help=false;if(this.helpReturn){this.mode=this.helpReturn.mode;this.detail=this.helpReturn.detail;}this.helpReturn=null;},
     notice(text){$('case-notice').textContent=text;clearTimeout(this.noticeTimer);this.noticeTimer=setTimeout(()=>$('case-notice').textContent='',4000);},
@@ -95,21 +101,22 @@
       $('case-name').textContent=cfg.name;
       $('case-note-count').textContent=s.actions.length;
       for(const id of ['orders','staff']){const b=$('case-'+id),seen=s.actions.includes(id);b.querySelector('small').textContent=seen?'已读 · 免费':'新线索 · −1 格';b.disabled=!seen&&left<=2;}
-      const view=this.help||this.detail||this.mode==='journal'?'evidence':phase==='intro'?'intro':phase==='investigate'?this.mode:['result','review','complete'].includes(phase)?'replay':'workbench';
+      const view=this.help||this.detail||['journal','films'].includes(this.mode)?'evidence':phase==='intro'?'intro':phase==='investigate'?this.mode:['result','review','complete'].includes(phase)?'replay':'workbench';
       const screen=$('cafe-case-screen');screen.dataset.view=view;
       panel.hidden=['talk','explore','observe'].includes(view);
       $('case-hotspots').hidden=view!=='explore';$('case-explore').hidden=view!=='explore'&&view!=='observe';
       $('case-dialogue').hidden=view!=='talk';$('case-scene-note').hidden=view!=='observe'&&view!=='replay';
       const dialogue=D.current(s);
-      PQCafeScene.setView(view,dialogue.stage||'guest',dialogue.id,this.help?'help':this.mode==='journal'?'journal':this.detail||'');
+      PQCafeScene.setView(view,dialogue.stage||'guest',dialogue.id,this.help?'help':['journal','films'].includes(this.mode)?this.mode:this.detail||'');
       if(view==='explore'||view==='observe')$('case-explore').innerHTML=this.exploration(view);
       if(view==='talk')this.renderDialogue();
       let html=`<div class="case-meta"><span>${cfg.day}</span><span>${phase==='intro'?'随时可离开':phase==='complete'?'已存入项目手记':`行动余量 ${left} / ${M.LIMIT}`}</span></div>`;
-      if(view==='evidence')html=`<div id="case-sheet-tools">${this.button(this.help?'← 返回刚才':this.detail&&this.readReturn==='talk'?'← 返回对话':'← 返回','back')}<span>随身手记</span></div>`+html;
+      if(view==='evidence')html=`<div id="case-sheet-tools">${this.button(this.help?'← 返回刚才':this.detail&&this.readReturn==='talk'?'← 返回对话':'← 返回','back')}<span>${this.mode==='films'&&!this.help?'岛上故事':'随身手记'}</span></div>`+html;
       if(phase!=='intro'&&phase!=='complete')html+=`<div class="case-clock" aria-label="剩余 ${left} 格行动">${Array.from({length:M.LIMIT},(_,i)=>`<i class="${i<left?'on':''}"></i>`).join('')}</div>`;
       if(this.help)html+=this.handbook();
       else if(this.detail)html+=this.reading(this.detail);
       else if(this.mode==='journal')html+=this.journal();
+      else if(this.mode==='films')html+=this.films();
       else if(phase==='intro')html+=this.intro();
       else if(phase==='investigate')html='';
       else if(phase==='plan')html+=this.planning();
@@ -160,13 +167,21 @@
       else if(oldFocus?.act)for(const b of el.querySelectorAll('button'))if(b.dataset.act===oldFocus.act&&b.dataset.value===oldFocus.value){b.focus({preventScroll:true});break;}
       this.lastNode=n.id;
     },
+    films(){
+      const s=G.cafeCase;
+      return this.head('岛上的片刻 / 可随时回看','故事发生在你身边。','看看岛民怎样度过一天，也看看你的尝试改变了什么。回看不消耗行动。')+`<div class="case-action-list">
+        ${this.button('<span>岛上的一个早晨<small>海风、社区门前，以及第一杯咖啡 · 14 秒</small></span><small>播放 ▷</small>','film','morning','case-action')}
+        ${this.button('<span>那天早上的阿晨<small>等候、迟疑，然后转身 · 11 秒</small></span><small>播放 ▷</small>','film','incident','case-action')}
+        ${this.button(`<span>试过之后，生活继续<small>${s.trials.length?'试验 '+(s.selected+1)+' 的街头片段 · 11 秒':'完成一次试验后，来看看大家的早晨'}</small></span><small>播放 ▷</small>`,'film','outcome','case-action',!s.trials.length)}
+      </div><div class="case-row">${this.button('回到刚才 →','back','','case-primary')}</div>`;
+    },
     journal(){
       const s=G.cafeCase;
       return this.head('随身手记 / 随时可回看','把线索留在这里。','已读材料不重复消耗行动。')+`<div class="case-action-list">${s.actions.map(id=>this.button(`<span>${M.actions[id].name}</span><small>已记录 ↗</small>`,'read',id,'case-action')).join('')||'<p>手记还是空的。可以先和阿晨聊聊，或去柜台看看订单。</p>'}</div><div class="case-row">${this.button(this.returnMode==='talk'?'回到刚才的对话 →':'回到刚才的地方 →','back','','case-primary')}</div>`;
     },
     intro(){
       const cfg=M.scenarios[G.cafeCase.scenario];
-      return this.head('蓝山咖啡馆 / 店长的小困惑',cfg.subtitle,cfg.owner)+`<p class="case-small">先去听听阿晨怎么说。8 格行动，随时离开也会保存。</p><div class="case-row">${this.button('走进店里 →','start','','case-primary')}${this.button('今天只想喝咖啡','exit')}</div>`;
+      return this.head('蓝山咖啡馆 / 店长的小困惑',cfg.subtitle,cfg.owner)+`<p class="case-small">先去听听阿晨怎么说。8 格行动，随时离开也会保存。</p><div class="case-row">${this.button('跟进阿晨，开始调查 →','start','','case-primary')}${this.button('今天只想喝咖啡','exit')}</div>`;
     },
     reading(id){
       const s=G.cafeCase,e=M.evidence(s.scenario,id),b=M.simulate(s.scenario);

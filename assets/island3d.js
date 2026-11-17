@@ -2857,6 +2857,7 @@
       this._lastTime = now;
 
       const tSec = now * 0.001;
+      if(window.PQLifeFilm?.active){PQLifeFilm.update(dt,tSec);this.environment.render();return;}
       if(window.PQStory3D?.active){
         PQStory3D.update(dt,tSec);this.environment.render();return;
       }
