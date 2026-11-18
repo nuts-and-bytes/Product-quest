@@ -25,3 +25,5 @@
 @media(prefers-reduced-motion:reduce){#prop-inspector *,#cafe-vista *{scroll-behavior:auto!important;transition:none!important}}
 
 #cafe-arrival[hidden]{display:none!important}#cafe-arrival{position:absolute;left:50%;bottom:calc(var(--play-bottom) + 35px);transform:translateX(-50%);display:flex;gap:12px;align-items:center;padding:12px 16px;border:1px solid #cabd9466;background:#1b3838ef;border-radius:12px;max-width:calc(100% - 32px);font:13px/1.6 system-ui;color:#eee3c6;pointer-events:auto}#cafe-arrival button{min-width:80px;min-height:44px;background:#ddc18c;color:#243d33;border:0;border-radius:7px;cursor:pointer}.cafe-arriving #cafe-actions,.cafe-arriving #cafe-spots,.cafe-arriving #cafe-life-pins,.cafe-arriving #cafe-mei,.cafe-arriving #cafe-li,.cafe-arriving #cafe-life-hint{visibility:hidden}
+
+#cafe-avatar-clearance{position:absolute;visibility:hidden;pointer-events:none}
