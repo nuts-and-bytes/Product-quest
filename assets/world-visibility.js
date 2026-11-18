@@ -85,12 +85,14 @@
     measure(now){
       if(now<this.nextMeasure)return;this.nextMeasure=now+160;
       const el=this.world.renderer.domElement,rect=el.getBoundingClientRect();this.screen={width:rect.width,height:rect.height};this.obstacles=[];
-      const ids=['campaign-route','journey-hud','journey-dialog','isl-toolbar','journey-tools','world-drawer','bpanel','exp-journal-panel','isl-prompt','exp-interact','isl-status','isl-joy'];
+      const ids=['campaign-route','journey-hud','journey-dialog','isl-toolbar','journey-tools','world-drawer','bpanel','exp-journal-panel','isl-prompt','exp-interact','isl-status','isl-joy','mobile-play-hint','mobile-play-status'];
       for(const id of ids){
         const node=$(id);if(!node||node.hidden||(id==='bpanel'&&!node.classList.contains('open')))continue;
         const style=getComputedStyle(node);if(style.display==='none'||style.visibility==='hidden'||Number(style.opacity)===0)continue;
         const b=node.getBoundingClientRect();if(b.width&&b.height)this.obstacles.push({x:b.left-rect.left,y:b.top-rect.top,width:b.width,height:b.height});
       }
+      const s=window.PQMobilePlay?.insets||{};
+      for(const r of [{x:0,y:0,width:s.left,height:rect.height},{x:rect.width-s.right,y:0,width:s.right,height:rect.height},{x:0,y:0,width:rect.width,height:s.top},{x:0,y:rect.height-s.bottom,width:rect.width,height:s.bottom}])if(r.width&&r.height)this.obstacles.push(r);
       this.anchor=F.safeAnchor(this.screen,this.obstacles);
     }
     follow(){

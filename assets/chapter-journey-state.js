@@ -49,6 +49,7 @@
     if(event==='topic'&&r.focus){const n=c.npcs.find(n=>n.key===r.focus.npc),t=n.topics.find(t=>t.id===value);if(t){r.focus.topic=t.id;if(!r.notes.includes(t.evidence))r.notes.push(t.evidence);r.view='talk';}}
     if(event==='read'&&c.clues.some(e=>e.id===value)&&!r.notes.includes(value))r.notes.push(value);
     if(event==='choose'){const slot=c.slots.find(slot=>slot.id===value?.slot);if(slot?.options.some(o=>o.id===value.value))r.plan[slot.id]=value.value;}
+    if(event==='unchoose'&&c.slots.some(slot=>slot.id===value))delete r.plan[value];
     if(event==='arrange'&&c.sequence){const k=c.sequence.id;if(value==='reset')r.plan[k]=[];else if(c.sequence.items.some(o=>o.id===value)&&!r.plan[k].includes(value))r.plan[k].push(value);}
     if(event==='run'&&ready(c,r.plan)){r.trials.push({plan:copy(r.plan),notes:[...r.notes]});r.trials=r.trials.slice(-3);r.selected=r.trials.length-1;r.reflection=null;r.view='result';}
     if(event==='select'&&Number.isInteger(value)&&r.trials[value]){r.selected=value;r.view='result';r.reflection=null;}

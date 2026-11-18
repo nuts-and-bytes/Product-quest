@@ -2,7 +2,7 @@
 <html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <title>产品经理大冒险 · Product Quest — 3D 开放群岛与产品调查游戏</title>
 <meta name="description" content="在 3D 开放群岛中探索、交谈和调查：走进蓝山咖啡馆，寻找线索、组合试验、观察后果。保留原有产品经理剧情闯关、方法卡与作品集。">
 <meta name="keywords" content="产品经理,产品经理入门,PM学习,产品经理游戏,MVP,PRD,用户研究,零基础转行产品经理,产品思维">
@@ -840,6 +840,7 @@
 <link rel="stylesheet" href="assets/chapter-journey.css?v=3.7">
 <link rel="stylesheet" href="assets/night-market.css?v=3.8">
 <link rel="stylesheet" href="assets/world-visibility.css?v=3.8.2">
+<link rel="stylesheet" href="assets/mobile-play.css?v=3.8.3">
 </head>
 <body>
 <div id="game" class="world-mode" data-screen="landing">
@@ -919,7 +920,7 @@
           </details>
         </div>
       </div>
-      <button class="pxbtn center" style="font-size:16px; padding:13px 46px" onclick="G.confirmAvatar()">✔ 就是这个我 · 入职星火科技</button>
+      <button id="av-confirm" class="pxbtn center" style="font-size:16px; padding:13px 46px" onclick="G.confirmAvatar()">✔ 就是这个我 · 入职星火科技</button>
     </div>
   </div>
 
@@ -1223,29 +1224,31 @@ if(_qp) window.OPC_SAVE_KEY = 'opc-pq-' + (/^[a-zA-Z0-9-]{1,80}$/.test(_qp) ? _q
 </script>
 <script src="assets/three.min.js?v=2.0"></script>
 <script src="assets/world-framing.js?v=3.8.2"></script>
-<script src="assets/world-visibility.js?v=3.8.2"></script>
+<script src="assets/mobile-play.js?v=3.8.3"></script>
+<script src="assets/world-visibility.js?v=3.8.3"></script>
 <script src="assets/world-quality.js?v=3.1"></script>
 <script src="assets/chapter-progress.js?v=3.7"></script>
 <script src="assets/world-environment.js?v=3.7"></script>
 <script src="assets/island3d.js?v=3.8.2"></script>
 <script src="assets/first-day-state.js?v=3.2"></script>
 <script src="content/pm/island-chapters.js?v=3.7"></script>
-<script src="assets/chapter-journey-state.js?v=3.7.1"></script>
+<script src="assets/chapter-journey-state.js?v=3.8.3"></script>
 <script src="assets/chapter-rooms.js?v=3.7"></script>
-<script src="assets/story3d.js?v=3.8"></script>
+<script src="assets/story3d.js?v=3.8.3"></script>
 <script src="assets/first-day.js?v=3.8.2"></script>
 <script src="assets/cafe-dialogue.js?v=3.4"></script>
 <script src="assets/cafe-case-state.js?v=3.4"></script>
 <script src="assets/cafe-motion.js?v=3.5"></script>
-<script src="assets/cafe-case-scene.js?v=3.5"></script>
+<script src="assets/cafe-case-scene.js?v=3.8.3"></script>
 <script src="assets/island-life-state.js?v=3.6"></script>
 <script src="assets/island-life.js?v=3.8"></script>
 <script src="assets/cafe-case.js?v=3.6"></script>
-<script src="assets/chapter-scene.js?v=3.7"></script>
-<script src="assets/chapter-journey.js?v=3.8.2"></script>
+<script src="assets/chapter-table.js?v=3.8.3"></script>
+<script src="assets/chapter-scene.js?v=3.8.3"></script>
+<script src="assets/chapter-journey.js?v=3.8.3"></script>
 <script src="assets/night-market-state.js?v=3.8"></script>
-<script src="assets/night-market-scene.js?v=3.8"></script>
+<script src="assets/night-market-scene.js?v=3.8.3"></script>
 <script src="assets/night-market.js?v=3.8"></script>
-<script src="engine.js?v=3.8"></script>
+<script src="engine.js?v=3.8.3"></script>
 </body>
 </html>

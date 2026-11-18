@@ -102,7 +102,8 @@
     },
     offset(width,height){
       const mobile=width<=700,side=['evidence','workbench','replay'].includes(this.view);
-      const x=side&&!mobile?.18:0,y=this.view==='talk'?(mobile?.14:.13):side?(mobile?.23:.06):mobile?.15:.08;
+      const beside=PQMobilePlay.landscape()||(width>height&&this.view==='talk');
+      const x=beside?.21:side&&!mobile?.18:0,y=beside?.02:this.view==='talk'?(mobile?.14:.13):side?(mobile?.23:.06):mobile?.15:.08;
       const p=this.motion?.camera()??1,from=this.offsetFrom||{x,y};
       return {x:width*(from.x+(x-from.x)*p),y:height*(from.y+(y-from.y)*p)};
     },
@@ -155,6 +156,7 @@
           const x=(v.x*.5+.5)*width,y=(-v.y*.5+.5)*height;
           el.style.left=Math.max(60,Math.min(width-70,x))+'px';el.style.top=Math.max(108,Math.min(height*.65,y))+'px';
         }
+        PQMobilePlay.placePins('#case-hotspots button','#case-topbar,.case-explore-caption');
       }
     },
     play(result,plan){

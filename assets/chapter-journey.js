@@ -56,6 +56,7 @@
       if(event==='explore'){this.mode='explore';this.detail=null;this.step('view','explore');this.render();return;}
       if(event==='workbench'){this.mode='workbench';this.detail=null;this.step('view','workbench');this.render();return;}
       if(event==='choose'){this.step('choose',{slot,value});this.render();return;}
+      if(event==='unchoose'){this.step('unchoose',value);this.render();return;}
       if(event==='arrange'){this.step('arrange',value);this.render();return;}
       if(event==='select'){this.step('select',Number(value));this.mode='result';this.render();return;}
       if(event==='reflect'){this.step('reflect',value);this.render();return;}
@@ -110,10 +111,15 @@
     workbench(){
       const c=M.def(this.chapter),r=this.record(),p=r.plan;
       let h=this.head('把选择变成一次尝试',c.bench,r.committed?'本章已经完成。接下来的试验属于练习，不改写后续故事中的那次决定。':'你可以改动、试用、观察，再修正。先收集线索会更有依据，也可以把第一次当作探索。');
+      if(this.chapter==='1')h=this.head('桌面试用',c.bench,r.committed?'这是一次练习，保留原来的故事决定。':'');
       if(c.sequence){const seq=c.sequence;h+=`<fieldset><legend>${esc(seq.name)}</legend><ol class="chapter-sequence">${Array.from({length:seq.items.length},(_,i)=>`<li>${esc(seq.items.find(o=>o.id===p[seq.id][i])?.name||'选择下一张卡')}</li>`).join('')}</ol><div class="chapter-row">${seq.items.map(o=>this.button(esc(o.name),'arrange',o.id,'',p[seq.id].includes(o.id))).join('')}${this.button('重新排列','arrange','reset')}</div></fieldset>`;}
+      if(this.chapter==='1'){
+        h+=`<p class="chapter-small">点选一张工具卡和一张开始方式卡。再点已选卡片可撤回。</p><div class="chapter-tray" aria-live="polite">${c.slots.map(s=>{const o=s.options.find(o=>o.id===p[s.id]);return `<div><span>${s.id==='tool'?'试用方案':'开始方式'}</span><b>${esc(o?.name||'等待卡片')}</b>${o?this.button('撤回','unchoose',s.id):''}</div>`;}).join('')}</div><details><summary>卡片列表与说明</summary>`;
+      }
       for(const s of c.slots)h+=`<fieldset><legend>${esc(s.name)}</legend><div class="chapter-options">${s.options.map(o=>this.button(`<b>${esc(o.name)}</b><small>${esc(o.detail)}</small>`,'choose',o.id,'',false,p[s.id]===o.id,s.id)).join('')}</div></fieldset>`;
+      if(this.chapter==='1')h+='</details>';
       if(this.chapter==='6'){const g=p.group||'returning',n=g==='new'?80:g==='all'?100:20,v=g==='new'?52:g==='all'?60:8;h+=`<figure class="chapter-chart"><figcaption>改动前 · ${g==='returning'?'第二月老用户':g==='new'?'第一次使用的新用户':'混合人群'}</figcaption><div style="--share:${v/n*100}%"><span></span></div><p>完成任务 ${v} / ${n} 人（${Math.round(v/n*100)}%）</p></figure>`;}
-      h+=`<p class="chapter-small">${r.notes.length?`你已查看 ${r.notes.length} 份线索。`:'尚未收集线索，这次结果会保留这个前提。'} 这是固定虚构样本的演练，不代表真实市场结果。</p><div class="chapter-row">${this.button(esc(c.test)+' →','run','','chapter-primary',!M.ready(c,p))}${this.button('再看看线索','journal')}</div>`;
+      h+=`<p class="chapter-small">${r.notes.length?`你已查看 ${r.notes.length} 份线索。`:'尚未收集线索，这次结果会保留这个前提。'} 这是固定虚构样本的演练，不代表真实市场结果。</p><div class="chapter-row chapter-bench-actions">${this.button((this.chapter==='1'?'开始七天试用':esc(c.test))+' →','run','','chapter-primary',!M.ready(c,p))}${this.button(this.chapter==='1'?'看线索':'再看看线索','journal')}</div>`;
       return h;
     },
     metricHTML(res){return `<dl class="chapter-metrics">${res.metrics.map(m=>`<div><dt>${esc(m.label)}</dt><dd>${esc(m.value)} <small>${esc(m.unit)}</small></dd></div>`).join('')}</dl>`;},

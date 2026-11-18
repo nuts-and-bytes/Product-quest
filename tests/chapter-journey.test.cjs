@@ -6,6 +6,15 @@ for(const f of ['world.js',...fs.readdirSync(path.join(__dirname,'../content/pm'
 const good={1:{tool:'envelope',setup:'together'},2:{journey:['payday','shopping','monthend'],moment:'payday',effort:'short'},3:{flow:['review','confirm','receipt'],exit:'edit',failure:'explain'},4:{identity:'same',state:'receipt'},5:{response:['pause','rollback','explain'],scope:'pilot',guard:'ready'},6:{group:'returning',intervention:'payday'},7:{price:'5',access:'keep',consent:'optin'},8:{source:'records',ending:'next'}};
 function plan(s,id,p){const c=M.def(id);if(c.sequence){s=M.advance(s,id,'arrange','reset',8);for(const item of p[c.sequence.id])s=M.advance(s,id,'arrange',item,8);}for(const slot of c.slots)s=M.advance(s,id,'choose',{slot:slot.id,value:p[slot.id]},8);return s;}
 function complete(s,id,p=good[id]){s=plan(s,id,p);s=M.advance(s,id,'run',null,8);s=M.advance(s,id,'reflect','uncertain',8);return M.advance(s,id,'complete',null,8);}
+test('taking a card back only edits the draft and cannot erase completed history',()=>{
+ let s=complete(M.normalize(),'1'),past=JSON.stringify(s.records['1'].committed),trials=JSON.stringify(s.records['1'].trials);
+ s=M.advance(s,'1','unchoose','tool');assert.equal(s.records['1'].plan.tool,undefined);assert.equal(M.ready(M.def('1'),s.records['1'].plan),false);
+ assert.equal(JSON.stringify(s.records['1'].committed),past);assert.equal(JSON.stringify(s.records['1'].trials),trials);
+ s=M.advance(s,'1','run');assert.equal(JSON.stringify(s.records['1'].trials),trials);
+ const before=JSON.stringify(s);assert.equal(JSON.stringify(M.advance(s,'1','unchoose','invalid-slot')),before);
+ s=M.normalize(JSON.parse(JSON.stringify(s)));assert.equal(s.records['1'].plan.tool,undefined);
+ s=M.advance(s,'1','choose',{slot:'tool',value:'envelope'});assert.equal(M.ready(M.def('1'),s.records['1'].plan),true);assert.equal(JSON.stringify(s.records['1'].committed),past);
+});
 test('new journey keeps the original save separate and gates the next chapter on a real trial and reflection',()=>{
  const old={progress:12,trust:67,unlocked:['mvp']},before=JSON.stringify(old),s=M.normalize(old.campaign);
  assert.equal(JSON.stringify(old),before);assert.equal(M.available(s,'2'),false);assert.equal(M.available(s,'1'),true);

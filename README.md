@@ -24,6 +24,8 @@
 
 跑图保持高视角，挡住主角和当前交互人物的建筑会局部让开。左上角任务卡可展开详情；右下角「视角」切换观察方式，「更多」打开画质、手记和存档等功能。
 
+手机支持横屏游玩，旋转时保留当前进度；支持的浏览器可点「全屏」。横屏和桌面宽屏将对话放到人物侧边。章节证据可以靠近查看，第一章方案卡可直接在桌面上选择、替换和撤回，完整说明仍可展开阅读。
+
 想直接试调查，可以打开蓝山调查入口。先看现场和交谈，再选择你想验证的猜测与试验。每个情境有行动和预算限制，阅读与整理不扣行动。周三早高峰和周末手冲日的瓶颈不同，没有跨情境通吃的方案。
 
 完成第一天后，小美会约你带着信封和收据去波波奶茶店。左上角每次只给出一处赴约地点。章节内可以交谈、读实物、排列流程、运行模拟、比较结果和留下复盘；失败也能继续。首次完成的决定会传到后续故事，回访练习不会改写它。也可以从[八章故事入口](https://nuts-and-bytes.github.io/Product-quest/?experience=chapters)接着当前存档玩。
@@ -62,6 +64,7 @@ node scripts/build-single-html.mjs
 | 原有剧情与章节 | `engine.js`、`content/` |
 | 群岛、导航与画质 | [开放世界说明](docs/open-world.md)、`assets/world-map.js`、`assets/island3d.js` |
 | 户外镜头、遮挡与标签 | [户外可见性说明](docs/outdoor-visibility.md)、`assets/world-visibility.js`、`assets/world-framing.js` |
+| 手机横屏与场景内道具 | [横屏与桌面卡片说明](docs/mobile-play.md)、`assets/mobile-play.js`、`assets/chapter-table.js` |
 | 调查模型与预算 | [蓝山调查](docs/cafe-case.md)、`assets/cafe-case-state.js` |
 | 阿晨交谈与线索 | [3D 对话说明](docs/cafe-dialogue.md) |
 | 八章任务、存档与伏笔 | [岛上章节](docs/island-chapters.md)、`content/pm/island-chapters.js`、`assets/chapter-journey-state.js` |

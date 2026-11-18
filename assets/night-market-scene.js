@@ -75,7 +75,8 @@
       else{this.goal.set(small?7.4:9.5,small?10.5:7.8,small?22:14);this.lookGoal.set(0,1.2,.4);}
       const alpha=snap||reduced?1:1-Math.exp(-dt*5);this.cam.lerp(this.goal,alpha);this.look.lerp(this.lookGoal,alpha);w.camera.position.copy(this.cam);w.camera.lookAt(this.look);
       const width=this.canvas.clientWidth,height=this.canvas.clientHeight,offset=small?(C.dialog?.3:.18):C.dialog?.13:.1;
-      w.camera.setViewOffset(width,height,0,height*offset,width,height);
+      const beside=PQMobilePlay.landscape()||(width>height&&!!C.dialog);
+      w.camera.setViewOffset(width,height,beside?width*.21:0,height*(beside?.02:offset),width,height);
       Object.values(this.rigs).forEach(rig=>rig.group.visible=false);
       const place=(key,x,z,yaw=0)=>{const rig=this.rigs[key];rig.group.visible=true;this.target.set(x,.08,z);const distance=rig.group.position.distanceTo(this.target);if(key==='hero'&&this.heroRoute.length&&!snap&&!reduced){const waypoint=this.heroRoute[0];this.target.set(waypoint[0],.08,waypoint[1]);const dist=rig.group.position.distanceTo(this.target);rig.group.position.lerp(this.target,dist?Math.min(1,step*3.6/dist):1);if(dist<.08)this.heroRoute.shift();}else{rig.group.position.lerp(this.target,snap||reduced?1:1-Math.exp(-step*5));if(snap||reduced)rig.group.position.copy(this.target);}rig.group.rotation.y=yaw;w.animateCharacter(rig,distance>.1&&!still&&!reduced,reduced?0:time,0);rig.head.rotation.x=0;rig.rightArm.rotation.z=rig.leftArm.rotation.z=0;return rig;};
       let work=state.brew?'brew':state.cup?'pickup':C.station||'order';if(!service)work='order';
@@ -103,6 +104,7 @@
         if(rig){this.point.copy(rig.group.position);this.point.y+=2.5;}else if(station){this.point.copy(station.position);this.point.setY(2.4);}else return;
         this.point.project(w.camera);b.style.left=Math.max(45,Math.min(width-45,(this.point.x*.5+.5)*width))+'px';b.style.top=Math.max(100,Math.min(height*(small?.57:.63),(-this.point.y*.5+.5)*height))+'px';
       });
+      PQMobilePlay.placePins('#market-pins [data-rig],#market-pins [data-station]','#market-top,#market-meter,#market-dock,#market-dialog');
     },
     filmFrame(f,shot,u){
       const r=G.nightMarket.run,arrival=shot.stage==='market-arrive',closing=shot.stage==='market-close';

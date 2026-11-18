@@ -179,7 +179,8 @@
       this.camPosition.lerp(this.cameraGoal,reduced||caseMode?1:1-Math.exp(-dt*3));
       w.camera.position.copy(this.camPosition);w.camera.lookAt(this.lookTarget);
       const el=w.renderer.domElement,key=el.clientWidth+':'+el.clientHeight+':'+caseMode+':'+(caseMode?PQCafeScene.view:'');
-      const offset=caseMode?PQCafeScene.offset(el.clientWidth,el.clientHeight):{x:0,y:el.clientHeight*(w.camera.aspect<.8&&this.kind==='office'?.10:.14)};
+      const wide=el.clientWidth>el.clientHeight;
+      const offset=caseMode?PQCafeScene.offset(el.clientWidth,el.clientHeight):{x:wide?el.clientWidth*.21:0,y:el.clientHeight*(wide?.02:w.camera.aspect<.8&&this.kind==='office'?.10:.14)};
       if(this.viewKey!==key||Math.abs((this.viewOffset?.x||0)*el.clientWidth-offset.x)>.1||Math.abs((this.viewOffset?.y||0)*el.clientHeight-offset.y)>.1){this.viewKey=key;this.viewOffset={x:offset.x/el.clientWidth,y:offset.y/el.clientHeight};w.camera.setViewOffset(el.clientWidth,el.clientHeight,offset.x,offset.y,el.clientWidth,el.clientHeight);}
       this.actors.forEach((rig,i)=>{
         w.animateCharacter(rig,false,reduced||(caseMode&&PQCafeScene.view==='evidence')?0:t,i);
