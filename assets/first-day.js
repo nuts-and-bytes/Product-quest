@@ -46,7 +46,7 @@
       if(this.guided()){
         if(s.stage==='arrival')w.playerPos.set(-6.5,1.04,4.8);
         s.started=true;G.save();w.diveAnim=null;w.setCinematic(null);w.setCloudOpen(1,true);w.setMode('walk');w.recentre(true);
-        w.spherical.radius=12.5;w.curSpherical.radius=12.5;
+        this.frameIsland(true);
         if(['arrival','hq'].includes(s.stage)){
           if(!this.guide){this.guide=w.createCharacter('xiaomei');w.scene.add(this.guide.group);}
           this.guide.group.visible=true;
@@ -83,8 +83,15 @@
       const goal=this.target();this.near=!!goal&&Math.hypot(PQIsland.playerPos.x-goal.x,PQIsland.playerPos.z-goal.z)<this.reach();
       $('journey-go').textContent=r[this.near?4:3]+(this.near?' · E':' →');
     },
+    frameIsland(snap=false){
+      // Keep the island readable throughout the outdoor introduction.
+      const w=PQIsland;w.spherical.radius=54;w.spherical.polar=.8;
+      if(snap)Object.assign(w.curSpherical,w.spherical);
+    },
     locate(){
-      const w=PQIsland;w.setMode('walk');w.recentre();w.spherical.radius=12.5;this.markerUntil=performance.now()+4000;
+      const w=PQIsland;w.setMode('walk');w.recentre();
+      if(this.guided())this.frameIsland();else w.spherical.radius=12.5;
+      this.markerUntil=performance.now()+4000;
       if(this.guided())$('isl-status').classList.remove('show');
     },
     clearRoute(){
@@ -93,7 +100,9 @@
     },
     walkTo(goal){
       const w=PQIsland,path=PQWorldMap.findPath(w.playerPos,goal,PQ.buildings);if(!path){w.setStatus('先回到道路上，再点击继续引导。',3000);return;}
-      w.setMode('walk');w.walkPath=path.map(p=>({...p}));w.walkGoal=w.walkPath.shift();
+      // Starting a route must preserve the player's chosen distance and angle.
+      if(w.mode!=='walk'){w.setMode('walk');if(this.guided())this.frameIsland();}
+      w.walkPath=path.map(p=>({...p}));w.walkGoal=w.walkPath.shift();
       w.goalRing.position.set(goal.x,1.08,goal.z);w.goalRing.visible=true;
       this.clearRoute();
       const points=[w.playerPos,...path].map(p=>new T.Vector3(p.x,1.09,p.z));
