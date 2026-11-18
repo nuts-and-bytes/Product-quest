@@ -7,6 +7,7 @@ export async function run(page){
  assert.equal(p.tag,'CANVAS','the actual character is unobstructed by HUD');
  await page.cdp('Input.dispatchMouseEvent',{type:'mousePressed',x:p.x,y:p.y,button:'left',buttons:1,clickCount:1});
  await page.cdp('Input.dispatchMouseEvent',{type:'mouseReleased',x:p.x,y:p.y,button:'left',buttons:0,clickCount:1});
+ await page.waitForFunction(()=>PQFirstDay.dialogOpen,undefined,{timeout:10000});
  assert.equal(await page.evaluate(()=>PQFirstDay.dialogOpen),true,'clicking the cafe character must open a conversation');
  return {passed:true,point:p};
 }

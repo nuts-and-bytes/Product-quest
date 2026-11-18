@@ -172,6 +172,7 @@
       if(window.PQCampaign?.active&&window.PQChapterScene?.active){PQChapterScene.update(dt,t);return;}
       const w=PQIsland,e=w.environment,caseMode=!!window.PQCafeScene?.active,reduced=e.reducedMotion||((caseMode||window.PQCafeLife?.active)&&PQCafeScene.reduced());
       if(caseMode)PQCafeScene.tick(dt);
+      else if(window.PQCafeLife?.active)PQCafeWalk.tick(dt);
       const active=this.speaker==='me'?this.player:this.speaker&&this.speaker!=='n'?this.npc:null;
       if(window.PQCafeScene?.active)PQCafeScene.frame(this.focusTarget,this.cameraGoal);
       else if(window.PQCafeLife?.active)PQCafeLife.frame(this.focusTarget,this.cameraGoal);
@@ -181,7 +182,7 @@
       w.camera.position.copy(this.camPosition);w.camera.lookAt(this.lookTarget);
       const el=w.renderer.domElement,key=el.clientWidth+':'+el.clientHeight+':'+caseMode+':'+(caseMode?PQCafeScene.view:'');
       const wide=el.clientWidth>el.clientHeight;
-      const offset=caseMode?PQCafeScene.offset(el.clientWidth,el.clientHeight):{x:wide?el.clientWidth*.21:0,y:el.clientHeight*(wide?.02:w.camera.aspect<.8&&this.kind==='office'?.10:.14)};
+      const offset=caseMode?PQCafeScene.offset(el.clientWidth,el.clientHeight):window.PQCafeLife?.active?{x:PQFirstDay.dialogOpen&&wide?el.clientWidth*.16:0,y:0}:{x:wide?el.clientWidth*.21:0,y:el.clientHeight*(wide?.02:w.camera.aspect<.8&&this.kind==='office'?.10:.14)};
       if(this.viewKey!==key||Math.abs((this.viewOffset?.x||0)*el.clientWidth-offset.x)>.1||Math.abs((this.viewOffset?.y||0)*el.clientHeight-offset.y)>.1){this.viewKey=key;this.viewOffset={x:offset.x/el.clientWidth,y:offset.y/el.clientHeight};w.camera.setViewOffset(el.clientWidth,el.clientHeight,offset.x,offset.y,el.clientWidth,el.clientHeight);}
       this.actors.forEach((rig,i)=>{
         w.animateCharacter(rig,false,reduced||(caseMode&&PQCafeScene.view==='evidence')?0:t,i);
@@ -193,7 +194,7 @@
       if(this.kind==='cafe'){
         for(const [id,key] of [['cafe-mei','xiaomei'],['cafe-li','lijie']]){
           const el=document.getElementById(id),rig=this.npcs[key];
-          el.hidden=!document.getElementById('social-screen').classList.contains('active')||PQFirstDay.dialogOpen||!G.firstDay.drink||!rig;
+          el.hidden=!document.getElementById('social-screen').classList.contains('active')||PQFirstDay.dialogOpen||(!G.firstDay.drink&&!window.PQCafeLife?.active)||!rig;
           if(!el.hidden){const v=rig.group.position.clone();v.y+=2.7;v.project(w.camera);el.hidden=Math.abs(v.x)>.95||Math.abs(v.y)>.95||v.z>1;
             const width=w.renderer.domElement.clientWidth,x=Math.max(65,Math.min(width-65,(v.x*.5+.5)*width));
             el.style.transform=`translate(${x}px,${(-v.y*.5+.5)*w.renderer.domElement.clientHeight}px) translate(-50%,-100%)`;}

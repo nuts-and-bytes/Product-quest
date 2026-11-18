@@ -1,17 +1,18 @@
 import assert from 'node:assert/strict';
 const finishTalk=async page=>{for(let i=0;i<12&&await page.evaluate(()=>PQFirstDay.dialogOpen);i++)await page.click('#journey-options button');};
+const approach=async(page,id)=>{await page.evaluate(id=>PQCafeLife.interact(id),id);await page.waitForFunction(()=>!PQCafeWalk.route.length,undefined,{timeout:12000});};
 const size=async(page,w,h)=>{await page.cdp('Emulation.setDeviceMetricsOverride',{width:w,height:h,deviceScaleFactor:1,mobile:true});await page.cdp('Emulation.setTouchEmulationEnabled',{enabled:true,maxTouchPoints:5});await page.waitForFunction(([w,h])=>innerWidth===w&&innerHeight===h&&PQIsland.renderer.domElement.clientWidth===w,[w,h]);};
 export async function run(page){
- await page.goto('http://127.0.0.1:8890/?player=cafe-39-regression&experience=cafe');await page.waitForFunction(()=>window.G?.cafeLife&&PQStory3D.active);
+ await page.goto('http://127.0.0.1:8890/?player=cafe-310-regression&experience=cafe');await page.waitForFunction(()=>window.G?.cafeLife&&PQStory3D.active);
  await page.evaluate(()=>{if(PQLifeFilm.active)PQLifeFilm.finish(false);window.qaErrors=[];addEventListener('error',e=>qaErrors.push(e.message));PQCafeCase.close();G.cafeLife=PQCafeLifeState.normalize();G.firstDay.drink='coffee';PQCafeLife.render();});
  const baseline=await page.evaluate(()=>JSON.stringify({progress:G.progress,case:G.cafeCase,campaign:G.campaign,night:G.nightMarket}));
- await page.click('#cafe-life-pins [data-prop="postcard"]');await page.click('#prop-flip');
+ await approach(page,'postcard');await page.waitForFunction(()=>PQPropInspector.active);await page.click('#prop-flip');
  assert.equal(await page.evaluate(()=>G.cafeLife.seen.includes('postcard-back')),true);
- await page.click('#prop-actions button');await page.waitForFunction(()=>!document.getElementById('vista-keep').disabled);
- await page.click('#cafe-vista [data-view="garden"]');await page.waitForFunction(()=>!document.getElementById('vista-keep').disabled);await page.click('#vista-keep');await page.click('#vista-back');
- await page.click('#cafe-life-pins [data-prop="postcard"]');await page.click('#prop-actions button:last-child');await finishTalk(page);
- await page.click('#cafe-spots [data-spot="window"]');await page.click('#cafe-life-pins [data-prop="note"]');await page.click('#prop-flip');await page.click('#prop-actions button');await finishTalk(page);
- await page.click('#cafe-life-pins [data-prop="cup"]');await page.click('#prop-actions button:first-child');await page.waitForFunction(()=>!PQCafeLife.arrival);await finishTalk(page);
+ await page.click('#prop-actions button');await page.waitForFunction(()=>PQCafeLife.vista&&!document.getElementById('vista-keep').disabled,undefined,{timeout:12000});
+ await page.click('#cafe-vista [data-view="garden"]');await page.waitForFunction(()=>PQCafeLife.vista&&!document.getElementById('vista-keep').disabled,undefined,{timeout:12000});await page.click('#vista-keep');await page.click('#vista-back');
+ await approach(page,'postcard');await page.waitForFunction(()=>PQPropInspector.active);await page.click('#prop-actions button:last-child');await finishTalk(page);
+ await approach(page,'note');await page.waitForFunction(()=>PQPropInspector.active);await page.click('#prop-flip');await page.click('#prop-actions button');await page.waitForFunction(()=>PQFirstDay.dialogOpen,undefined,{timeout:12000});await finishTalk(page);
+ await approach(page,'cup');await page.waitForFunction(()=>PQPropInspector.active);await page.click('#prop-actions button:first-child');await page.waitForFunction(()=>!PQCafeLife.arrival);await finishTalk(page);
  assert.deepEqual(await page.evaluate(()=>G.cafeLife),{version:1,seen:['postcard-back','seat-back'],postcard:{view:'garden',ending:'sent'},seat:{asked:true,choice:'window'}});
  assert.equal(await page.evaluate(()=>PQStory3D.npcs.akai.group.visible&&PQCafeLife.props.sent.visible),true);
  assert.equal(await page.evaluate(()=>JSON.stringify({progress:G.progress,case:G.cafeCase,campaign:G.campaign,night:G.nightMarket})),baseline,'optional stories cannot spend or rewrite main progress');
@@ -20,7 +21,7 @@ export async function run(page){
  await page.reload();await page.waitForFunction(()=>window.PQCafeCase?.active);await page.evaluate(()=>{if(PQLifeFilm.active)PQLifeFilm.finish(false);PQCafeCase.close();});
  assert.equal(await page.evaluate(()=>G.cafeLife.seat.choice==='window'&&PQStory3D.npcs.akai.group.visible&&PQCafeLife.props.sent.visible),true);
  // Fullscreen inspector remains open and owns input across rotation.
- await page.click('#cafe-life-pins [data-prop="postcard"]');await size(page,844,390);await page.click('#prop-flip');await page.click('#prop-read');
+ await approach(page,'postcard');await page.waitForFunction(()=>PQPropInspector.active);await size(page,844,390);await page.click('#prop-flip');await page.click('#prop-read');
  assert.equal(await page.evaluate(()=>document.getElementById('prop-copy').textContent.includes('海风')),true);
  await size(page,390,844);assert.equal(await page.evaluate(()=>PQPropInspector.active&&PQPropInspector.back&&!document.getElementById('prop-reading').hidden),true);
  await page.click('#prop-read-close');await size(page,568,320);

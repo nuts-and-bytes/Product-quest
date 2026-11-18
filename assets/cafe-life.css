@@ -27,3 +27,19 @@
 #cafe-arrival[hidden]{display:none!important}#cafe-arrival{position:absolute;left:50%;bottom:calc(var(--play-bottom) + 35px);transform:translateX(-50%);display:flex;gap:12px;align-items:center;padding:12px 16px;border:1px solid #cabd9466;background:#1b3838ef;border-radius:12px;max-width:calc(100% - 32px);font:13px/1.6 system-ui;color:#eee3c6;pointer-events:auto}#cafe-arrival button{min-width:80px;min-height:44px;background:#ddc18c;color:#243d33;border:0;border-radius:7px;cursor:pointer}.cafe-arriving #cafe-actions,.cafe-arriving #cafe-spots,.cafe-arriving #cafe-life-pins,.cafe-arriving #cafe-mei,.cafe-arriving #cafe-li,.cafe-arriving #cafe-life-hint{visibility:hidden}
 
 #cafe-avatar-clearance{position:absolute;visibility:hidden;pointer-events:none}
+
+/* Indoor exploration: the room is the primary interface. */
+#cafe-walk-tools,#cafe-stick,#cafe-nearby,#cafe-walk-status{display:none}
+.cafe-walk-mode #cafe-actions{display:none!important}.cafe-walk-mode.cafe-menu-open #cafe-actions{display:block!important}
+.cafe-walk-mode #cafe-life-hint{display:none}.cafe-walk-mode #cafe-spots{left:auto;right:var(--play-right);transform:none;bottom:var(--play-bottom)}
+.cafe-walk-mode #cafe-walk-tools{display:flex;position:absolute;right:var(--play-right);top:calc(var(--play-top) + 68px);gap:6px;pointer-events:auto}
+#cafe-walk-tools button,#cafe-nearby{min-width:44px;min-height:44px;padding:10px 16px;border:1px solid #dcc48d70;border-radius:9px;background:#183b35df;color:#f2e4c8;font:13px/1.4 system-ui;cursor:pointer;touch-action:manipulation}
+#cafe-walk-tools button:focus-visible,#cafe-nearby:focus-visible{outline:3px solid #e7c988;outline-offset:3px}
+.cafe-walk-mode #cafe-nearby:not([hidden]){display:block;position:absolute;bottom:calc(var(--play-bottom) + 70px);left:50%;transform:translateX(-50%);background:#e1c38c;color:#263e35;pointer-events:auto;max-width:70%;white-space:nowrap}
+.cafe-walk-mode #cafe-walk-status{display:block;position:absolute;left:var(--play-left);bottom:var(--play-bottom);max-width:42%;margin:0;padding:8px 12px;border-radius:8px;background:#183b35c9;color:#f2e4c8;font:12px/1.6 system-ui;pointer-events:none}
+.cafe-walk-mode #cafe-stick{display:block;position:absolute;left:var(--play-left);bottom:calc(var(--play-bottom) + 54px);width:100px;height:100px;border:1px solid #ead3a578;border-radius:50%;background:#c9c2a222;box-shadow:inset 0 0 24px #193a3330;pointer-events:auto;touch-action:none}
+#cafe-stick span{position:absolute;width:42px;height:42px;left:28px;top:28px;border:2px solid #e7d6b8a8;border-radius:50%;background:#244c449c;pointer-events:none}
+.conversation-open #cafe-walk-tools,.conversation-open #cafe-stick,.conversation-open #cafe-nearby,.conversation-open #cafe-walk-status,.cafe-arriving #cafe-walk-tools,.cafe-arriving #cafe-stick,.cafe-arriving #cafe-nearby,.cafe-arriving #cafe-walk-status{visibility:hidden}
+@media(hover:hover) and (pointer:fine){.cafe-walk-mode #cafe-stick{display:none}}
+@media(orientation:landscape) and (max-height:600px){.cafe-walk-mode #cafe-walk-tools{top:calc(var(--play-top) + 50px)}#cafe-walk-tools button{font-size:11px;padding:8px 11px}.cafe-walk-mode #cafe-actions{top:calc(var(--play-top) + 98px)!important}.cafe-walk-mode #cafe-walk-status{font-size:10px;max-width:45%}.cafe-walk-mode #cafe-stick{width:86px;height:86px;bottom:calc(var(--play-bottom) + 45px)}#cafe-stick span{left:21px;top:21px}.cafe-walk-mode #cafe-nearby:not([hidden]){bottom:calc(var(--play-bottom) + 55px);font-size:12px}}
+@media(orientation:portrait){.cafe-walk-mode #cafe-walk-status{bottom:calc(var(--play-bottom) + 175px);max-width:70%;font-size:11px}.cafe-walk-mode #cafe-spots{left:50%;right:auto;transform:translateX(-50%)}.cafe-walk-mode #cafe-nearby:not([hidden]){bottom:calc(var(--play-bottom) + 115px);left:auto;right:var(--play-right);transform:none;max-width:60%}.cafe-walk-mode #cafe-actions{bottom:calc(var(--play-bottom) + 190px)!important;max-height:38%!important}}

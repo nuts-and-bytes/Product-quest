@@ -2,7 +2,7 @@
 
 在 3D 开放群岛里探索、交谈和调查，用证据尝试解决问题，再观察选择带来的后果。原有产品经理剧情闯关仍可继续游玩。
 
-[进入开放群岛](https://nuts-and-bytes.github.io/Product-quest/) · [继续八章岛上故事](https://nuts-and-bytes.github.io/Product-quest/?experience=chapters) · [直接进入蓝山调查](https://nuts-and-bytes.github.io/Product-quest/?experience=cafe) · [观看岛上清晨](https://nuts-and-bytes.github.io/Product-quest/?experience=cafe&film=morning) · [版本记录](CHANGELOG.md) · [English](#english)
+[进入开放群岛](https://nuts-and-bytes.github.io/Product-quest/) · [继续八章岛上故事](https://nuts-and-bytes.github.io/Product-quest/?experience=chapters) · [在咖啡馆走走](https://nuts-and-bytes.github.io/Product-quest/?experience=cafe-life) · [直接进入蓝山调查](https://nuts-and-bytes.github.io/Product-quest/?experience=cafe) · [观看岛上清晨](https://nuts-and-bytes.github.io/Product-quest/?experience=cafe&film=morning) · [版本记录](CHANGELOG.md) · [English](#english)
 
 ## 当前可以玩什么
 
@@ -10,6 +10,7 @@
 | --- | --- |
 | 开放群岛 | 漫游星火岛、琥珀林地、星潮观测站与珊瑚花园；行走、交互、收集手记，查看章节成果 |
 | 入职第一天 | 创建角色，跟随引导进入总部与咖啡馆，继续原有序章 |
+| 蓝山日常 · 3.10 | 点击地面、键盘或手机摇杆走动；绕过桌椅与人物，靠近交谈和全屏检视物件，发现明信片与留座支线，走到门口看海 |
 | 蓝山调查 | 交谈、读取订单和现场线索，圈出依据，组合试营业方案，再比较结果与复盘 |
 | 岛上的片刻 | 观看与调查状态关联的实时 3D 演出；可暂停、跳过或重看，结尾依据实际试验结果变化 |
 | 周末夜市副本 · 3.8 | 和小美摆摊：交换工作台、备货开价、接单制作交杯、中场调整；长凳或取餐架与人物记忆留在岛上，可回访、可继续经营 |
