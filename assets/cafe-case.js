@@ -79,7 +79,7 @@
         if(!G.cafeCase.actions.includes(value))return;
         this.readReturn=this.mode;this.detail=value;this.help=false;
         if(value==='observe'&&this.mode!=='journal'){this.mode='observe';this.detail=null;this.preview();}
-        this.render();return;
+        this.render();if(this.detail)PQPropLibrary.cafe(value);return;
       }
       if(event==='toggle'&&!s.plan.includes(value)&&M.cost([...s.plan,value])>M.BUDGET){this.notice('这次最多投入 6 枚预算。先收起一项改动，再比较取舍。');return;}
       if(event==='pin'&&!s.pins.includes(value)&&s.pins.length>=3){this.notice('最多圈出 3 份关键证据；可以先取消一份。');return;}

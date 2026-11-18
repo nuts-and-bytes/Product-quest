@@ -37,13 +37,13 @@
       if(a==='sound'){G.toggleMute();this.render();return;}
       if(a==='talk'){this.step('talk',v);this.dialog={type:'talk',id:v,line:0};this.render();return;}
       if(a==='line'){const lines=this.lines(this.dialog.id);if(++this.dialog.line>=lines.length)this.dialog=null;this.render();return;}
-      if(a==='evidence'){this.dialog={type:'evidence',id:v};this.render();return;}
+      if(a==='evidence'){this.dialog={type:'evidence',id:v};this.render();PQPropLibrary.market(v);return;}
       if(a==='film'){PQLifeFilm.playMarket(v);return;}
       if(a==='setup'){this.step('setup');this.view=this.run.phase;this.render();return;}
       if(a==='tab'){this.tab=v;this.render();return;}
       if(a==='station'){
         this.station=v;
-        if(['arrival','visit','complete','closing'].includes(this.view)){if(this.view==='arrival'){this.step('setup');this.view='setup';}else{this.dialog={type:'evidence',id:'layout'};}}
+        if(['arrival','visit','complete','closing'].includes(this.view)){if(this.view==='arrival'){this.step('setup');this.view='setup';}else{this.action('evidence','layout');return;}}
         else if(this.view==='service'){const o=this.selectedOrder();if(v==='order'&&o?.status==='waiting'&&!this.paused)this.action('accept');else if(v==='pickup'&&this.run.cup&&!this.paused)this.action('serve');}
         this.render();return;
       }

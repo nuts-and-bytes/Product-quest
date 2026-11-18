@@ -170,10 +170,11 @@
     update(dt,t){
       if(window.PQNightMarket?.active&&window.PQNightMarketScene?.active){PQNightMarketScene.update(dt,t);return;}
       if(window.PQCampaign?.active&&window.PQChapterScene?.active){PQChapterScene.update(dt,t);return;}
-      const w=PQIsland,e=w.environment,caseMode=!!window.PQCafeScene?.active,reduced=e.reducedMotion||(caseMode&&PQCafeScene.reduced());
+      const w=PQIsland,e=w.environment,caseMode=!!window.PQCafeScene?.active,reduced=e.reducedMotion||((caseMode||window.PQCafeLife?.active)&&PQCafeScene.reduced());
       if(caseMode)PQCafeScene.tick(dt);
       const active=this.speaker==='me'?this.player:this.speaker&&this.speaker!=='n'?this.npc:null;
       if(window.PQCafeScene?.active)PQCafeScene.frame(this.focusTarget,this.cameraGoal);
+      else if(window.PQCafeLife?.active)PQCafeLife.frame(this.focusTarget,this.cameraGoal);
       else this.focusTarget.set((w.camera.aspect<.8&&this.kind==='cafe'?-.65:0)+(active?active.group.position.x*.25:0),1.25,.5);
       this.lookTarget.lerp(this.focusTarget,reduced||caseMode?1:1-Math.exp(-dt*3));
       this.camPosition.lerp(this.cameraGoal,reduced||caseMode?1:1-Math.exp(-dt*3));
@@ -198,6 +199,7 @@
             el.style.transform=`translate(${x}px,${(-v.y*.5+.5)*w.renderer.domElement.clientHeight}px) translate(-50%,-100%)`;}
         }
       }
+      if(window.PQCafeLife?.active)PQCafeLife.update(dt,t);
       e.shafts.uniforms.uStrength.value=0;
       e.composite.uniforms.uInvProjection.value.copy(w.camera.projectionMatrixInverse);
       e.composite.uniforms.uFocus.value=w.camera.position.distanceTo(this.lookTarget);
@@ -211,6 +213,8 @@
     },
     exit(){
       if(!this.active)return;
+      if(window.PQPropInspector?.active)PQPropInspector.close(false);
+      if(window.PQCafeLife)PQCafeLife.detach(true);
       if(window.PQCafeScene)PQCafeScene.reset();
       const w=PQIsland;this.active=false;w.scene=this.saved.scene;
       w.camera.clearViewOffset();w._viewKey=null;w.camera.position.copy(this.saved.position);

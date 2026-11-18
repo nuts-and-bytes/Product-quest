@@ -191,7 +191,9 @@ const G = {
     PQ.hydratePxi(document); // 像素图标注入
     this.syncMute();         // 静音状态跨会话保留，图标得跟上
     if(window.PQIsland) PQIsland.onShow({ cinematic:'landing', snap:true });
+    if(window.PQPropInspector)PQPropInspector.init();
     if(window.PQFirstDay)PQFirstDay.init();
+    if(window.PQCafeLife)PQCafeLife.init();
     if(window.PQCafeCase)PQCafeCase.init();
     if(window.PQLifeFilm)PQLifeFilm.init();
     if(window.PQCampaign)PQCampaign.init();
@@ -247,7 +249,7 @@ const G = {
     p.innerHTML=`<div class="tp-box"><b>${PQ.pxi('book',14,'var(--accent)')} ${t.name}</b><div class="tp-def">${t.def}</div>${t.src?`<div class="tp-src">${t.src}</div>`:''}<div class="tp-close">— 点击任意处关闭 —</div></div>`;
     p.classList.add('show');
   },
-  save(){ try{ localStorage.setItem((window.OPC_SAVE_KEY || 'pmquest2'), JSON.stringify({trust:this.trust,unlocked:this.unlocked,notes:this.notes,progress:this.progress,avatar:this.avatar,stats:this.stats||{},exploration:this.exploration||{},firstDay:this.firstDay,cafeCase:this.cafeCase,lifeFilms:this.lifeFilms,campaign:this.campaign,nightMarket:window.PQNightMarketModel?PQNightMarketModel.pack(this.nightMarket):this.nightMarket})); }catch(e){} },
+  save(){ try{ localStorage.setItem((window.OPC_SAVE_KEY || 'pmquest2'), JSON.stringify({trust:this.trust,unlocked:this.unlocked,notes:this.notes,progress:this.progress,avatar:this.avatar,stats:this.stats||{},exploration:this.exploration||{},firstDay:this.firstDay,cafeCase:this.cafeCase,lifeFilms:this.lifeFilms,cafeLife:this.cafeLife,campaign:this.campaign,nightMarket:window.PQNightMarketModel?PQNightMarketModel.pack(this.nightMarket):this.nightMarket})); }catch(e){} },
   load(){ try{ const d=JSON.parse(localStorage.getItem((window.OPC_SAVE_KEY || 'pmquest2'))); if(d){Object.assign(this,d); this.avatar=normalizeAvatar(d.avatar);} }catch(e){} },
 
   /* ---------- 角色DIY ---------- */
@@ -412,6 +414,8 @@ const G = {
   },
 
   show(id, opts){
+    if(window.PQPropInspector?.active)PQPropInspector.close(false);
+    if(id!=='social-screen'&&window.PQCafeLife?.active)PQCafeLife.detach();
     if(window.PQLifeFilm?.active)PQLifeFilm.finish(false);
     opts=opts||{};
     if(id!=='play-screen'){clearTimeout(this._startTimer);clearInterval(this.typeTimer);clearInterval(this.talkAnim);this.typing=false;document.getElementById('feedback').classList.remove('show');document.getElementById('quiz-panel').classList.remove('show');}
@@ -996,7 +1000,7 @@ const G = {
   exportSave(){
     SFX.click();
     const raw = localStorage.getItem((window.OPC_SAVE_KEY || 'pmquest2')) ||
-      JSON.stringify({trust:this.trust,unlocked:this.unlocked,notes:this.notes,progress:this.progress,avatar:this.avatar,stats:this.stats||{},exploration:this.exploration||{},firstDay:this.firstDay,cafeCase:this.cafeCase,lifeFilms:this.lifeFilms,campaign:this.campaign,nightMarket:window.PQNightMarketModel?PQNightMarketModel.pack(this.nightMarket):this.nightMarket});
+      JSON.stringify({trust:this.trust,unlocked:this.unlocked,notes:this.notes,progress:this.progress,avatar:this.avatar,stats:this.stats||{},exploration:this.exploration||{},firstDay:this.firstDay,cafeCase:this.cafeCase,lifeFilms:this.lifeFilms,cafeLife:this.cafeLife,campaign:this.campaign,nightMarket:window.PQNightMarketModel?PQNightMarketModel.pack(this.nightMarket):this.nightMarket});
     const blob = new Blob([raw], {type:'application/json'});
     const a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
@@ -1111,7 +1115,7 @@ function bootPQ(){
     panel.innerHTML='<div><span class="journey-eyebrow">PRODUCT QUEST</span><h2>世界还没准备好。</h2><p>部分画面资源没有完整载入。重新载入后，就可以继续你的冒险。</p><button class="journey-primary">重新载入 →</button></div>';
     panel.querySelector('button').onclick=()=>location.reload();document.getElementById('game').appendChild(panel);
   };
-  if(!window.THREE||!window.PQIsland||!window.PQMobilePlay||!window.PQFirstDay||!window.PQStory3D||!window.PQCafeModel||!window.PQCafeScene||!window.PQCafeCase||!window.PQLifeState||!window.PQLifeFilm||!window.PQChapterJourney||!window.PQChapterRooms||!window.PQChapterTable||!window.PQChapterScene||!window.PQCampaign||!window.PQNightMarket||!window.PQNightMarketScene||!window.PQNightMarketModel){retry();return;}
+  if(!window.THREE||!window.PQIsland||!window.PQMobilePlay||!window.PQFirstDay||!window.PQStory3D||!window.PQCafeModel||!window.PQCafeScene||!window.PQCafeCase||!window.PQLifeState||!window.PQLifeFilm||!window.PQChapterJourney||!window.PQChapterRooms||!window.PQCafeLife||!window.PQPropInspector||!window.PQPropLibrary||!window.PQChapterTable||!window.PQChapterScene||!window.PQCampaign||!window.PQNightMarket||!window.PQNightMarketScene||!window.PQNightMarketModel){retry();return;}
   try{ G.init();const params=new URLSearchParams(location.search);if(params.get('experience')==='market')PQNightMarket.open(params.get('visit')==='1');else if(params.get('experience')==='cafe')PQCafeCase.open(params.get('film'));else if(params.get('experience')==='chapters'){const requested=params.get('chapter');PQCampaign.open(PQChapterJourney.available(G.campaign,requested,PQCampaign.legacy())?requested:G.campaign.current);} }catch(e){ console.error('PQ boot error:', e);retry(); }
 }
 window.G = G;

@@ -51,7 +51,7 @@
       if(event==='back'){if(this.detail){this.detail=null;this.mode=this.readReturn||'explore';}else this.mode=this.returnMode||'explore';this.help=false;if(['talk','workbench','result','complete'].includes(this.mode))this.step('view',this.mode);else this.step('view','explore');this.render();return;}
       if(event==='talk'){this.detail=null;this.mode='talk';this.step('talk',value);this.render();return;}
       if(event==='topic'){this.step('topic',value);this.render();return;}
-      if(event==='read'){this.readReturn=this.mode;this.step('read',value);this.detail=value;this.mode='evidence';this.render();return;}
+      if(event==='read'){this.readReturn=this.mode;this.step('read',value);this.detail=value;this.mode='evidence';this.render();PQPropLibrary.chapter(value);return;}
       if(['journal','library','help'].includes(event)){this.returnMode=['journal','library','help'].includes(this.mode)?this.returnMode:this.mode;this.mode=event;this.detail=null;this.render();return;}
       if(event==='explore'){this.mode='explore';this.detail=null;this.step('view','explore');this.render();return;}
       if(event==='workbench'){this.mode='workbench';this.detail=null;this.step('view','workbench');this.render();return;}

@@ -15,15 +15,16 @@
         const body=new T.Mesh(box,paper);body.scale.set(1.48,.07,1.03);body.castShadow=true;body.receiveShadow=true;group.add(body);
         const face=room.text([names[option.id],row?'开始方式':'试用方案'],0,.04,0,1.42,.97,'#efe4c9','#345c4f');face.rotation.x=-Math.PI/2;group.add(face);
         const button=document.createElement('button');button.dataset.slot=slot.id;button.dataset.value=option.id;button.type='button';this.pins.append(button);
-        const card={group,body,button,home,target,slot:slot.id,value:option.id,name:names[option.id],paper,gold};this.cards.push(card);button.onclick=()=>this.choose(card);
+        const card={group,body,button,home,target,slot:slot.id,value:option.id,name:names[option.id],paper,gold};this.cards.push(card);button.onclick=()=>this.inspect(card);
       }));
     }
+    inspect(card){PQPropLibrary.card(this,card);}
     choose(card){const selected=PQCampaign.record().plan[card.slot]===card.value;PQCampaign.act(selected?'unchoose':'choose',selected?card.slot:card.value,card.slot);this.update(0,PQCafeScene.reduced());}
     setView(view){this.root.visible=view==='workbench';this.pins.hidden=!this.root.visible;}
     update(dt,reduced){
       if(!this.root.visible)return;const w=PQIsland,plan=PQCampaign.record().plan,k=reduced?1:1-Math.exp(-Math.max(dt,.001)*10),width=w.renderer.domElement.clientWidth,height=w.renderer.domElement.clientHeight;
       for(const c of this.cards){const selected=plan[c.slot]===c.value;c.group.position.lerp(selected?c.target:c.home,k);c.body.material=selected?c.gold:c.paper;
-        if(c.selected!==selected){c.selected=selected;c.button.setAttribute('aria-pressed',String(selected));c.button.textContent=(selected?'✓ ':'')+c.name;c.button.setAttribute('aria-label',(selected?'撤回':'放入试用区：')+c.name);}
+        if(c.selected!==selected){c.selected=selected;c.button.setAttribute('aria-pressed',String(selected));c.button.textContent=(selected?'✓ ':'')+c.name;c.button.setAttribute('aria-label',(selected?'检视已选卡片：':'检视卡片：')+c.name);}
         // Keep touch targets settled while the physical card slides into its slot.
         this.point.copy(selected?c.target:c.home);this.root.localToWorld(this.point);this.point.y+=.12;this.point.project(w.camera);c.button.style.left=(this.point.x*.5+.5)*width+'px';c.button.style.top=(-this.point.y*.5+.5)*height+'px';
       }

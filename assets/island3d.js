@@ -2886,6 +2886,8 @@
       this._lastTime = now;
 
       const tSec = now * 0.001;
+      if(window.PQPropInspector?.active){this.visibility?.suspend();PQPropInspector.update(dt,tSec);this.environment.render();return;}
+      if(window.PQCafeLife?.vista){PQCafeLife.updateVista(dt,tSec);this.environment.render();return;}
       if(window.PQLifeFilm?.active){this.visibility?.suspend();PQLifeFilm.update(dt,tSec);this.environment.render();return;}
       if(window.PQStory3D?.active){
         this.visibility?.suspend();

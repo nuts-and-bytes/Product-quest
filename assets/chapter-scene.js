@@ -18,7 +18,7 @@
         const bounds=this.canvas.getBoundingClientRect();this.pointer.set((e.clientX-bounds.left)/bounds.width*2-1,-(e.clientY-bounds.top)/bounds.height*2+1);
         this.raycaster.setFromCamera(this.pointer,PQIsland.camera);
         if(PQCampaign.mode==='workbench'){
-          const cards=this.table?.cards||[],hit=this.raycaster.intersectObjects(cards.map(c=>c.group),true)[0];if(hit){const card=cards.find(c=>c.group.getObjectById(hit.object.id));if(card)this.table.choose(card);}return;
+          const cards=this.table?.cards||[],hit=this.raycaster.intersectObjects(cards.map(c=>c.group),true)[0];if(hit){const card=cards.find(c=>c.group.getObjectById(hit.object.id));if(card)this.table.inspect(card);}return;
         }
         const targets=[...c.npcs.map(n=>({group:r.npcs[n.key].group,act:'talk',id:n.key})),...this.props.map(p=>({...p,act:'read'}))];
         const hit=this.raycaster.intersectObjects(targets.map(t=>t.group),true)[0];if(!hit)return;

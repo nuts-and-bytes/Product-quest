@@ -162,6 +162,7 @@
       });
     },
     renderCafe(){
+      if(window.PQCafeLife){PQCafeLife.render();return;}
       const s=G.firstDay,box=$('cafe-buttons');box.replaceChildren();
       $('cafe-welcome').textContent=s.drink?'把节奏放慢一点。':'第一杯，想喝什么？';
       $('cafe-description').textContent=s.drink?`你点的${s.drink==='coffee'?'手冲咖啡':'热茶'}已经上桌。聊聊天，或只是坐一会儿。`:'小美替你留了靠窗的位置。这杯算她请你的。';
@@ -201,6 +202,7 @@
       ],()=>{this.clue('investor');PQStory3D.focus(null);this.renderCafe();});
     },
     rest(){
+      if(window.PQCafeLife?.active){PQCafeLife.startVista();return;}
       PQStory3D.focus(null);
       this.say('蓝山咖啡馆 · 窗边','片刻休息',[
         '杯子还热着。窗外的海风摇着树梢，吧台传来很轻的杯碟声。',
@@ -212,6 +214,8 @@
       if(s.clues.includes('envelopes'))lines.push('小美的纸信封：发薪日先分好预算，余钱交给妈妈。她答应以后聊聊自己的真实消费经历。');
       if(s.clues.includes('investor'))lines.push('窗边的李姐：每周三来蓝山。她愿意听真实的人和行为，胜过一个漂亮的点子。');
       if(G.cafeCase?.legacy)lines.push('蓝山项目手记：你试过的办法已经留在店里。回到咖啡馆的调查入口，可以查看结果或体验不同的营业日。');
+      if(G.cafeLife?.postcard.ending)lines.push(G.cafeLife.postcard.ending==='wall'?'寄给海风的明信片：你把风景贴在了蓝山的墙上。':'寄给海风的明信片：小美把它和给妈妈的信一起寄出。');
+      if(G.cafeLife?.seat.choice)lines.push(G.cafeLife.seat.choice==='window'?'给一个人留座：阿凯有了一处安静看海的位置。':'给一个人留座：阿凯坐到了大家身边，约好周末再见。');
       if(!lines.length)lines.push('还没有记下新的相遇。和小美或窗边的李姐聊聊，故事会慢慢留下来。');
       this.say('相遇手记 · 自动保存','今天记住的事',lines,()=>this.renderCafe());
     },
