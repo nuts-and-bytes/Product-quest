@@ -85,12 +85,11 @@
     },
     frameIsland(snap=false){
       // Keep the island readable throughout the outdoor introduction.
-      const w=PQIsland;w.spherical.radius=54;w.spherical.polar=.8;
-      if(snap)Object.assign(w.curSpherical,w.spherical);
+      PQIsland.frameWalk(snap);
     },
     locate(){
       const w=PQIsland;w.setMode('walk');w.recentre();
-      if(this.guided())this.frameIsland();else w.spherical.radius=12.5;
+      this.frameIsland();
       this.markerUntil=performance.now()+4000;
       if(this.guided())$('isl-status').classList.remove('show');
     },

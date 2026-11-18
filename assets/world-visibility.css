@@ -1,0 +1,43 @@
+/* Exploration keeps the foreground clear; full controls remain one click away. */
+#world-drawer[hidden],#world-target[hidden],#world-label-lines[hidden],#campaign-detail[hidden],#isl-toolbar[hidden]{display:none!important}
+#campaign-route{width:286px;padding:14px 16px;z-index:14;max-height:calc(100dvh - 150px);overflow:auto}
+#campaign-route .campaign-summary{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.campaign-summary>span{font:10px/1.5 system-ui,sans-serif;letter-spacing:1px;color:#d7c28a}
+#campaign-count{margin-left:10px;font-weight:500;color:#a8bdb1}
+#campaign-route #campaign-details{padding:4px 8px;min-height:32px;font-size:11px;border:0;background:transparent;color:#cfdfcb}
+#campaign-route h2{font-size:18px;margin:4px 0 12px;line-height:1.4}
+#campaign-route #campaign-go{width:100%;min-height:44px;font-size:12px;padding:8px 12px}
+#campaign-detail{margin-top:12px;border-top:1px solid #d6cb9b30;padding-top:4px}
+#campaign-detail p{margin:10px 0 12px}
+#campaign-detail button{width:100%}
+#game[data-screen="map-screen"] #journey-tools{bottom:20px;right:20px;z-index:25;flex-wrap:wrap;max-width:calc(100% - 130px);justify-content:flex-end}
+#game[data-screen="map-screen"] #isl-joy{bottom:20px;left:20px}
+#game[data-screen="map-screen"] #isl-toolbar{top:auto;bottom:82px;right:20px;left:auto;max-width:min(620px,calc(100% - 40px));z-index:26}
+#world-drawer{position:absolute;z-index:26;bottom:82px;right:20px;width:min(360px,calc(100% - 40px));max-height:calc(100dvh - 180px);overflow:auto;padding:18px;border:1px solid #c5d4bb48;border-radius:14px;background:#152e36f5;box-shadow:0 16px 50px #07192366;color:#e8ead9;backdrop-filter:blur(16px)}
+#world-drawer #expedition-hud,#world-drawer #map-foot{position:static;inset:auto;transform:none;width:auto;min-width:0;max-width:none;margin:0;padding:0;border:0;background:none;box-shadow:none;backdrop-filter:none}
+#world-drawer #map-foot{display:grid;grid-template-columns:1fr 1fr;gap:8px;overflow:visible;margin-top:18px;padding-top:16px;border-top:1px solid #c3d4b72a}
+#world-drawer #map-foot .pxbtn{min-height:44px;font-size:12px;background:#b8cbaa0b;border:1px solid #b6ccae25;border-radius:7px;white-space:normal;text-align:left;padding:10px}
+#world-drawer .exp-controls{flex-wrap:wrap;gap:12px}
+#world-drawer .exp-controls button,#world-drawer .exp-controls select{min-height:40px;font-size:12px}
+#world-target{position:absolute;left:0;top:0;z-index:11;max-width:calc(100% - 24px);min-height:40px;padding:8px 12px;border-radius:20px;border:1px solid #e2c285;background:#213f3fe8;color:#ffe5b8;font:12px/1.5 system-ui,"PingFang SC",sans-serif;white-space:nowrap;cursor:pointer;box-shadow:0 3px 15px #112d3540}
+#world-target:hover{background:#34574f}
+#isl-prompt.same-goal{display:none!important}
+#world-label-lines{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:8;overflow:hidden}
+#world-label-lines line{stroke:#efd4a5;stroke-width:1;opacity:.65}
+#player-marker:after{display:none}
+#player-marker{z-index:11}
+.photo-mode #world-target,.photo-mode #world-label-lines,.photo-mode #world-drawer{visibility:hidden}
+.guided-mode #world-view-toggle,.guided-mode #world-more-toggle{display:none}
+#game[data-screen="map-screen"] #isl-prompt,#game[data-screen="map-screen"] #exp-interact{bottom:84px;max-width:calc(100% - 40px)}
+@media(max-width:600px){
+  #campaign-route{left:12px;top:12px;width:calc(100% - 24px);padding:10px 14px;max-height:calc(100dvh - 160px)}
+  #campaign-route h2{font-size:17px;margin:2px 0 8px}
+  #campaign-route .campaign-summary{display:flex}
+  #game[data-screen="map-screen"] #journey-tools{right:12px;bottom:16px;max-width:calc(100% - 116px);gap:5px}
+  #journey-tools button{min-height:44px;padding:8px 10px;font-size:11px}
+  #game[data-screen="map-screen"] #isl-joy{left:12px;bottom:18px;width:76px;height:76px}
+  #game[data-screen="map-screen"] #isl-toolbar{left:12px;right:12px;bottom:122px;max-width:none;justify-content:flex-start;flex-wrap:wrap;padding:8px}
+  #isl-toolbar .isl-tool{min-height:40px;font-size:11px}
+  #world-drawer{left:12px;right:12px;bottom:122px;width:auto;max-height:calc(100dvh - 150px)}
+  #game[data-screen="map-screen"] #isl-prompt,#game[data-screen="map-screen"] #exp-interact{bottom:122px;left:50%;right:auto;transform:translateX(-50%)}
+}

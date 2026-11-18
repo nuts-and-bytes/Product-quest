@@ -850,10 +850,11 @@
     }
 
     const group = new THREE.Group();
-    group.add(makeVoxelMesh(vg, unit, [0, 0, 0], solidMat));
+    const walls=makeVoxelMesh(vg, unit, [0, 0, 0], solidMat);walls.userData.pqOccluder=true;group.add(walls);
     if (gv.map.size > 0) {
       const gm = makeVoxelMesh(gv, unit, [0, 0, 0], glowMat, true);
       gm.castShadow = false;
+      gm.userData.pqOccluder=true;
       group.add(gm);
     }
 
@@ -1176,6 +1177,7 @@
     camCurTarget: { x: 0, y: 2.2, z: 2 },
     spherical: { radius: 64, polar: 0.74, azimuth: 0.56 },
     curSpherical: { radius: 64, polar: 0.74, azimuth: 0.56 },
+    walkView: { radius: 54, polar: .8, azimuth: .56 },
     curTod: null,
 
     pointers: new Map(),
@@ -1237,6 +1239,7 @@
       this._buildContinents();
       this.rebuildPlayer();
       this.environment = new PQWorldEnvironment(this);
+      this.visibility = new PQWorldVisibility(this);
       this._bindEvents();
       this._bindAvatarTurntable();
       this._resize();
@@ -1387,10 +1390,12 @@
         return makeVoxelMesh(bv, 0.78, [0, 0, 0], { roughness: 0.7 });
       };
       this.balloon = makeBalloon('#ff6b7a', '#ffcd5c', '#5cb9ff');
+      this.balloon.userData={pqOccluder:true,pqMovingOccluder:true};
       this.balloon.position.set(16, 20, -10);
       this.scene.add(this.balloon);
 
       this.balloon2 = makeBalloon('#5cb9ff', '#f5f7fc', '#4ad07a');
+      this.balloon2.userData={pqOccluder:true,pqMovingOccluder:true};
       this.balloon2.position.set(-20, 17, 14);
       this.scene.add(this.balloon2);
 
@@ -1607,6 +1612,7 @@
       ];
       treeSpots.forEach(([tx, tz, kind]) => {
         const t = createTree(kind);
+        t.userData.pqOccluder=true;
         t.position.set(tx, 1.0, tz);
         t.rotation.y = (hash2(tx, tz) * 4 | 0) * Math.PI * 0.5;
         this.scene.add(t);
@@ -2317,7 +2323,7 @@
         this.cinematicMode = null;
         this.archipelago = false;
         this.camTarget = { x: 0, y: 1.8, z: 2 };
-        this.spherical = { radius: this.mode === 'walk' ? 14.5 : 54, polar: this.mode === 'walk' ? 1.02 : 0.80, azimuth: 0.56 };
+        this.spherical = this.mode==='walk'?{...this.walkView}:{radius:54,polar:.8,azimuth:.56};
         this.diveAnim = {
           start: performance.now(),
           dur: 780,
@@ -2335,7 +2341,10 @@
     },
 
     setCinematic(mode, snap) {
+      const previousCinematic=this.cinematicMode;
+      if(mode&&!this.cinematicMode&&this.mode==='walk')this.rememberWalkView();
       this.cinematicMode = mode || null;
+      if(!mode&&previousCinematic&&this.mode==='walk')this.frameWalk();
       if (this.cinematicMode === 'landing') {
         this.archipelago = false;
         this.camTarget = { x: 0, y: 2.2, z: 2 };
@@ -2393,6 +2402,7 @@
     },
 
     onHide() {
+      this.visibility?.suspend();
       this.running = false;
       if (this.rafId) {
         cancelAnimationFrame(this.rafId);
@@ -2402,7 +2412,17 @@
       this.joyVec = { x: 0, z: 0 };
     },
 
+    rememberWalkView(){
+      if(this.mode==='walk'&&!this.cinematicMode&&!this.archipelago)this.walkView=PQWorldFraming.walkView(this.spherical);
+    },
+
+    frameWalk(snap=false){
+      Object.assign(this.spherical,this.walkView);
+      if(snap)Object.assign(this.curSpherical,this.spherical);
+    },
+
     setMode(mode) {
+      const previous=this.mode;this.rememberWalkView();this.visibility?.resetFollow();
       this.mode = mode;
       this.walkGoal = null;
       if (this.goalRing) this.goalRing.visible = false;
@@ -2428,8 +2448,7 @@
         this.camTarget.x = this.playerPos.x;
         this.camTarget.y = 2.0;
         this.camTarget.z = this.playerPos.z;
-        this.spherical.radius = 14.5;
-        this.spherical.polar = 1.02;
+        if(previous!=='walk')this.frameWalk();
         this.setStatus('漫步模式：WASD / 方向键 或 点击地面移动立体小人，靠近建筑按 E 互动', 3800);
       } else if (mode === 'orbit') {
         this.spherical.radius = Math.max(24, Math.min(this.spherical.radius, 76));
@@ -2439,11 +2458,12 @@
         this.spherical.radius = 54;
         this.spherical.polar = 0.80;
         this.spherical.azimuth = 0.56;
-        this.setStatus('平移模式：拖拽探索星火岛，点击建筑开启关卡，右上角可切换第一人称与昼夜', 3200);
+        this.setStatus('平移模式：拖拽探索星火岛，点击建筑开启关卡；在「视角」中切换第一人称与昼夜', 3200);
       }
     },
 
     setArchipelago(on, snap) {
+      this.rememberWalkView();
       this.archipelago = !!on;
       const btn = document.getElementById('isl-arch-btn');
       if (btn) btn.classList.toggle('active', this.archipelago);
@@ -2455,7 +2475,7 @@
         this.setStatus('群岛全览：三条栈道连接四座岛屿，点击岛屿查看地标，切换漫步开始探索', 4000);
       } else {
         this.camTarget = { x: 0, y: 1.8, z: 2 };
-        this.spherical = { radius: this.mode === 'walk' ? 14.5 : 54, polar: this.mode === 'walk' ? 1.02 : 0.80, azimuth: 0.56 };
+        this.spherical = this.mode==='walk'?{...this.walkView}:{radius:54,polar:.8,azimuth:.56};
         this.setStatus('已着陆「产品大陆 · 星火岛」：点击建筑开启关卡，或切换漫步 / 第一人称探索', 3200);
       }
       if (snap) {
@@ -2469,10 +2489,11 @@
     },
 
     recentre(snap) {
+      this.visibility?.resetFollow();
       if (this.archipelago) this.setArchipelago(false, snap);
       if (!this.cinematicMode && (this.mode === 'walk' || this.mode === 'fp')) {
         this.camTarget = { x: this.playerPos.x, y: 2.0, z: this.playerPos.z };
-        if (this.mode === 'walk') { this.spherical.radius = 14.5; this.spherical.polar = 1.02; }
+        if (this.mode === 'walk') { this.spherical=PQWorldFraming.walkView(this.spherical);this.rememberWalkView(); }
         else { this.fpPitch = -0.04; }
       } else {
         const b = this.buildings[this.currentQuestBldId];
@@ -2681,6 +2702,7 @@
           if (this.pinchDist > 0 && this.mode !== 'fp') {
             const delta = (this.pinchDist - dist) * 0.14;
             this.spherical.radius = Math.max(12, Math.min(this.archipelago?Math.max(220,220/this.camera.aspect):135, this.spherical.radius + delta));
+            if(this.mode==='walk'){this.spherical=PQWorldFraming.walkView(this.spherical);this.rememberWalkView();}
           }
           this.pinchDist = dist;
           return;
@@ -2702,6 +2724,7 @@
         } else {
           this.spherical.azimuth -= dx * 0.0075;
           this.spherical.polar = Math.max(0.32, Math.min(1.28, this.spherical.polar - dy * 0.0065));
+          if(this.mode==='walk'){this.spherical=PQWorldFraming.walkView(this.spherical);this.rememberWalkView();}
         }
       });
 
@@ -2722,8 +2745,9 @@
         if (this.mode === 'fp'||window.PQStory3D?.active||window.PQFirstDay?.dialogOpen) return;
         const factor = e.deltaY * 0.045;
         const maxR = this.archipelago ? Math.max(220,220/this.camera.aspect) : (this.cinematicMode?150:96);
-        const minR = this.mode === 'walk' ? 9 : 15;
+        const minR = this.mode === 'walk' ? 30 : 15;
         this.spherical.radius = Math.max(minR, Math.min(maxR, this.spherical.radius + factor));
+        this.rememberWalkView();
       }, { passive: false });
 
       window.addEventListener('keydown', (e) => {
@@ -2791,7 +2815,7 @@
       );
       this.raycaster.setFromCamera(ndc, this.camera);
 
-      const hits = this.raycaster.intersectObjects(this.hitTargets, false);
+      const hits = this.raycaster.intersectObjects(this.hitTargets, false).filter(hit=>!hit.object.userData.buildingId||!this.visibility?.throughCutout(hit.object.userData.buildingId,clientX-rect.left,clientY-rect.top));
       if (hits.length > 0) {
         const ud = hits[0].object.userData;
         if (ud.expeditionId) { this.environment.inspect(ud.expeditionId); return; }
@@ -2836,6 +2860,7 @@
     },
 
     _resize() {
+      if(this.visibility)this.visibility.nextMeasure=0;
       if (!this.renderer || !this.camera) return;
       const vp = document.getElementById('island-viewport');
       const w = (vp && vp.clientWidth) || window.innerWidth;
@@ -2861,8 +2886,9 @@
       this._lastTime = now;
 
       const tSec = now * 0.001;
-      if(window.PQLifeFilm?.active){PQLifeFilm.update(dt,tSec);this.environment.render();return;}
+      if(window.PQLifeFilm?.active){this.visibility?.suspend();PQLifeFilm.update(dt,tSec);this.environment.render();return;}
       if(window.PQStory3D?.active){
+        this.visibility?.suspend();
         PQStory3D.update(dt,tSec);this.environment.render();return;
       }
       if(window.PQFirstDay?.dialogOpen||window.PQFirstDay?.transitioning){this.keys={};this.walkGoal=null;this.joyVec={x:0,z:0};}
@@ -2881,6 +2907,7 @@
       this._updateLabels();
       if(window.PQFirstDay&&typeof G!=='undefined'&&G.firstDay)PQFirstDay.update(dt,tSec);
       if(window.PQCampaign&&typeof G!=='undefined'&&G.campaign)PQCampaign.updateWorld();
+      this.visibility?.labels();
     },
 
     _updatePortraits(dt, tSec) {
@@ -2978,6 +3005,7 @@
       this.hemiLight.groundColor.copy(c.hemiGround);
       this.hemiLight.intensity = c.hemiInt;
       this.glowMat.emissiveIntensity = c.glowInt;
+      this.visibility?.syncMaterials();
       this.pointLights.forEach((pl) => { pl.intensity = c.lampInt; });
 
       if (this.starsMesh) this.starsMesh.material.opacity = c.starOp;
@@ -3077,9 +3105,10 @@
       animateRig(this.playerRig, isMoving, timeSec, 0);
 
       if (this.mode === 'walk') {
-        this.camTarget.x = this.playerPos.x;
+        const follow=this.visibility?.follow()||this.playerPos;
+        this.camTarget.x = follow.x;
         this.camTarget.y = 2.1;
-        this.camTarget.z = this.playerPos.z;
+        this.camTarget.z = follow.z;
         this._checkProximity();
       } else if (this.mode === 'fp') {
         this._checkProximity();
@@ -3198,12 +3227,12 @@
       });
       if (this.balloon) {
         const ba = tSec * 0.11;
-        this.balloon.position.set(Math.cos(ba) * 24, 19 + Math.sin(tSec * 0.8) * 1.2, Math.sin(ba) * 20);
+        this.balloon.position.set(Math.cos(ba) * 39, 24 + Math.sin(tSec * 0.8) * 1.2, Math.sin(ba) * 33);
         this.balloon.rotation.y = -ba;
       }
       if (this.balloon2) {
         const ba2 = -tSec * 0.09 + 2.4;
-        this.balloon2.position.set(Math.cos(ba2) * 28, 16.5 + Math.cos(tSec * 0.75) * 1.1, Math.sin(ba2) * 24);
+        this.balloon2.position.set(Math.cos(ba2) * 44, 23 + Math.cos(tSec * 0.75) * 1.1, Math.sin(ba2) * 37);
         this.balloon2.rotation.y = -ba2;
       }
       if (this.birds) {
@@ -3299,6 +3328,7 @@
         const tz = ez + Math.cos(this.fpPitch) * Math.cos(this.fpYaw) * 10;
         this.camera.position.set(ex, ey, ez);
         this.camera.lookAt(tx, ty, tz);
+        this.visibility?.frame(dt,now);
         return;
       }
 
@@ -3336,6 +3366,7 @@
       const cz = this.camCurTarget.z + r * Math.sin(p) * Math.cos(a);
       this.camera.position.set(cx, cy, cz);
       this.camera.lookAt(this.camCurTarget.x, this.camCurTarget.y, this.camCurTarget.z);
+      this.visibility?.frame(dt,now);
     }
   };
 

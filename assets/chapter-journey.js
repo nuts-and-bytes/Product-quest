@@ -12,10 +12,11 @@
         <div id="chapter-pins" aria-label="场景中可交互的人物与物件"></div><div id="chapter-explore"></div>
         <section id="chapter-talk" aria-label="人物交谈" hidden></section><aside id="chapter-panel" aria-label="线索与工作台" hidden><div id="chapter-content"></div></aside>
         <div id="chapter-motion" hidden><span>走到你身边</span><button data-act="skip">跳过动作 ↵</button></div><p id="chapter-notice" role="status" aria-live="polite"></p>
-      </section><aside id="campaign-route" hidden><span>岛上的故事 <b id="campaign-count"></b></span><h2 id="campaign-title"></h2><p id="campaign-hint"></p><div><button id="campaign-go"></button><button id="campaign-list">章节地图</button></div></aside>`);
+      </section><aside id="campaign-route" aria-label="当前任务" hidden><div class="campaign-summary"><span>岛上的故事 <b id="campaign-count"></b></span><button id="campaign-details" aria-expanded="false" aria-controls="campaign-detail">详情</button></div><h2 id="campaign-title"></h2><button id="campaign-go"></button><div id="campaign-detail" hidden><p id="campaign-hint"></p><button id="campaign-list">章节地图</button></div></aside>`);
       $('chapter-screen').addEventListener('click',e=>{const b=e.target.closest('button[data-act]');if(b&&!b.disabled)this.act(b.dataset.act,b.dataset.value,b.dataset.slot);});
       $('chapter-screen').addEventListener('keydown',e=>{if(e.key==='Escape'){e.preventDefault();this.act(this.mode==='explore'?'exit':'back');}});
       $('campaign-go').onclick=()=>this.travel(G.campaign.current);$('campaign-list').onclick=()=>this.mapLibrary();
+      $('campaign-details').onclick=()=>{const d=$('campaign-detail'),open=d.hidden;d.hidden=!open;$('campaign-details').setAttribute('aria-expanded',String(open));$('campaign-details').textContent=open?'收起':'详情';if(open)PQIsland.visibility?.stopWalking();if(PQIsland.visibility)PQIsland.visibility.nextMeasure=0;};
       G.save();this.mapHud();
     },
     record(){return G.campaign.records[this.chapter];},
