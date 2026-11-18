@@ -12,7 +12,7 @@
       {stage:'street',duration:5,place:'蓝山咖啡馆 · 开门了',caption:'有人慢慢喝。有人只想带走一杯。',world:true}
     ]};
     if(kind==='incident')return {id:'incident-'+s.scenario,title:weekend?'周末，队伍又长了':'那天早上，空着手的熟客',end:'接下来，轮到你去问问阿晨',shots:[
-      {stage:'counter',duration:3.6,place:weekend?'周六 · 手冲日':'周三 · 早高峰',caption:weekend?'小美仍在忙上一单。阿晨看向取餐牌。':'小美把做好的咖啡放到柜台。',world:false},
+      {stage:'counter',duration:3.6,place:weekend?'周六 · 手冲日':'周三 · 早高峰',caption:weekend?'夏青仍在忙上一单。阿晨看向取餐牌。':'夏青把做好的咖啡放到柜台。',world:false},
       {stage:'hesitate',duration:3.2,place:'阿晨 · 等候的位置',caption:'“车快到了……”',world:false},
       {stage:'leave',duration:3.8,place:'门边',caption:'阿晨转身要走。你还来得及叫住他。',world:false}
     ],served:false,ready:!weekend};

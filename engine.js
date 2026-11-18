@@ -956,9 +956,9 @@ const G = {
     if(lv.id==='p1'&&window.PQFirstDay)PQFirstDay.step('passOffice');
     const nextButton=document.querySelector('#end-screen>button');
     const coffeeNext=lv.id==='p1'&&['cafe','coffee'].includes(this.firstDay?.stage);
-    nextButton.textContent=coffeeNext?'和小美去喝一杯 →':'返回世界 →';
+    nextButton.textContent=coffeeNext?'和夏青去喝一杯 →':'返回世界 →';
     nextButton.onclick=()=>this.toMap();
-    if(coffeeNext)document.getElementById('end-tease').textContent='小美在楼下等你：第一天的任务完成了，一起去蓝山坐坐。';
+    if(coffeeNext)document.getElementById('end-tease').textContent='夏青在楼下等你：第一天的任务完成了，一起去蓝山坐坐。';
     SFX.unlock();
     this.show('end-screen');
     if(lv.finale){ setTimeout(()=>this.showBadge({gold:true}), 900); }

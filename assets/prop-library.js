@@ -29,7 +29,7 @@
   market(id){
    const C=PQNightMarket,r=(C.view==='visit'?G.nightMarket.legacy?.run:null)||C.run,q=PQNightMarketModel.result(r),names={order:'点单台',brew:'制作台',pickup:'取餐架'};
    const front=id==='layout'?['从左到右：'+r.plan.layout.map(k=>names[k]).join(' → '),r.plan.space==='bench'?'给人歇脚的长凳。':'让制作顺手的置物架。',r.plan.sign?'取餐指示牌也保留着。':'这一次没有摆取餐指示牌。']:['起始信封：60 元。',`布置和备料：${PQNightMarketModel.cost(r.plan)} 元。每杯：${r.plan.price} 元。`,`已交付 ${q.served} 杯；进账 ${q.revenue} 元。`,`本晚成本 ${q.cost} 元；结余 ${q.profit} 元。`,`剩余材料 ${q.stock} 份。`];
-   PQPropInspector.open({type:id==='budget'?'envelope':'book',source:'小美的周末夜市 / 实际操作记录',title:id==='layout'?'留下来的布置':id==='result'?'这一晚的营业记录':'小美的周末信封',front,back:['摊位 8 元，材料每份 2 元。','长凳 8 元，置物架 4 元，指示牌 4 元。','这是岛上这一晚的记录。不要把一个晚上的结果，当成所有人的需求。'],onClose:()=>C.active&&C.action('back')});
+   PQPropInspector.open({type:id==='budget'?'envelope':'book',source:'夏青的周末夜市 / 实际操作记录',title:id==='layout'?'留下来的布置':id==='result'?'这一晚的营业记录':'夏青的周末信封',front,back:['摊位 8 元，材料每份 2 元。','长凳 8 元，置物架 4 元，指示牌 4 元。','这是岛上这一晚的记录。不要把一个晚上的结果，当成所有人的需求。'],onClose:()=>C.active&&C.action('back')});
   }
  };window.PQPropLibrary=L;
 })();

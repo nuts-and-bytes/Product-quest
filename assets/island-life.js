@@ -85,10 +85,10 @@
       if(this.active||!window.PQNightMarket?.active||!PQStory3D.active||!['arrival','break','closing'].includes(kind))return false;
       const w=PQIsland,r=PQStory3D,C=PQNightMarket,q=PQNightMarketModel.result(C.run);
       this.owner={type:'market',kind};this.film={id:'market-'+kind,title:kind==='arrival'?'赴一场海风里的约':kind==='break'?'灯亮起来，歇一会儿':'收摊以后，故事还在',shots:kind==='arrival'?[
-        {stage:'market-arrive',world:false,duration:5,place:'周六 · 蓝山旁的海岸小摊',caption:'小美把周末信封放上桌。阿晨今天没有看表。'},
+        {stage:'market-arrive',world:false,duration:5,place:'周六 · 蓝山旁的海岸小摊',caption:'夏青把周末信封放上桌。阿晨今天没有看表。'},
         {stage:'market-open',world:false,duration:4.5,place:'这一晚，由你经营',caption:'摆好台面，招呼客人。让一杯饮品真正交到人手里。'}
       ]:kind==='break'?[
-        {stage:'market-open',world:false,duration:5,place:'中场 · 时间已经停下',caption:'小美去收空杯。阿晨把目光投向海面。先看看刚才哪里忙不过来。'}
+        {stage:'market-open',world:false,duration:5,place:'中场 · 时间已经停下',caption:'夏青去收空杯。阿晨把目光投向海面。先看看刚才哪里忙不过来。'}
       ]:[
         {stage:'market-close',world:false,duration:6,place:'收摊 · 零钱回到信封里',caption:'交付了 '+q.served+' 杯。'+(q.space==='bench'?'人散了，长凳还可以留下。':'灯暗下来，取餐架明早还能用。')}
       ]};

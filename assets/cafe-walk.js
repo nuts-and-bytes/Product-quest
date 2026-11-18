@@ -51,7 +51,7 @@
   },
   obstacles(){const out=N.base.slice();for(const [id,n]of Object.entries(PQStory3D.npcs))if(n.group.visible)out.push({x:n.group.position.x,z:n.group.position.z,r:id==='akai'?.4:.45});if(G.cafeLife.seat.choice==='shared')out.push({x:-1,z:2.3,r:.7},{x:-.6,z:3.65,w:.75,d:.75});return out;},
   targets(){const shared=G.cafeLife.seat.choice==='shared';const a=[
-   {id:'xiaomei',label:'和小美聊聊',x:-.1,z:1.55}, {id:'lijie',label:'和李姐聊聊',x:-6.15,z:1.8},
+   {id:'xiaomei',label:'和夏青聊聊',x:-.1,z:1.55}, {id:'lijie',label:'和李姐聊聊',x:-6.15,z:1.8},
    {id:'postcard',label:'拿起明信片',x:.15,z:-2.15}, {id:'note',label:'拿起留座便笺',x:-2,z:.15},
    {id:'cup',label:'拿起杯子',x:shared?.3:-2,z:shared?2.3:.15},
    {id:'window',label:'去海风露台',x:3.2,z:5.5}, {id:'order',label:'点一杯喝的',x:1.8,z:-2.15}

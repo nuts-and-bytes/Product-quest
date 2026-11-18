@@ -15,7 +15,7 @@
       // Cloth canopy and a single instanced string of lanterns. Only the existing sun casts a shadow.
       for(const x of [-3.9,3.9])r.box(x,2.1,-1.1,.12,4.2,.12,'#375a55');
       for(let i=0;i<10;i++){const cloth=r.box(-3.6+i*.8,4.05,-1.1,.79,.1,3.2,i%2?'#d9bd8b':'#6e998e');cloth.rotation.x=.05;}
-      r.text(['小美的周末夜市','慢慢喝，也可以带走'],0,3.4,-.7,4.5,.9,'#315a58','#f3dfb5');
+      r.text(['夏青的周末夜市','慢慢喝，也可以带走'],0,3.4,-.7,4.5,.9,'#315a58','#f3dfb5');
       const bulbGeo=new T.SphereGeometry(.13,8,6),bulbMat=r.mat('#ffdda0',{emissive:'#ffca7c',emissiveIntensity:1.8}),bulbs=new T.InstancedMesh(bulbGeo,bulbMat,24),matrix=new T.Matrix4(),points=[];
       for(let i=0;i<24;i++){const x=-8.7+i*.76,y=4.9-.8*Math.sin(i/23*Math.PI),z=-3.8;matrix.makeTranslation(x,y,z);bulbs.setMatrixAt(i,matrix);points.push(new T.Vector3(x,y+.12,z));}r.group.add(bulbs);
       const wire=new T.Line(new T.BufferGeometry().setFromPoints(points),new T.LineBasicMaterial({color:'#57696a'}));r.group.add(wire);
