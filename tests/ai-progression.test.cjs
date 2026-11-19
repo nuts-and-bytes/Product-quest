@@ -11,11 +11,13 @@ const ctx = {
   PQ: { sprites: {}, buildings: [], pains: [], levels: [], terms: {}, notes: {}, cases: [] }
 };
 
-// Run world, PM, and AI scripts in context
+// Run world, PM, and all AI scripts in context
 const files = [
   'world.js',
   'pm/terms.js', 'pm/notes.js', 'pm/cases.js',
-  'ai/terms.js', 'ai/notes.js', 'ai/cases.js', 'ai/ch1-illusion.js', 'ai/ch2-rag.js', 'ai/ch3-eval.js', 'ai/museum.js'
+  'ai/terms.js', 'ai/notes.js', 'ai/cases.js',
+  'ai/ch1-illusion.js', 'ai/ch2-rag.js', 'ai/ch3-eval.js', 'ai/ch4-agent.js', 'ai/ch5-finale.js',
+  'ai/museum.js'
 ];
 
 for (const f of files) {
@@ -25,33 +27,41 @@ for (const f of files) {
 
 const { levels, terms, notes, cases } = ctx.PQ;
 
-test('AI continent chapters 1-3 load with 12 valid levels', () => {
+test('AI continent chapters 1-5 load with all 18 valid levels', () => {
   const aiLevels = levels.filter(l => l.id.startsWith('ai'));
-  assert.equal(aiLevels.length, 12, 'Chapters 1-3 must have exactly 12 levels');
-  
+  assert.equal(aiLevels.length, 18, 'Chapters 1-5 must have exactly 18 levels');
+
   const expectedIds = [
     'ai1_1', 'ai1_2', 'ai1_3', 'ai1_boss',
     'ai2_1', 'ai2_2', 'ai2_3', 'ai2_boss',
-    'ai3_1', 'ai3_2', 'ai3_3', 'ai3_boss'
+    'ai3_1', 'ai3_2', 'ai3_3', 'ai3_boss',
+    'ai4_1', 'ai4_2', 'ai4_3', 'ai4_boss',
+    'ai5_1', 'ai5_end'
   ];
   assert.equal(aiLevels.map(l => l.id).join(','), expectedIds.join(','));
 });
 
-test('AI chapters 1-3 levels meet all engine contracts and content rules', () => {
+test('AI chapters 1-5 levels meet all engine contracts and content rules', () => {
   const aiLevels = levels.filter(l => l.id.startsWith('ai'));
   for (const lv of aiLevels) {
-    assert.ok(lv.ch && /^第[123]章/.test(lv.ch), `Level ${lv.id} must belong to Chapter 1, 2, or 3`);
+    assert.ok(lv.ch && /^第[12345]章/.test(lv.ch), `Level ${lv.id} must belong to Chapter 1-5`);
     assert.ok(lv.name, `Level ${lv.id} must have a name`);
     assert.ok(lv.loc, `Level ${lv.id} must have a location`);
     assert.ok(lv.note && notes[lv.note], `Level ${lv.id} note "${lv.note}" must exist in notes`);
-    
-    // Validate script nodes
+
     assert.ok(Array.isArray(lv.script) && lv.script.length >= 3, `Level ${lv.id} script must have nodes`);
     for (const node of lv.script) {
       if (node.choices) {
         assert.equal(node.choices.length, 3, `Node in ${lv.id} must have exactly 3 choices`);
+        const isOpenEnding = Array.from(node.choices).every(c => c.open === true);
         const scores = Array.from(node.choices).map(c => c.s).sort((a, b) => a - b);
-        assert.equal(scores.join(','), '0,1,2', `Choices in ${lv.id} must have scores 0, 1, and 2`);
+        if (isOpenEnding) {
+          assert.equal(lv.id, 'ai5_end', 'Only finale level may use open-ended choices');
+          assert.equal(scores.join(','), '2,2,2', 'Open endings must all award full score 2');
+          assert.equal(new Set(Array.from(node.choices).map(c => c.ending)).size, 3, 'Open endings must have 3 distinct ending keys');
+        } else {
+          assert.equal(scores.join(','), '0,1,2', `Choices in ${lv.id} must have scores 0, 1, and 2`);
+        }
         for (const c of node.choices) {
           assert.ok(c.t && c.t.length >= 10, `Choice in ${lv.id} must be descriptive`);
           assert.ok(c.fb && c.fb.length >= 20, `Feedback in ${lv.id} must be rich`);
@@ -62,8 +72,7 @@ test('AI chapters 1-3 levels meet all engine contracts and content rules', () =>
         }
       }
     }
-    
-    // Validate quizzes
+
     assert.equal(lv.quiz.length, 3, `Level ${lv.id} must have 3 quiz questions`);
     for (const q of lv.quiz) {
       assert.ok(q.q, 'Quiz question must have text');
@@ -74,45 +83,42 @@ test('AI chapters 1-3 levels meet all engine contracts and content rules', () =>
   }
 });
 
-test('AI continent terms, notes, and cases are rich and well-formed', () => {
-  assert.ok(terms.hallucination, 'hallucination term must exist');
-  assert.ok(terms.prob_sys, 'prob_sys term must exist');
-  assert.ok(terms.ai_native_ux, 'ai_native_ux term must exist');
-  assert.ok(terms.rule_vs_llm, 'rule_vs_llm term must exist');
-  assert.ok(terms.token_econ, 'token_econ term must exist');
-  assert.ok(terms.few_shot, 'few_shot term must exist');
-  assert.ok(terms.rag_vs_ft, 'rag_vs_ft term must exist');
-  assert.ok(terms.chunking, 'chunking term must exist');
-  assert.ok(terms.grounding, 'grounding term must exist');
-  assert.ok(terms.precision_recall, 'precision_recall term must exist');
-  assert.ok(terms.llm_judge, 'llm_judge term must exist');
-  assert.ok(terms.prompt_injection, 'prompt_injection term must exist');
-  assert.ok(terms.model_drift, 'model_drift term must exist');
-  assert.ok(notes.ai_n1, 'ai_n1 note must exist');
-  assert.ok(notes.ai_n2, 'ai_n2 note must exist');
-  assert.ok(notes.ai_n5, 'ai_n5 note must exist');
-  assert.ok(notes.ai_n6, 'ai_n6 note must exist');
-  assert.ok(notes.ai_n7, 'ai_n7 note must exist');
-  assert.ok(notes.ai_n8, 'ai_n8 note must exist');
-  assert.ok(cases.some(c => c.title.includes('纽约律师')), 'Mata v. Avianca case must exist');
-  assert.ok(cases.some(c => c.title.includes('Copilot')), 'Copilot case must exist');
-  assert.ok(cases.some(c => c.title.includes('加拿大航空')), 'Air Canada case must exist');
-  assert.ok(cases.some(c => c.title.includes('雪佛兰')), 'Chevrolet prompt injection case must exist');
+test('AI continent terms, notes, and cases cover all 5 chapters', () => {
+  for (const k of [
+    'hallucination', 'prob_sys', 'ai_native_ux', 'rule_vs_llm', 'golden_eval', 'token_econ',
+    'few_shot', 'rag_vs_ft', 'chunking', 'grounding',
+    'precision_recall', 'llm_judge', 'prompt_injection', 'model_drift',
+    'ttft_stream', 'sem_cache', 'hitl_agent', 'data_flywheel'
+  ]) {
+    assert.ok(terms[k], `${k} term must exist`);
+  }
+  for (const n of ['ai_n1', 'ai_n2', 'ai_n3', 'ai_n4', 'ai_n5', 'ai_n6', 'ai_n7', 'ai_n8', 'ai_n9', 'ai_n10', 'ai_n11']) {
+    assert.ok(notes[n], `${n} note must exist`);
+  }
+  for (const kw of ['纽约律师', 'Copilot', '加拿大航空', '雪佛兰', '模型路由', '越权删库']) {
+    assert.ok(cases.some(c => c.title.includes(kw)), `Case matching "${kw}" must exist`);
+  }
 });
 
-test('AI Museum and mentor Stone narrative data is complete and valid', () => {
+test('AI Museum and mentor Stone narrative data is complete and enriched', () => {
   const m = ctx.PQ.aiMuseum;
   assert.ok(m && m.mentor && m.mentor.name === '石头', 'AI Museum must feature mentor 石头');
+  assert.equal(m.mentor.casualTalks.length, 4, 'Stone must have 4 casual lighthouse talks');
+  assert.ok(m.mentor.greetings.afterMainCh4 && m.mentor.greetings.afterMainCh5, 'Stone must react to Chapters 4 and 5');
   assert.equal(m.halls.length, 3, 'AI Museum must have 3 exhibit halls');
   const timeline = m.halls.find(h => h.id === 'timeline');
-  assert.ok(timeline.exhibits.some(e => e.title.includes('ChatGPT')), 'Timeline must include ChatGPT');
-  assert.ok(timeline.exhibits.some(e => e.title.includes('DeepSeek')), 'Timeline must include DeepSeek');
+  assert.equal(timeline.exhibits.length, 7, 'Timeline hall must have 7 historical milestones');
+  for (const kw of ['AlphaGo', 'Transformer', 'ChatGPT', 'DeepSeek']) {
+    assert.ok(timeline.exhibits.some(e => e.title.includes(kw)), `Timeline must include ${kw}`);
+  }
   assert.ok(timeline.exhibits.every(e => e.animCue && e.stoneLines.length >= 2), 'Every timeline exhibit needs animCue and Stone dialogue');
   const concepts = m.halls.find(h => h.id === 'concepts');
-  assert.equal(concepts.exhibits.length, 5, 'Concept hall must cover 5 foundational AI concepts');
+  assert.equal(concepts.exhibits.length, 7, 'Concept hall must cover 7 foundational AI concepts');
   for (const ex of concepts.exhibits) {
     assert.ok(terms[ex.termKey], `Concept exhibit ${ex.id} termKey "${ex.termKey}" must exist`);
     assert.ok(ex.miniCheck && ex.miniCheck.ops.length === 3, `Concept exhibit ${ex.id} must have a 3-option miniCheck`);
   }
-  assert.equal(m.teaTable.drills.length, 3, 'Tea table must have 3 practical drills');
+  const products = m.halls.find(h => h.id === 'products');
+  assert.equal(products.exhibits.length, 4, 'Products hall must have 4 generational specimens');
+  assert.equal(m.teaTable.drills.length, 6, 'Tea table must have 6 practical drills');
 });

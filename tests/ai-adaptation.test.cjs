@@ -9,7 +9,7 @@ test('Legacy sequential saves and newly appended AI chapters remain reachable',(
  assert.equal(A.next(all,{progress:4}).id,ai[2].id);const stats=Object.fromEntries(ai.map(l=>[l.id,{rank:'B'}])),newLevel={id:'ai99_1',name:'Next chapter'};assert.equal(A.next([...all,newLevel],{stats}).id,newLevel.id);assert.equal(A.routes([...all,newLevel],{stats}).at(-1).available,true);
 });
 test('Authored AI locations and every speaker have explicit presentation mappings',()=>{
- assert.equal(new Set(ai.map(A.chapterId)).size,3,'boss stages belong to their existing chapter');
+ assert.equal(new Set(ai.map(A.chapterId)).size,5,'boss stages belong to their existing chapter');
  for(const l of ai){assert.ok(A.room(l).startsWith('ai-'));for(const n of l.script.filter(n=>n.sp&&!['n','me'].includes(n.sp))){assert.notEqual(A.speaker(l,n),n.sp,`${l.id}: ${n.sp}`);if(n.sp!=='xiaomei')assert.ok(A.cast[n.sp]?.look);}}
  assert.equal(A.room(ai.find(l=>l.id==='ai3_1')),'ai-eval');assert.equal(A.room(ai.find(l=>l.id==='ai1_boss')),'ai-roof');assert.equal(A.room({id:'c1'}),null);
 });
