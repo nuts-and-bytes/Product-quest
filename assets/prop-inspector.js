@@ -100,7 +100,7 @@
   flip(){if(this.spec.type==='cup'){this.angle.x=this.back?.26:-Math.PI/2;this.angle.y=0;}else this.angle.y=(Math.round(this.angle.y/Math.PI)+(this.back?-1:1))*Math.PI;this.syncSide();this.read(false);SFX.foley('paper');},
   read(open){
    $('prop-reading').hidden=!open;
-   if(open){$('prop-reading-title').textContent=this.back?(this.spec.backTitle||'写在背面'):this.spec.title;const copy=$('prop-copy');copy.replaceChildren();for(const line of this.lines(this.back?'back':'front')){const p=document.createElement('p');p.textContent=line;copy.append(p);}$('prop-read-close').focus({preventScroll:true});}
+   if(open){$('prop-reading-title').textContent=this.back?(this.spec.backTitle||'写在背面'):this.spec.title;const copy=$('prop-copy');copy.replaceChildren();const side=this.back?'back':'front';if(this.spec.renderReading)this.spec.renderReading(copy,side);else for(const line of this.lines(side)){const p=document.createElement('p');p.textContent=line;copy.append(p);}$('prop-read-close').focus({preventScroll:true});}
    else if(this.active)$('prop-read').focus({preventScroll:true});
   },
   actions(){const box=$('prop-actions');box.replaceChildren();const rows=typeof this.spec.actions==='function'?this.spec.actions():this.spec.actions||[];for(const row of rows){const b=document.createElement('button');b.textContent=row.label;b.disabled=!!row.disabled;b.onclick=()=>{this.close();row.run();};box.append(b);}},

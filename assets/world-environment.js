@@ -424,7 +424,7 @@
     }
     showNote(r){
       this.world.keys={};this.panel.innerHTML=`<button class="exp-close" aria-label="关闭探索手记">×</button><div class="exp-eyebrow">${r.continent} / ${r.name}</div><h2>${r.title}</h2><p>${r.text}</p><div class="exp-note-seal">✦ 已加入探索手记</div><button class="exp-primary">查看关联主线</button>`;
-      this.panel.querySelector('.exp-close').onclick=()=>this.closeJournal();this.panel.querySelector('.exp-primary').onclick=()=>{this.closeJournal();this.world.setMode('pan');this.world.focusBuilding(r.building);};this.panel.hidden=false;this.panel.querySelector('.exp-close').focus();
+      this.panel.querySelector('.exp-close').onclick=()=>this.closeJournal();if(r.id==='ai')this.panel.querySelector('.exp-primary').textContent='进入 AI 大陆章节';this.panel.querySelector('.exp-primary').onclick=()=>{this.closeJournal();if(r.id==='ai'&&window.PQAIJourney){PQAIJourney.open();return;}this.world.setMode('pan');this.world.focusBuilding(r.building);};this.panel.hidden=false;this.panel.querySelector('.exp-close').focus();
     }
     inspect(id){
       const r=W.regions.find(r=>r.id===id);if(!r)return;

@@ -9,7 +9,7 @@
       if(this.active&&this.kind===kind){this.ensureNpc(npc);return;}
       if(this.active)this.exit();
       this.saved={scene:w.scene,position:w.camera.position.clone(),target:{...w.camCurTarget},spherical:{...w.curSpherical},cinematic:w.cinematicMode};
-      this.viewOffset=null;this.active=true;this.kind=kind;this.night=night??(w.curTod.starOp>.4);this.speaker=null;this.actors=[];this.npcs={};this.ownedTextures=[];this.hotspots=[];
+      this.scriptCast=null;this.viewOffset=null;this.active=true;this.kind=kind;this.night=night??(w.curTod.starOp>.4);this.speaker=null;this.actors=[];this.npcs={};this.ownedTextures=[];this.hotspots=[];
       w.keys={};w.walkGoal=null;w.walkPath=[];w.joyVec={x:0,z:0};w.diveAnim=null;
       this.scene=new T.Scene();this.scene.background=new T.Color('#263c40');this.scene.fog=new T.Fog('#263c40',32,65);
       this.group=new T.Group();this.scene.add(this.group);w.scene=this.scene;
@@ -158,7 +158,7 @@
       rig.group.rotation.y=key==='lijie'?.7:-.65;
       this.scene.add(rig.group);this.actors.push(rig);this.npcs[key]=rig;this.npc=rig;
     },
-    focus(who){this.speaker=who;},
+    focus(who){this.speaker=who;if(this.scriptCast){if(this.scriptCast.includes(who))this.scriptSpeaker=who;const key=this.scriptSpeaker||this.scriptMain;for(const [id,rig]of Object.entries(this.npcs)){rig.group.visible=id===key;if(id===key){rig.group.position.set(1.45,.08,1.35);rig.group.rotation.y=-.6;}}this.npc=this.npcs[key];this.npcKey=key;}},
     resize(snap=false){
       if(!this.active)return;
       const w=PQIsland,a=w.camera.aspect,small=a<.8,cafe=this.kind==='cafe';

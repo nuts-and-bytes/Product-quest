@@ -843,6 +843,7 @@
 <link rel="stylesheet" href="assets/mobile-play.css?v=3.8.3">
 <link rel="stylesheet" href="assets/cafe-life.css?v=3.10.1">
 <link rel="stylesheet" href="assets/scene-prompts.css?v=3.10.2">
+<link rel="stylesheet" href="assets/ai-journey.css?v=3.11">
 </head>
 <body>
 <div id="game" class="world-mode" data-screen="landing">
@@ -980,7 +981,7 @@
           <text x="468" y="154" font-size="10.5" fill="#c4cede" text-anchor="middle">用户增长与运营 · 开发中</text>
         </g>
         <!-- ===== AI 大陆（可点击开放拼图块） ===== -->
-        <g class="isle-g" onclick="G.startLevel('ai1_1')" style="cursor:pointer">
+        <g class="isle-g" onclick="PQAIJourney.open()" style="cursor:pointer">
           <polygon points="640,80 710,150 690,250 560,330 545,270 520,210 585,150" fill="url(#landG)" style="filter:hue-rotate(150deg) brightness(1.05)"/>
           <ellipse cx="655" cy="140" rx="26" ry="8" fill="#ffffff2e"/>
           <!-- 星潮观测站水晶标 -->
@@ -1050,7 +1051,7 @@
         </g>
       </svg>
     </div></div>
-    <div class="wsub blink">点击「产品大陆」登陆 ▶</div>
+    <div class="wsub blink">选择已开放的大陆，继续你的故事 ▶</div>
   </div>
 
   <!-- 3D 开放世界地图（星火岛 + 周边群岛） -->
@@ -1096,6 +1097,7 @@
     <div id="isl-status"></div>
 
     <div id="map-foot">
+      <button class="pxbtn small" onclick="PQAIJourney.open()">✦ AI 大陆章节</button>
       <button class="pxbtn small" onclick="G.openDex()"><i data-pxi="book" data-size="13"></i> 术语图鉴</button>
       <button class="pxbtn small" onclick="G.openNotes()"><i data-pxi="note" data-size="13"></i> 方法卡</button>
       <button class="pxbtn small" onclick="PQFirstDay.replay()">✦ 重温入职第一天</button>
@@ -1229,9 +1231,9 @@ window.PQ = { levels:[], terms:{}, notes:{}, cases:[], buildings:[], sprites:{},
 <script src="content/pm/ch6-growth.js?v=1.6"></script>
 <script src="content/pm/ch7-monetize.js?v=1.6"></script>
 <script src="content/pm/ch8-finale.js?v=1.6"></script>
-<script src="content/ai/terms.js?v=1.0"></script>
-<script src="content/ai/notes.js?v=1.0"></script>
-<script src="content/ai/cases.js?v=1.0"></script>
+<script src="content/ai/terms.js?v=3.11"></script>
+<script src="content/ai/notes.js?v=3.11"></script>
+<script src="content/ai/cases.js?v=3.11"></script>
 <script src="content/ai/ch1-illusion.js?v=1.0"></script>
 <script src="content/ai/ch2-rag.js?v=1.0"></script>
 <script src="content/ai/ch3-eval.js?v=1.0"></script>
@@ -1245,13 +1247,14 @@ if(_qp) window.OPC_SAVE_KEY = 'opc-pq-' + (/^[a-zA-Z0-9-]{1,80}$/.test(_qp) ? _q
 <script src="assets/world-visibility.js?v=3.8.3"></script>
 <script src="assets/world-quality.js?v=3.1"></script>
 <script src="assets/chapter-progress.js?v=3.7"></script>
-<script src="assets/world-environment.js?v=3.7"></script>
-<script src="assets/island3d.js?v=3.9"></script>
+<script src="assets/world-environment.js?v=3.11"></script>
+<script src="assets/ai-journey-state.js?v=3.11"></script>
+<script src="assets/island3d.js?v=3.11"></script>
 <script src="assets/first-day-state.js?v=3.2"></script>
 <script src="content/pm/island-chapters.js?v=3.7"></script>
 <script src="assets/chapter-journey-state.js?v=3.8.3"></script>
-<script src="assets/chapter-rooms.js?v=3.7"></script>
-<script src="assets/story3d.js?v=3.10.1"></script>
+<script src="assets/chapter-rooms.js?v=3.11"></script>
+<script src="assets/story3d.js?v=3.11"></script>
 <script src="assets/first-day.js?v=3.9"></script>
 <script src="assets/cafe-dialogue.js?v=3.4"></script>
 <script src="assets/cafe-case-state.js?v=3.4"></script>
@@ -1268,11 +1271,12 @@ if(_qp) window.OPC_SAVE_KEY = 'opc-pq-' + (/^[a-zA-Z0-9-]{1,80}$/.test(_qp) ? _q
 <script src="assets/night-market-scene.js?v=3.10.2"></script>
 <script src="assets/night-market.js?v=3.10.2"></script>
 <script src="assets/cafe-life-state.js?v=3.9"></script>
-<script src="assets/prop-inspector.js?v=3.9"></script>
+<script src="assets/prop-inspector.js?v=3.11"></script>
 <script src="assets/prop-library.js?v=3.9"></script>
 <script src="assets/cafe-navigation.js?v=3.10"></script>
 <script src="assets/cafe-walk.js?v=3.10.1"></script>
 <script src="assets/cafe-life.js?v=3.10.1"></script>
-<script src="engine.js?v=3.10"></script>
+<script src="assets/ai-journey.js?v=3.11"></script>
+<script src="engine.js?v=3.11"></script>
 </body>
 </html>

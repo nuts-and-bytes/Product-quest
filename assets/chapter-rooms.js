@@ -2,14 +2,17 @@
 (function(){
   'use strict';
   const T=THREE,names={tea:['BOBO / 波波','打烊前，再坐一会儿'],home:['SUNSHINE / 阳光社区','生活在日历之外'],studio:['DESIGN / 原型桌','让纸上的路，也能走通'],lab:['ENGINEERING / 测试角','先让问题发生在这里'],ops:['NIGHT SHIFT / 值班室','灯亮着，有人在场'],data:['OBSERVATORY / 数据中心','看见回来的人'],market:['WEEKEND / 周末小集市','每一次选择都有来处'],roof:['SPARK / 岛上的夜晚','故事还在继续']};
+  Object.assign(names,{'ai-workshop':['STAR TIDE / 潮汐工坊','从真实问题开始'],'ai-lab':['COMPUTE / 算力控制台','成本 · 引用 · 可回退'],'ai-eval':['EVAL / 星潮评测角','真实样本 · 边界情况 · 历史错误'],'ai-ops':['ON CALL / 星潮值班室','监测 · 复核 · 回退'],'ai-tea':['STAR TIDE / 星潮夜市','夏青的柠檬茶铺'],'ai-roof':['STAR TIDE / 环形露台','把选择带回真实生活']});
   const C={
     supports(kind){return !!names[kind];},
     forLevel(lv){
+      if(window.PQAI?.isLevel(lv))return PQAI.room(lv);
       if(lv.finale)return 'roof';
       if(lv.scene==='cafe')return 'cafe';if(lv.scene==='tea')return 'tea';if(lv.scene==='home')return 'home';if(lv.scene==='data')return 'data';if(lv.scene==='bank')return 'market';
       if(lv.ch?.includes('第5章'))return 'ops';if(lv.ch?.includes('第4章'))return 'lab';if(lv.ch?.includes('第3章'))return 'studio';return 'office';
     },
     build(r,kind){
+      const title=names[kind],ai=kind.startsWith('ai-');if(ai)kind=({'ai-workshop':'lab','ai-lab':'lab','ai-eval':'lab','ai-ops':'ops','ai-tea':'tea','ai-roof':'roof'})[kind];
       const roof=kind==='roof',night=roof||kind==='ops',b=(...args)=>r.box(...args);
       r.scene.background.set(night?'#152e3d':'#315653');r.scene.fog.color.copy(r.scene.background);
       b(0,-.2,0,16,.4,13,'#675641');
@@ -21,13 +24,13 @@
           const lamp=new T.Mesh(new T.SphereGeometry(.12,8,6),r.mat('#ffe0a2',{emissive:'#ffcc77',emissiveIntensity:1.3}));lamp.position.set(-7+i*1.75,1.8,-6.1);r.group.add(lamp);
           b(-14+i*3.5,-1.5,-12-i%3,2.2,2+i%4,2.2,'#304f5c');
         }
-        r.text(names[kind],2.8,2.4,-6.05,4.9,1.1,'#29464b','#eed8ad');
+        r.text(title,2.8,2.4,-6.05,4.9,1.1,'#29464b','#eed8ad');
       }else{
         b(0,3.1,-6.45,16,6.2,.25,kind==='home'?'#d5c7b2':'#c5c6b6');b(-7.85,3.1,-.2,.25,6.2,12.5,'#b9c2b2');
         b(0,.9,-6.25,16,1.8,.18,'#325a58');b(-7.68,.9,-.2,.18,1.8,12.5,'#325a58');b(0,1.85,-6.1,16,.1,.15,'#bc9f70');
         b(-4.2,3.8,-6.08,5.5,3.4,.14,'#d5dfcf');b(-4.2,3.8,-5.97,5.2,3.1,.06,night?'#32596a':'#a8cbca',{emissive:night?'#385e71':'#90b6b0',emissiveIntensity:.16});
         for(const x of [-6.9,-4.2,-1.5])b(x,3.8,-5.78,.1,3.5,.15,'#325a58');b(-4.2,3.7,-5.78,5.5,.1,.15,'#325a58');
-        r.text(names[kind],3.1,4.6,-6.07,5,1.2,'#234746','#e6d4ad');
+        r.text(title,3.1,4.6,-6.07,5,1.2,'#234746','#e6d4ad');
         for(const x of [-2.5,3.8]){r.cylinder(x,5.7,-1,.025,1,'#42554e');const shade=new T.Mesh(new T.ConeGeometry(.62,.36,20,1,true),r.mat('#d0b988',{side:T.DoubleSide}));shade.position.set(x,5.1,-1);r.group.add(shade);}
         for(let i=0;i<3;i++){const patch=b(-4+i*1.2,.053,-2.4,1,.008,4.3,'#ead5a6',{transparent:true,opacity:night?0:.15,depthWrite:false});patch.rotation.y=-.3;patch.castShadow=false;}
       }
@@ -53,7 +56,7 @@
             b(.2+i*3,2.05,-4.35,2.25,1.45,.12,'#2a4547');b(.2+i*3,2.05,-4.27,2.05,1.25,.025,'#497778',{emissive:'#3e6b71',emissiveIntensity:.23});b(.2+i*3,1.38,-4.3,.13,.6,.13,'#314f50');
             for(let j=0;j<4;j++)b(-.6+i*3+j*.5,1.75+j*.1,-4.22,.3,.2+j*.18,.04,j%2?'#b7d0aa':'#d9ba7b');
           }
-          r.text(kind==='lab'?['网络 / 已连接','请求记录']:kind==='ops'?['试营业 / 值班中','暂停 · 回退 · 核对']:['新用户 / 老用户','完成任务 · 再次回来'],2,3.45,-6.05,4.2,.85,'#d1bd93','#315452');
+          r.text(ai?['样本 / 引用 / 评测','潮汐审单 · 工作记录']:kind==='lab'?['网络 / 已连接','请求记录']:kind==='ops'?['试营业 / 值班中','暂停 · 回退 · 核对']:['新用户 / 老用户','完成任务 · 再次回来'],2,3.45,-6.05,4.2,.85,'#d1bd93','#315452');
         }
       }else if(roof){
         r.chair(3.8,-3.5,'#577c75');r.chair(5.1,-3.5,'#577c75');r.cup(-5,1.13,-.8);

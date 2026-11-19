@@ -1,0 +1,16 @@
+#ai-route{box-sizing:border-box;width:min(720px,calc(100vw - 24px));max-height:calc(100dvh - 32px);padding:26px;background:#173b3a;color:#ede5cd;border:1px solid #cfba8666;border-radius:18px;font:14px/1.7 system-ui;overflow:auto;overscroll-behavior:contain;box-shadow:0 20px 80px #06192388}
+#ai-route::backdrop{background:#071f2ab8;backdrop-filter:blur(5px)}
+#ai-route header{display:flex;justify-content:space-between;align-items:start;gap:14px}#ai-route header span{font-size:10px;letter-spacing:2px;color:#b6cfc9}#ai-route h2{font:500 25px/1.5 Georgia,'Songti SC',serif;margin:8px 0}#ai-route h3{margin:24px 0 10px;color:#d8c398;font-size:15px}
+#ai-route button,#ai-end-route,#ai-story-next{font:inherit;min-height:44px;border:1px solid #c0ccaa55;background:#2e514a;color:#f0e4c8;border-radius:9px;padding:9px 14px;cursor:pointer}#ai-route button:disabled{opacity:.48;cursor:default}#ai-resume{width:100%;text-align:left;background:#ddc58e!important;color:#203b35!important}#ai-route-list{display:grid;gap:8px}#ai-route-list button{text-align:left;width:100%}#ai-route-list small{display:block;color:#b6c9be;font-size:11px;margin-top:3px}#ai-route-world{margin-top:22px}
+#game:not(.ai-story-mode) #ai-story-next,#ai-story-next[hidden]{display:none!important}
+.ai-story-mode #dtext,.ai-story-mode #fb-text{white-space:pre-line;overflow-wrap:anywhere}
+.ai-story-mode #dialog{display:flex;flex-direction:column;gap:12px}
+.ai-story-mode #choices .pxbtn{white-space:normal;text-align:left;flex-shrink:0}
+.ai-story-mode #ai-story-next{flex-shrink:0;background:#e2c993;color:#213f37;position:sticky;bottom:0;align-self:flex-end}
+.ai-story-mode #fb-btn,.ai-story-mode #quiz-next{position:sticky;bottom:0}
+#prop-copy table{border-collapse:collapse;width:100%;table-layout:fixed;overflow-wrap:anywhere}#prop-copy td,#prop-copy th{border:1px solid #829c8166;padding:8px;vertical-align:top;font-size:13px}#prop-copy .kh{font-size:17px;color:#edd49c;margin-bottom:16px}#prop-copy .src{font-size:12px;margin-top:16px;color:#b9c8b6}
+@media(max-width:600px){#ai-route{padding:18px}#ai-route h2{font-size:20px}.ai-story-mode #hud .loc{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}.ai-story-mode #hud{gap:6px}.ai-story-mode #trust-wrap{min-width:65px}.ai-story-mode #trust-heart{display:none}}
+.ai-story-mode #next-hint{display:none!important}
+.ai-story-mode #dtext,.ai-story-mode #choices{flex-shrink:0}
+.ai-story-mode #hud>button{flex-shrink:0;white-space:nowrap}
+@media(orientation:landscape) and (max-height:600px){.ai-story-mode #hud{height:50px;box-sizing:border-box;padding:2px 6px;flex-wrap:nowrap}.ai-story-mode #hud .loc{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}}

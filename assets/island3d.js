@@ -381,7 +381,7 @@
     let prof = Object.assign({
       style: 'short', outfit: 'hoodie', hair: '#ffd15c', skin: '#fff1e6',
       eyeColor: '#4a90e2', cloth: '#5cb9ff', pants: '#6486b8', glasses: 'none', prop: 'none'
-    }, ROLE_PROFILES[key] || ROLE_PROFILES.citizen1);
+    }, window.PQAI?.cast[key]?.look || ROLE_PROFILES[key] || ROLE_PROFILES.citizen1);
 
     if (key === 'me') {
       const av = (typeof G !== 'undefined' && G && G.avatar)
