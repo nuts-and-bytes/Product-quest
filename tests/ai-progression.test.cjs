@@ -95,7 +95,7 @@ test('AI continent terms, notes, and cases cover all 5 chapters', () => {
   for (const n of ['ai_n1', 'ai_n2', 'ai_n3', 'ai_n4', 'ai_n5', 'ai_n6', 'ai_n7', 'ai_n8', 'ai_n9', 'ai_n10', 'ai_n11']) {
     assert.ok(notes[n], `${n} note must exist`);
   }
-  for (const kw of ['纽约律师', 'Copilot', '加拿大航空', '雪佛兰', '模型路由', '越权删库']) {
+  for (const kw of ['纽约律师', 'Copilot', '加拿大航空', '雪佛兰', '模型路由', '越权删库', '小龙虾']) {
     assert.ok(cases.some(c => c.title.includes(kw)), `Case matching "${kw}" must exist`);
   }
 });
@@ -103,12 +103,12 @@ test('AI continent terms, notes, and cases cover all 5 chapters', () => {
 test('AI Museum and mentor Stone narrative data is complete and enriched', () => {
   const m = ctx.PQ.aiMuseum;
   assert.ok(m && m.mentor && m.mentor.name === '石头', 'AI Museum must feature mentor 石头');
-  assert.equal(m.mentor.casualTalks.length, 4, 'Stone must have 4 casual lighthouse talks');
+  assert.equal(m.mentor.casualTalks.length, 5, 'Stone must have 5 casual lighthouse talks');
   assert.ok(m.mentor.greetings.afterMainCh4 && m.mentor.greetings.afterMainCh5, 'Stone must react to Chapters 4 and 5');
   assert.equal(m.halls.length, 3, 'AI Museum must have 3 exhibit halls');
   const timeline = m.halls.find(h => h.id === 'timeline');
-  assert.equal(timeline.exhibits.length, 7, 'Timeline hall must have 7 historical milestones');
-  for (const kw of ['AlphaGo', 'Transformer', 'ChatGPT', 'DeepSeek']) {
+  assert.equal(timeline.exhibits.length, 9, 'Timeline hall must have 9 historical milestones');
+  for (const kw of ['AlphaGo', 'Transformer', 'ChatGPT', 'DeepSeek', '小龙虾', 'Claude', 'Codex', 'Gemini']) {
     assert.ok(timeline.exhibits.some(e => e.title.includes(kw)), `Timeline must include ${kw}`);
   }
   assert.ok(timeline.exhibits.every(e => e.animCue && e.stoneLines.length >= 2), 'Every timeline exhibit needs animCue and Stone dialogue');
@@ -120,5 +120,5 @@ test('AI Museum and mentor Stone narrative data is complete and enriched', () =>
   }
   const products = m.halls.find(h => h.id === 'products');
   assert.equal(products.exhibits.length, 4, 'Products hall must have 4 generational specimens');
-  assert.equal(m.teaTable.drills.length, 6, 'Tea table must have 6 practical drills');
+  assert.equal(m.teaTable.drills.length, 7, 'Tea table must have 7 practical drills');
 });
