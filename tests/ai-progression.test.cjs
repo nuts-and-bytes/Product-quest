@@ -15,7 +15,7 @@ const ctx = {
 const files = [
   'world.js',
   'pm/terms.js', 'pm/notes.js', 'pm/cases.js',
-  'ai/terms.js', 'ai/notes.js', 'ai/cases.js', 'ai/ch1-illusion.js', 'ai/ch2-rag.js', 'ai/ch3-eval.js'
+  'ai/terms.js', 'ai/notes.js', 'ai/cases.js', 'ai/ch1-illusion.js', 'ai/ch2-rag.js', 'ai/ch3-eval.js', 'ai/museum.js'
 ];
 
 for (const f of files) {
@@ -98,4 +98,21 @@ test('AI continent terms, notes, and cases are rich and well-formed', () => {
   assert.ok(cases.some(c => c.title.includes('Copilot')), 'Copilot case must exist');
   assert.ok(cases.some(c => c.title.includes('加拿大航空')), 'Air Canada case must exist');
   assert.ok(cases.some(c => c.title.includes('雪佛兰')), 'Chevrolet prompt injection case must exist');
+});
+
+test('AI Museum and mentor Stone narrative data is complete and valid', () => {
+  const m = ctx.PQ.aiMuseum;
+  assert.ok(m && m.mentor && m.mentor.name === '石头', 'AI Museum must feature mentor 石头');
+  assert.equal(m.halls.length, 3, 'AI Museum must have 3 exhibit halls');
+  const timeline = m.halls.find(h => h.id === 'timeline');
+  assert.ok(timeline.exhibits.some(e => e.title.includes('ChatGPT')), 'Timeline must include ChatGPT');
+  assert.ok(timeline.exhibits.some(e => e.title.includes('DeepSeek')), 'Timeline must include DeepSeek');
+  assert.ok(timeline.exhibits.every(e => e.animCue && e.stoneLines.length >= 2), 'Every timeline exhibit needs animCue and Stone dialogue');
+  const concepts = m.halls.find(h => h.id === 'concepts');
+  assert.equal(concepts.exhibits.length, 5, 'Concept hall must cover 5 foundational AI concepts');
+  for (const ex of concepts.exhibits) {
+    assert.ok(terms[ex.termKey], `Concept exhibit ${ex.id} termKey "${ex.termKey}" must exist`);
+    assert.ok(ex.miniCheck && ex.miniCheck.ops.length === 3, `Concept exhibit ${ex.id} must have a 3-option miniCheck`);
+  }
+  assert.equal(m.teaTable.drills.length, 3, 'Tea table must have 3 practical drills');
 });
