@@ -573,6 +573,7 @@ const G = {
   },
 
   startLevel(i){
+    if(typeof i==='string'){ const idx=LEVELS.findIndex(l=>l.id===i); if(idx>=0) i=idx; else return; }
     SFX.click();
     this.track('level_start',{id:LEVELS[i].id});
     this.lvIdx=i; this.nodeIdx=0; this.quizIdx=0;
