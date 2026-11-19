@@ -49,9 +49,10 @@
       for(const key of ['citizen2','lijie','akai','citizen3','xiaoyu','citizen4','citizen5']){r.ensureNpc(key);this.rigs[key]=r.npcs[key];this.rigs[key].group.position.set(-8,.08,4);}
       r.sun.color.set('#ffe0b2');r.sun.intensity=2.15;r.sun.position.set(-6,10,5);r.scene.children.find(o=>o.isHemisphereLight).intensity=1.35;
       this.pick=e=>{if(!this.active||PQLifeFilm.active||PQNightMarket.dialog)return;const b=this.canvas.getBoundingClientRect();this.pointer.set((e.clientX-b.left)/b.width*2-1,-(e.clientY-b.top)/b.height*2+1);this.raycaster.setFromCamera(this.pointer,w.camera);const targets=this.targets();const hit=this.raycaster.intersectObjects(targets.map(o=>o.group),true)[0];if(!hit)return;const item=targets.find(o=>o.group.getObjectById(hit.object.id));if(item)PQNightMarket.action(item.act,item.id);};
+      this.prompts=new PQScenePrompts(document.getElementById('market-screen'),'#market-top,#market-meter,#market-dock,#market-dialog,#market-notice',()=>!this.active||!!PQNightMarket.dialog);
       this.canvas.addEventListener('click',this.pick);this.sync();this.update(0,0,true);
     },
-    detach(){this.canvas?.removeEventListener('click',this.pick);this.active=false;this.rigs=null;this.focus=null;this.targetsCache=null;},
+    detach(){this.prompts?.detach();this.prompts=null;this.canvas?.removeEventListener('click',this.pick);this.active=false;this.rigs=null;this.focus=null;this.targetsCache=null;},
     targets(){
       const r=G.nightMarket.run,C=PQNightMarket,out=[];
       if(['arrival','setup','break','complete','visit','closing'].includes(C.view)){
@@ -98,13 +99,9 @@
       this.stock.count=['arrival','setup'].includes(state.phase)?state.plan.stock:state.stock;
       r.dust.visible=w.environment.tier>0;r.dust.rotation.y=reduced?0:Math.sin(time*.07)*.08;
       const e=w.environment;e.shafts.uniforms.uStrength.value=0;e.composite.uniforms.uInvProjection.value.copy(w.camera.projectionMatrixInverse);e.composite.uniforms.uFocus.value=w.camera.position.distanceTo(this.look);e.composite.uniforms.uNight.value=.18;e.composite.uniforms.uBloomStrength.value=.25;
-      // Project a few stable, accessible DOM targets over the physical objects.
-      document.querySelectorAll('#market-pins [data-rig],#market-pins [data-station]').forEach(b=>{
-        const rig=b.dataset.rig&&this.rigs[b.dataset.rig],station=b.dataset.station&&this.stations[b.dataset.station];
-        if(rig){this.point.copy(rig.group.position);this.point.y+=2.5;}else if(station){this.point.copy(station.position);this.point.setY(2.4);}else return;
-        this.point.project(w.camera);b.style.left=Math.max(45,Math.min(width-45,(this.point.x*.5+.5)*width))+'px';b.style.top=Math.max(100,Math.min(height*(small?.57:.63),(-this.point.y*.5+.5)*height))+'px';
-      });
-      PQMobilePlay.placePins('#market-pins [data-rig],#market-pins [data-station]','#market-top,#market-meter,#market-dock,#market-dialog');
+      const rows=[...document.querySelectorAll('#market-pins button')].map(b=>{const rig=b.dataset.rig&&this.rigs[b.dataset.rig],station=b.dataset.station&&this.stations[b.dataset.station],group=rig?.group||station;return {id:b.dataset.a+':'+b.dataset.v,b,label:b.getAttribute('data-label')||b.textContent,point:group.getWorldPosition(new T.Vector3()).add(new T.Vector3(0,rig?3.2:2.4,0))};});
+      this.prompts.update(rows,Object.values(this.rigs),Object.values(this.stations));
+
     },
     filmFrame(f,shot,u){
       const r=G.nightMarket.run,arrival=shot.stage==='market-arrive',closing=shot.stage==='market-close';

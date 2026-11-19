@@ -8,7 +8,7 @@
       this.gold=gold;
       const board=new T.Mesh(box,boardMat);board.scale.set(5.9,.12,4.6);board.position.z=-.2;board.receiveShadow=true;this.root.add(board);
       const caption=room.text(['七天试用区 · 每种放一张'],0,.075,1.15,5.4,.4,'#294c42','#cdd4aa');caption.rotation.x=-Math.PI/2;this.root.add(caption);
-      this.pins=document.createElement('div');this.pins.id='chapter-table-pins';this.pins.setAttribute('aria-label','桌面上的方案卡片');this.pins.hidden=true;document.getElementById('chapter-screen').append(this.pins);this.cards=[];this.point=new T.Vector3();
+      this.pins=document.createElement('div');this.pins.id='chapter-table-pins';this.pins.setAttribute('aria-label','桌面上的方案卡片');this.pins.hidden=true;document.getElementById('chapter-screen').append(this.pins);this.cards=[];
       const names={ledger:'记账本',envelope:'预算信封',reminder:'购物提醒',together:'一起设置',alone:'发链接'};
       chapter.slots.forEach((slot,row)=>slot.options.forEach((option,i)=>{
         const group=new T.Group(),home=new T.Vector3((i-(slot.options.length-1)/2)*1.8,.13,row===0?-1.5:-.12),target=new T.Vector3(row?1.25:-1.25,.28,1.67);group.position.copy(home);this.root.add(group);
@@ -22,14 +22,13 @@
     choose(card){const selected=PQCampaign.record().plan[card.slot]===card.value;PQCampaign.act(selected?'unchoose':'choose',selected?card.slot:card.value,card.slot);this.update(0,PQCafeScene.reduced());}
     setView(view){this.root.visible=view==='workbench';this.pins.hidden=!this.root.visible;}
     update(dt,reduced){
-      if(!this.root.visible)return;const w=PQIsland,plan=PQCampaign.record().plan,k=reduced?1:1-Math.exp(-Math.max(dt,.001)*10),width=w.renderer.domElement.clientWidth,height=w.renderer.domElement.clientHeight;
+      if(!this.root.visible)return;const plan=PQCampaign.record().plan,k=reduced?1:1-Math.exp(-Math.max(dt,.001)*10);
       for(const c of this.cards){const selected=plan[c.slot]===c.value;c.group.position.lerp(selected?c.target:c.home,k);c.body.material=selected?c.gold:c.paper;
         if(c.selected!==selected){c.selected=selected;c.button.setAttribute('aria-pressed',String(selected));c.button.textContent=(selected?'✓ ':'')+c.name;c.button.setAttribute('aria-label',(selected?'检视已选卡片：':'检视卡片：')+c.name);}
-        // Keep touch targets settled while the physical card slides into its slot.
-        this.point.copy(selected?c.target:c.home);this.root.localToWorld(this.point);this.point.y+=.12;this.point.project(w.camera);c.button.style.left=(this.point.x*.5+.5)*width+'px';c.button.style.top=(-this.point.y*.5+.5)*height+'px';
       }
-      PQMobilePlay.placePins('#chapter-table-pins button','#chapter-top,#chapter-panel',true);
     }
+    promptRows(){return this.cards.map(c=>({id:'card:'+c.slot+':'+c.value,b:c.button,label:'检视'+(c.selected?'已选卡片：':'卡片：')+c.name,point:c.group.getWorldPosition(new T.Vector3()).add(new T.Vector3(0,.15,0))}));}
+
     detach(){this.pins.remove();if(this.cards.every(c=>c.body.material!==this.gold))this.gold.dispose();this.gold=null;this.cards=[];}
   }
   window.PQChapterTable=ChapterTable;

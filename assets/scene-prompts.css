@@ -1,0 +1,20 @@
+/* A single action strip and quiet 44px markers shared by chapters and the market. */
+:is(#chapter-screen,#market-screen) .scene-context{position:absolute;display:flex;align-items:center;gap:4px;padding:4px;border:1px solid #dbca9666;border-radius:14px;background:#183b37f5;box-shadow:0 5px 20px #061d242b;pointer-events:auto;z-index:4;box-sizing:border-box;max-width:calc(100% - 24px)}
+:is(#chapter-screen,#market-screen) .scene-context button{height:44px;min-height:44px;line-height:1.3;padding:6px 10px;white-space:nowrap;border:0;box-shadow:none;border-radius:9px;font-size:12px}
+:is(#chapter-screen,#market-screen) button.scene-context-action{width:230px;overflow:hidden;text-overflow:ellipsis;text-align:left;color:#f3dfb0;background:transparent}
+:is(#chapter-screen,#market-screen) button.scene-context-next{width:100px;flex-shrink:0;background:#34574e;color:#ede1c5;font-variant-numeric:tabular-nums}
+:is(#chapter-screen,#market-screen) .scene-prompt-status{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
+:is(#chapter-screen,#market-screen) button.scene-dot{position:absolute;width:44px;height:44px;min-width:44px;min-height:44px;margin:0;padding:0;border:0;background:transparent!important;box-shadow:none!important;transform:none!important;font-size:0;pointer-events:auto;border-radius:50%;transition:none}
+:is(#chapter-screen,#market-screen) button.scene-dot>*{display:none}
+:is(#chapter-screen,#market-screen) button.scene-dot::after{content:'';position:absolute;left:17px;top:17px;width:10px;height:10px;border:1px solid #e7dfb8;border-radius:50%;background:#244d43;box-sizing:border-box;box-shadow:0 1px 5px #102e33}
+:is(#chapter-screen,#market-screen) button.scene-dot.is-current::after{left:15px;top:15px;width:14px;height:14px;background:#efd091;border-color:#fff1c7}
+#market-pins .market-hero-label{display:none}
+.market-dialog-open .scene-context,.market-dialog-open .scene-dot,.life-mode .scene-context,.life-mode .scene-dot{display:none!important}
+@media(max-width:600px),(orientation:landscape) and (max-height:600px){
+  :is(#chapter-screen,#market-screen) .scene-context{padding:2px;gap:2px;border-radius:11px}
+  :is(#chapter-screen,#market-screen) button.scene-context-action{width:108px;padding:5px 7px;font-size:11px;white-space:normal;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;word-break:break-all}
+  :is(#chapter-screen,#market-screen) button.scene-context-next{width:76px;padding:5px 5px;font-size:11px}
+}
+
+:is(#chapter-screen,#market-screen) .scene-context.is-stacked{flex-direction:column}
+:is(#chapter-screen,#market-screen) .scene-context.is-stacked button{width:108px;white-space:normal;overflow:hidden}

@@ -76,7 +76,7 @@
       $('chapter-screen').dataset.view=this.mode;
       $('chapter-explore').hidden=this.mode!=='explore';$('chapter-pins').hidden=this.mode!=='explore';$('chapter-talk').hidden=this.mode!=='talk';panel.hidden=['explore','talk'].includes(this.mode);
       const pinButtons=c.npcs.map(n=>this.button(`<span>${esc(n.name)}</span><small>${esc(n.role)}</small>`,'talk',n.key,'chapter-pin'));
-      pinButtons.push(this.button('<span>桌上的线索</span><small>看一眼实物</small>','journal','','chapter-pin chapter-object'));
+      pinButtons.push(...c.clues.map(e=>this.button(esc(e.title),'read',e.id,'chapter-pin chapter-object')));
       $('chapter-pins').innerHTML=pinButtons.join('');
       $('chapter-explore').innerHTML=`<span class="chapter-eyebrow">${esc(c.place)} · ${r.notes.length} / ${c.clues.length} 份线索</span><h2>${esc(c.objective)}</h2><div class="chapter-row">${this.button('和'+esc(c.npcs[0].name)+'聊聊','talk',c.npcs[0].key,'chapter-primary')}${this.button('看看桌上的物件','journal')}${this.button(r.trials.length?'继续试验':'动手试试','workbench')}${r.committed?this.button('查看已完成的记录','view-complete'):''}</div>`;
       if(r.committed)$('chapter-explore').querySelector('[data-act="view-complete"]').onclick=()=>{this.mode='complete';this.render();};
