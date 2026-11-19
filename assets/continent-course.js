@@ -6,7 +6,7 @@
   const courses = PQ.continentCourses;
   const ui = courses.ui;
   const offsets = [[-4, -3], [1, 5], [5, 0]];
-  let region, course, index, replay, pendingSite, stations, returnPosition;
+  let region, course, index, replay, pendingSite, stations, returnPosition, returnToOverview;
 
   const panel = () => $('field-dialog');
   const chapter = () => course.chapters[index];
@@ -295,9 +295,10 @@
     }};
   }
 
-  function open(id) {
+  function open(id, {fromOverview = false} = {}) {
     if (region || !['growth','design'].includes(id)) return;
     returnPosition = PQIsland.playerPos.clone();
+    returnToOverview = fromOverview || PQIsland.archipelago;
     region = PQWorldMap.regions.find(r => r.id === id);
     $('field-screen').style.setProperty('--shore', region.color);
     course = courses[id];
@@ -326,7 +327,7 @@
     region = null;
     index = null;
     replay = null;
-    G.toMap();
+    G.toMap({archipelago:returnToOverview});
   }
 
   function normalize(raw) {

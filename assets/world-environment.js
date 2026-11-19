@@ -461,7 +461,7 @@
       else if (this.courseHere) PQFieldCourse.open(this.courseHere);
     }
     selectRegion(id){
-      if (PQ.continentCourses[id]?.chapters) PQFieldCourse.open(id);
+      if (PQ.continentCourses[id]?.chapters) PQFieldCourse.open(id, {fromOverview:true});
       else this.focusRegion(id);
     }
     focusRegion(id){

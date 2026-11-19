@@ -2678,7 +2678,12 @@
         this.pointers.set(e.pointerId, { x: e.clientX, y: e.clientY, btn: e.button });
         if (this.pointers.size === 1) {
           this.dragStart = { x: e.clientX, y: e.clientY, moved: 0, btn: e.button };
+          if (this.archipelago && e.button === 0) {
+            // The overview can still be zooming when a player presses the beach.
+            this.dragStart.mapRay = this._rayAt(e.clientX, e.clientY).clone();
+          }
         } else if (this.pointers.size === 2) {
+          this.dragStart = null;
           const pts = [...this.pointers.values()];
           this.pinchDist = Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y);
         }
@@ -2728,7 +2733,7 @@
         this.pointers.delete(e.pointerId);
         if (this.pointers.size < 2) this.pinchDist = 0;
         if (wasSingle && this.dragStart && this.dragStart.moved < 7 && this.dragStart.btn === 0) {
-          this._handleTap(e.clientX, e.clientY);
+          this._handleTap(e.clientX, e.clientY, this.dragStart.mapRay);
         }
         if (this.pointers.size === 0) this.dragStart = null;
       };
@@ -2801,14 +2806,20 @@
       this.camTarget.z = Math.max(-48, Math.min(66, this.camTarget.z));
     },
 
-    _handleTap(clientX, clientY) {
-      if(window.PQStory3D?.active||window.PQFirstDay?.dialogOpen||window.PQFirstDay?.transitioning)return;
-      const rect = this.renderer.domElement.getBoundingClientRect();
+    _rayAt(clientX, clientY, rect = this.renderer.domElement.getBoundingClientRect()) {
       const ndc = new THREE.Vector2(
         ((clientX - rect.left) / rect.width) * 2 - 1,
         -((clientY - rect.top) / rect.height) * 2 + 1
       );
       this.raycaster.setFromCamera(ndc, this.camera);
+      return this.raycaster.ray;
+    },
+
+    _handleTap(clientX, clientY, mapRay) {
+      if(window.PQStory3D?.active||window.PQFirstDay?.dialogOpen||window.PQFirstDay?.transitioning)return;
+      const rect = this.renderer.domElement.getBoundingClientRect();
+      if (mapRay && this.archipelago) this.raycaster.ray.copy(mapRay);
+      else this._rayAt(clientX, clientY, rect);
 
       if (window.PQFieldCourse?.active && PQFieldCourse.hit(this.raycaster)) return;
       const hits = window.PQFieldCourse?.active ? [] : this.raycaster.intersectObjects(this.hitTargets, false).filter(hit=>!hit.object.userData.buildingId||!this.visibility?.throughCutout(hit.object.userData.buildingId,clientX-rect.left,clientY-rect.top));
