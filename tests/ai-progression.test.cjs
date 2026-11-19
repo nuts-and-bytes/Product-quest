@@ -15,7 +15,7 @@ const ctx = {
 const files = [
   'world.js',
   'pm/terms.js', 'pm/notes.js', 'pm/cases.js',
-  'ai/terms.js', 'ai/notes.js', 'ai/cases.js', 'ai/ch1-illusion.js', 'ai/ch2-rag.js'
+  'ai/terms.js', 'ai/notes.js', 'ai/cases.js', 'ai/ch1-illusion.js', 'ai/ch2-rag.js', 'ai/ch3-eval.js'
 ];
 
 for (const f of files) {
@@ -25,18 +25,22 @@ for (const f of files) {
 
 const { levels, terms, notes, cases } = ctx.PQ;
 
-test('AI continent chapters 1-2 load with 8 valid levels', () => {
+test('AI continent chapters 1-3 load with 12 valid levels', () => {
   const aiLevels = levels.filter(l => l.id.startsWith('ai'));
-  assert.equal(aiLevels.length, 8, 'Chapters 1-2 must have exactly 8 levels');
+  assert.equal(aiLevels.length, 12, 'Chapters 1-3 must have exactly 12 levels');
   
-  const expectedIds = ['ai1_1', 'ai1_2', 'ai1_3', 'ai1_boss', 'ai2_1', 'ai2_2', 'ai2_3', 'ai2_boss'];
+  const expectedIds = [
+    'ai1_1', 'ai1_2', 'ai1_3', 'ai1_boss',
+    'ai2_1', 'ai2_2', 'ai2_3', 'ai2_boss',
+    'ai3_1', 'ai3_2', 'ai3_3', 'ai3_boss'
+  ];
   assert.equal(aiLevels.map(l => l.id).join(','), expectedIds.join(','));
 });
 
-test('AI chapters 1-2 levels meet all engine contracts and content rules', () => {
+test('AI chapters 1-3 levels meet all engine contracts and content rules', () => {
   const aiLevels = levels.filter(l => l.id.startsWith('ai'));
   for (const lv of aiLevels) {
-    assert.ok(lv.ch && /^第[12]章/.test(lv.ch), `Level ${lv.id} must belong to Chapter 1 or 2`);
+    assert.ok(lv.ch && /^第[123]章/.test(lv.ch), `Level ${lv.id} must belong to Chapter 1, 2, or 3`);
     assert.ok(lv.name, `Level ${lv.id} must have a name`);
     assert.ok(lv.loc, `Level ${lv.id} must have a location`);
     assert.ok(lv.note && notes[lv.note], `Level ${lv.id} note "${lv.note}" must exist in notes`);
@@ -80,11 +84,18 @@ test('AI continent terms, notes, and cases are rich and well-formed', () => {
   assert.ok(terms.rag_vs_ft, 'rag_vs_ft term must exist');
   assert.ok(terms.chunking, 'chunking term must exist');
   assert.ok(terms.grounding, 'grounding term must exist');
+  assert.ok(terms.precision_recall, 'precision_recall term must exist');
+  assert.ok(terms.llm_judge, 'llm_judge term must exist');
+  assert.ok(terms.prompt_injection, 'prompt_injection term must exist');
+  assert.ok(terms.model_drift, 'model_drift term must exist');
   assert.ok(notes.ai_n1, 'ai_n1 note must exist');
   assert.ok(notes.ai_n2, 'ai_n2 note must exist');
   assert.ok(notes.ai_n5, 'ai_n5 note must exist');
   assert.ok(notes.ai_n6, 'ai_n6 note must exist');
+  assert.ok(notes.ai_n7, 'ai_n7 note must exist');
+  assert.ok(notes.ai_n8, 'ai_n8 note must exist');
   assert.ok(cases.some(c => c.title.includes('纽约律师')), 'Mata v. Avianca case must exist');
   assert.ok(cases.some(c => c.title.includes('Copilot')), 'Copilot case must exist');
   assert.ok(cases.some(c => c.title.includes('加拿大航空')), 'Air Canada case must exist');
+  assert.ok(cases.some(c => c.title.includes('雪佛兰')), 'Chevrolet prompt injection case must exist');
 });
