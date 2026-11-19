@@ -1037,12 +1037,7 @@
     }
     const group = new THREE.Group();
     group.position.set(c.wx, 0, c.wz);
-    group.add(makeVoxelMesh(vg, 1.0, [0, 0, 0], { roughness: 0.84 }));
-    const hit = new THREE.Mesh(
-      new THREE.CylinderGeometry(11, 11, 10, 12),
-      new THREE.MeshBasicMaterial({ visible: false })
-    );
-    hit.position.y = 4;
+    const hit = makeVoxelMesh(vg, 1.0, [0, 0, 0], { roughness: 0.84 });
     hit.userData = { continentId: c.id };
     group.add(hit);
     return { group, hit, data: c };
@@ -2577,7 +2572,7 @@
           el.innerHTML = `<span class="pin-nm">${c.data.name}</span><span class="pin-badge side">可探索</span>`;
           el.onclick = (e) => {
             e.stopPropagation();
-            this.environment.focusRegion(c.data.id);
+            this.environment.selectRegion(c.data.id);
           };
           layer.appendChild(el);
           this._labelEls['c_' + c.data.id] = el;
@@ -2819,7 +2814,11 @@
       const hits = window.PQFieldCourse?.active ? [] : this.raycaster.intersectObjects(this.hitTargets, false).filter(hit=>!hit.object.userData.buildingId||!this.visibility?.throughCutout(hit.object.userData.buildingId,clientX-rect.left,clientY-rect.top));
       if (hits.length > 0) {
         const ud = hits[0].object.userData;
-        if (ud.expeditionId) { this.environment.inspect(ud.expeditionId); return; }
+        if (ud.expeditionId) {
+          if (ud.expeditionId === 'ai' || this.mode === 'walk' || this.mode === 'fp') this.environment.inspect(ud.expeditionId);
+          else this.environment.selectRegion(ud.expeditionId);
+          return;
+        }
         if (ud.buildingId) { this.focusBuilding(ud.buildingId); return; }
         if (ud.milestoneId) {
           const item = this.milestones.find((m) => m.ms.id === ud.milestoneId);
@@ -2834,8 +2833,7 @@
           return;
         }
         if (ud.continentId && this.mode !== 'walk' && this.mode !== 'fp') {
-          const cont = this.continents.find((c) => c.data.id === ud.continentId);
-          if (cont) this.environment.focusRegion(cont.data.id);
+          this.environment.selectRegion(ud.continentId);
           return;
         }
       }

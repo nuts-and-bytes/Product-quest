@@ -23,6 +23,7 @@
 #field-dialog details { padding:6px 0; border-bottom:1px solid var(--line); }
 #field-screen #isl-joy { bottom:max(16px,env(safe-area-inset-bottom)); left:max(16px,env(safe-area-inset-left)); }
 #game[data-screen="field-screen"] #island-labels { display:none; }
+.guided-mode #exp-interact.course-island:not([hidden]) { display:block!important; }
 @media(max-width:699px) {
   #land-continents { position:fixed; right:20px; bottom:70px; margin:0; }
   #land-continents button { font-size:12px; padding:4px 9px; }

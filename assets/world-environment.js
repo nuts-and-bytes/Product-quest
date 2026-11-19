@@ -417,7 +417,7 @@
       this.select=hud.querySelector('select');this.select.onchange=()=>this.setQuality(this.select.value);
       hud.querySelector('#exp-journal').onclick=()=>this.openJournal();hud.querySelector('#exp-photo').onclick=()=>this.togglePhoto();
       const photo=document.createElement('button');photo.id='exp-photo-exit';photo.textContent='H / 轻点返回探索';photo.onclick=()=>this.togglePhoto();screen.appendChild(photo);
-      const prompt=document.createElement('button');prompt.id='exp-interact';prompt.onclick=()=>this.inspect(this.near);screen.appendChild(prompt);this.prompt=prompt;
+      const prompt=document.createElement('button');prompt.id='exp-interact';prompt.hidden=true;prompt.onclick=()=>this.interact();screen.appendChild(prompt);this.prompt=prompt;
       const panel=document.createElement('section');panel.id='exp-journal-panel';panel.setAttribute('role','dialog');panel.setAttribute('aria-modal','false');panel.setAttribute('aria-label','探索手记');panel.hidden=true;screen.appendChild(panel);this.panel=panel;
       window.addEventListener('keydown',e=>{
         if(!screen.classList.contains('active')||/INPUT|TEXTAREA|SELECT/.test(e.target.tagName)||e.repeat)return;
@@ -425,7 +425,7 @@
         if(key==='h')this.togglePhoto();
         if(key==='j'){if(this.panel.hidden)this.openJournal();else this.closeJournal();}
         if(key==='escape'){this.closeJournal();if(this.photo)this.togglePhoto();}
-        if(key==='e'&&this.near){e.preventDefault();this.inspect(this.near);}
+        if(key==='e'&&!this.prompt.hidden){e.preventDefault();this.interact();}
       });
       this.refreshJournalCount();
     }
@@ -455,6 +455,14 @@
       if(Math.hypot(this.world.playerPos.x-r.x-3,this.world.playerPos.z-r.z+2)>5){this.focusRegion(id);return;}
       if(!this.state()[id]){this.state()[id]=true;G.save();this.refreshJournalCount();this.world.setStatus(`发现「${r.name}」· 新的探索手记已收录`,3600);this.flash={region:r,start:this.time.value};}
       this.showNote(r);
+    }
+    interact(){
+      if (this.near) this.inspect(this.near);
+      else if (this.courseHere) PQFieldCourse.open(this.courseHere);
+    }
+    selectRegion(id){
+      if (PQ.continentCourses[id]?.chapters) PQFieldCourse.open(id);
+      else this.focusRegion(id);
     }
     focusRegion(id){
       const r=W.regions.find(r=>r.id===id);if(!r)return;this.closeJournal();this.world.setMode('orbit');
@@ -504,8 +512,13 @@
         const r=W.regionAt(w.playerPos.x,w.playerPos.z),bridge=W.bridgeAt(w.playerPos.x,w.playerPos.z),name=r?r.name:bridge?bridge.name:'星火岛';
         if(name!==this.regionName){this.regionName=name;this.regionEl.innerHTML=`${name} <span>· ${r?r.continent:bridge?'海上漫游':'探索者的起点'}</span>`;if(walking&&r)w.setStatus(`抵达 ${r.name} · 寻找发光信标`,3500);}
         const near=walking?W.regions.find(r=>Math.hypot(w.playerPos.x-r.x-3,w.playerPos.z-r.z+2)<4.8):null;this.near=near?.id;
-        this.prompt.hidden=!near||!this.panel.hidden;
-        if(near)this.prompt.textContent=`E / 轻点 · ${this.state()[near.id]?'重读手记':'发现'}「${near.name}」`;
+        this.courseHere=walking && r && PQ.continentCourses[r.id]?.chapters ? r.id : null;
+        this.prompt.classList.toggle('course-island', !!this.courseHere);
+        this.prompt.hidden=(!near && !this.courseHere)||!this.panel.hidden;
+        if(!this.prompt.hidden){
+          const label=near ? `E / 轻点 · ${this.state()[near.id]?'重读手记':'发现'}「${near.name}」` : 'E / 轻点 · '+PQ.continentCourses[r.id].title;
+          if(this.prompt.textContent!==label)this.prompt.textContent=label;
+        }
       }
       if(this.panel&&!this.panel.hidden){w.keys={};w.walkGoal=null;w.joyVec={x:0,z:0};}
     }
