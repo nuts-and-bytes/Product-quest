@@ -2815,7 +2815,8 @@
       );
       this.raycaster.setFromCamera(ndc, this.camera);
 
-      const hits = this.raycaster.intersectObjects(this.hitTargets, false).filter(hit=>!hit.object.userData.buildingId||!this.visibility?.throughCutout(hit.object.userData.buildingId,clientX-rect.left,clientY-rect.top));
+      if (window.PQFieldCourse?.active && PQFieldCourse.hit(this.raycaster)) return;
+      const hits = window.PQFieldCourse?.active ? [] : this.raycaster.intersectObjects(this.hitTargets, false).filter(hit=>!hit.object.userData.buildingId||!this.visibility?.throughCutout(hit.object.userData.buildingId,clientX-rect.left,clientY-rect.top));
       if (hits.length > 0) {
         const ud = hits[0].object.userData;
         if (ud.expeditionId) { this.environment.inspect(ud.expeditionId); return; }
@@ -2901,6 +2902,7 @@
       if(window.PQNightMarketScene&&typeof G!=='undefined'&&G.nightMarket)PQNightMarketScene.worldUpdate(dt);
       this._updateAmbient(dt, tSec);
       this._updateCamera(dt, now, tSec);
+      window.PQFieldCourse?.update();
       this.environment.update(dt, tSec);
       this.environment.render();
       if (now - (this._portraitTime || 0) > 66) {

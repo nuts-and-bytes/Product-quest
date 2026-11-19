@@ -6,6 +6,8 @@ const destination=resolve(process.argv[2]||resolve(root,'dist/Product-Quest.html
 let html=await readFile(resolve(root,'index.html'),'utf8');
 // The offline build must never request analytics or external runtime assets.
 html=html.replace(/<script\b[^>]*\bsrc=["']https?:\/\/[^"']+["'][^>]*>\s*<\/script>/gi,'');
+const museum = await readFile(resolve(root,'AI-Museum.html'));
+html = html.replace('</head>', () => `<script>window.PQOfflineMuseum='${museum.toString('base64')}';</script>\n</head>`);
 for(const match of [...html.matchAll(/<script\s+src="([^"]+)"\s*><\/script>/g)]){
   const file=resolve(root,match[1].split('?')[0]);
   if(relative(root,file).startsWith('..'))throw new Error('Script outside source directory');

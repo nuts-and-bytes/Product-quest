@@ -3,8 +3,17 @@
  'use strict';const $=id=>document.getElementById(id),A=PQAI;
  const J={
   init(){
-   const counts=document.querySelectorAll('.land-stat b');if(counts[0])counts[0].textContent=String((PQ.milestones?.length||8)+1+new Set(A.levels(PQ.levels).map(A.chapterId)).size).padStart(2,'0');if(counts[1])counts[1].textContent=String(PQ.levels.length);
-   $('game').insertAdjacentHTML('beforeend','<dialog id="ai-route" aria-labelledby="ai-route-title"><header><div><span>STAR TIDE / 星潮观测站</span><h2 id="ai-route-title">AI 大陆 · 潮汐工坊</h2></div><button id="ai-route-close" aria-label="关闭章节目录">关闭</button></header><p id="ai-route-summary"></p><button id="ai-resume"></button><div id="ai-route-list"></div><button id="ai-route-world">返回群岛</button></dialog>');
+   const fieldChapters = PQ.continentCourses.growth.chapters.length + PQ.continentCourses.design.chapters.length;
+   const counts=document.querySelectorAll('.land-stat b');if(counts[0])counts[0].textContent=String((PQ.milestones?.length||8)+1+new Set(A.levels(PQ.levels).map(A.chapterId)).size+fieldChapters).padStart(2,'0');if(counts[1])counts[1].textContent=String(PQ.levels.length+fieldChapters);
+   $('game').insertAdjacentHTML('beforeend','<dialog id="ai-route" aria-labelledby="ai-route-title"><header><div><span>STAR TIDE / 星潮观测站</span><h2 id="ai-route-title">AI 大陆 · 潮汐工坊</h2></div><button id="ai-route-close" aria-label="关闭章节目录">关闭</button></header><p id="ai-route-summary"></p><button id="ai-resume"></button><button id="ai-museum-visit">潮汐馆 · AI 博物馆 ↗</button><div id="ai-route-list"></div><button id="ai-route-world">返回群岛</button></dialog>');
+   $('ai-museum-visit').onclick = () => {
+     let url = 'AI-Museum.html';
+     if (window.PQOfflineMuseum) {
+       this.museumUrl ||= URL.createObjectURL(new Blob([Uint8Array.from(atob(window.PQOfflineMuseum), c => c.charCodeAt(0))], {type:'text/html;charset=utf-8'}));
+       url = this.museumUrl;
+     }
+     window.open(url, '_blank', 'noopener');
+   };
    $('ai-route-close').onclick=()=>this.close();$('ai-route-world').onclick=()=>{this.close();G.toMap();};
    $('ai-route').addEventListener('keydown',e=>e.stopPropagation());
   },

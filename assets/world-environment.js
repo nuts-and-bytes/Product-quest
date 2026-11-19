@@ -189,11 +189,28 @@
         const light=new T.PointLight(r.color,3,11,2);light.position.y=3.5;b.add(light);
         b.traverse(m=>{if(m.isMesh){m.castShadow=true;m.receiveShadow=true;}});this.scene.add(b);
         const hit=new T.Mesh(new T.CylinderGeometry(1.6,1.6,6,8),new T.MeshBasicMaterial({visible:false}));hit.position.copy(b.position);hit.position.y=3;hit.userData.expeditionId=r.id;this.scene.add(hit);this.world.hitTargets.push(hit);
-        this.beacons.push({group:b,crystal,ring,light,region:r});
+        const flags = [];
+        if (r.id !== 'ai') {
+          const flagGeo = new T.BoxGeometry(.38, .34, .12);
+          for (let i = 0; i < PQ.continentCourses[r.id].chapters.length; i++) {
+            const flag = new T.Mesh(flagGeo, crystal.material);
+            flag.position.set((i - 1.5) * .45, .7, .85);
+            b.add(flag);
+            flags.push(flag);
+          }
+        }
+        this.beacons.push({group:b,crystal,ring,light,region:r,flags});
       });
+      this.updateCourseFlags();
       const combined=new T.Mesh(bake([...pieces.children],pieces),new T.MeshStandardMaterial({vertexColors:true,roughness:.8,metalness:.05}));combined.castShadow=true;combined.receiveShadow=true;
       this.scene.remove(pieces);this.scene.add(combined);
       const disposed=new Set();pieces.traverse(m=>{if(m.geometry&&!disposed.has(m.geometry)){disposed.add(m.geometry);m.geometry.dispose();}if(m.material&&!disposed.has(m.material)){disposed.add(m.material);m.material.dispose();}});
+    }
+
+    updateCourseFlags() {
+      for (const {region, flags} of this.beacons) {
+        flags.forEach((flag, i) => { flag.visible = !!G.fieldCourses?.[region.id]?.[i]?.done; });
+      }
     }
 
     createFoliage(){
@@ -424,7 +441,14 @@
     }
     showNote(r){
       this.world.keys={};this.panel.innerHTML=`<button class="exp-close" aria-label="关闭探索手记">×</button><div class="exp-eyebrow">${r.continent} / ${r.name}</div><h2>${r.title}</h2><p>${r.text}</p><div class="exp-note-seal">✦ 已加入探索手记</div><button class="exp-primary">查看关联主线</button>`;
-      this.panel.querySelector('.exp-close').onclick=()=>this.closeJournal();if(r.id==='ai')this.panel.querySelector('.exp-primary').textContent='进入 AI 大陆章节';this.panel.querySelector('.exp-primary').onclick=()=>{this.closeJournal();if(r.id==='ai'&&window.PQAIJourney){PQAIJourney.open();return;}this.world.setMode('pan');this.world.focusBuilding(r.building);};this.panel.hidden=false;this.panel.querySelector('.exp-close').focus();
+      if (r.id !== 'ai') {
+        const course = document.createElement('button');
+        course.className = 'exp-primary field-entry';
+        course.textContent = PQ.continentCourses[r.id].title;
+        course.onclick = () => { this.closeJournal(); PQFieldCourse.open(r.id); };
+        this.panel.querySelector('.exp-primary').before(course);
+      }
+      this.panel.querySelector('.exp-close').onclick=()=>this.closeJournal();if(r.id==='ai')this.panel.querySelector('.exp-primary').textContent='进入 AI 大陆章节';this.panel.querySelector('.exp-primary:not(.field-entry)').onclick=()=>{this.closeJournal();if(r.id==='ai'&&window.PQAIJourney){PQAIJourney.open();return;}this.world.setMode('pan');this.world.focusBuilding(r.building);};this.panel.hidden=false;this.panel.querySelector('.exp-close').focus();
     }
     inspect(id){
       const r=W.regions.find(r=>r.id===id);if(!r)return;

@@ -186,6 +186,7 @@ const G = {
 
   init(){
     this.load();
+    this.fieldCourses = PQFieldCourse.normalize(this.fieldCourses);
     if(window.PQNightMarketModel)this.nightMarket=PQNightMarketModel.normalize(this.nightMarket);
     this.renderDex();
     PQ.hydratePxi(document); // 像素图标注入
@@ -199,6 +200,7 @@ const G = {
     if(window.PQCampaign)PQCampaign.init();
     if(window.PQNightMarket)PQNightMarket.init();
     if(window.PQAIJourney)PQAIJourney.init();
+    PQFieldCourse.init();
     const start=document.getElementById('land-cta');
     if(this.progress>0||this.firstDay?.started) start.firstElementChild.textContent='继续我的冒险';
     // 全局眨眼循环
@@ -250,7 +252,7 @@ const G = {
     p.innerHTML=`<div class="tp-box"><b>${PQ.pxi('book',14,'var(--accent)')} ${t.name}</b><div class="tp-def">${t.def}</div>${t.src?`<div class="tp-src">${t.src}</div>`:''}<div class="tp-close">— 点击任意处关闭 —</div></div>`;
     p.classList.add('show');
   },
-  save(){ try{ localStorage.setItem((window.OPC_SAVE_KEY || 'pmquest2'), JSON.stringify({trust:this.trust,unlocked:this.unlocked,notes:this.notes,progress:this.progress,avatar:this.avatar,stats:this.stats||{},exploration:this.exploration||{},firstDay:this.firstDay,cafeCase:this.cafeCase,lifeFilms:this.lifeFilms,cafeLife:this.cafeLife,campaign:this.campaign,nightMarket:window.PQNightMarketModel?PQNightMarketModel.pack(this.nightMarket):this.nightMarket})); }catch(e){} },
+  save(){ try{ localStorage.setItem((window.OPC_SAVE_KEY || 'pmquest2'), JSON.stringify({trust:this.trust,unlocked:this.unlocked,notes:this.notes,progress:this.progress,avatar:this.avatar,stats:this.stats||{},exploration:this.exploration||{},fieldCourses:this.fieldCourses||{},firstDay:this.firstDay,cafeCase:this.cafeCase,lifeFilms:this.lifeFilms,cafeLife:this.cafeLife,campaign:this.campaign,nightMarket:window.PQNightMarketModel?PQNightMarketModel.pack(this.nightMarket):this.nightMarket})); }catch(e){} },
   load(){ try{ const d=JSON.parse(localStorage.getItem((window.OPC_SAVE_KEY || 'pmquest2'))); if(d){Object.assign(this,d); this.avatar=normalizeAvatar(d.avatar);} }catch(e){} },
 
   /* ---------- 角色DIY ---------- */
@@ -429,7 +431,7 @@ const G = {
     document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
     document.getElementById(id).classList.add('active');
     const g=document.getElementById('game');
-    const is3d=(id==='landing'||id==='avatar-screen'||id==='map-screen'||!!window.PQStory3D?.active);
+    const is3d=(id==='landing'||id==='avatar-screen'||id==='map-screen'||id==='field-screen'||!!window.PQStory3D?.active);
     if(g){
       g.dataset.screen=id;
       g.classList.toggle('world-mode', is3d);
@@ -1010,7 +1012,7 @@ const G = {
   exportSave(){
     SFX.click();
     const raw = localStorage.getItem((window.OPC_SAVE_KEY || 'pmquest2')) ||
-      JSON.stringify({trust:this.trust,unlocked:this.unlocked,notes:this.notes,progress:this.progress,avatar:this.avatar,stats:this.stats||{},exploration:this.exploration||{},firstDay:this.firstDay,cafeCase:this.cafeCase,lifeFilms:this.lifeFilms,cafeLife:this.cafeLife,campaign:this.campaign,nightMarket:window.PQNightMarketModel?PQNightMarketModel.pack(this.nightMarket):this.nightMarket});
+      JSON.stringify({trust:this.trust,unlocked:this.unlocked,notes:this.notes,progress:this.progress,avatar:this.avatar,stats:this.stats||{},exploration:this.exploration||{},fieldCourses:this.fieldCourses||{},firstDay:this.firstDay,cafeCase:this.cafeCase,lifeFilms:this.lifeFilms,cafeLife:this.cafeLife,campaign:this.campaign,nightMarket:window.PQNightMarketModel?PQNightMarketModel.pack(this.nightMarket):this.nightMarket});
     const blob = new Blob([raw], {type:'application/json'});
     const a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
@@ -1126,7 +1128,7 @@ function bootPQ(){
     panel.querySelector('button').onclick=()=>location.reload();document.getElementById('game').appendChild(panel);
   };
   if(!window.THREE||!window.PQAI||!window.PQAIJourney||!window.PQScenePrompts||!window.PQIsland||!window.PQMobilePlay||!window.PQFirstDay||!window.PQStory3D||!window.PQCafeModel||!window.PQCafeScene||!window.PQCafeCase||!window.PQLifeState||!window.PQLifeFilm||!window.PQChapterJourney||!window.PQChapterRooms||!window.PQCafeLife||!window.PQCafeNavigation||!window.PQCafeWalk||!window.PQPropInspector||!window.PQPropLibrary||!window.PQChapterTable||!window.PQChapterScene||!window.PQCampaign||!window.PQNightMarket||!window.PQNightMarketScene||!window.PQNightMarketModel){retry();return;}
-  try{ G.init();const params=new URLSearchParams(location.search);if(params.get('experience')==='ai')PQAIJourney.open();else if(params.get('experience')==='market')PQNightMarket.open(params.get('visit')==='1');else if(params.get('experience')==='cafe')PQCafeCase.open(params.get('film'));else if(params.get('experience')==='cafe-life'){PQStory3D.enter('cafe','xiaomei');G.show('social-screen');PQFirstDay.renderCafe();}else if(params.get('experience')==='chapters'){const requested=params.get('chapter');PQCampaign.open(PQChapterJourney.available(G.campaign,requested,PQCampaign.legacy())?requested:G.campaign.current);} }catch(e){ console.error('PQ boot error:', e);retry(); }
+  try{ G.init();const params=new URLSearchParams(location.search);if(['growth','design'].includes(params.get('experience')))PQFieldCourse.open(params.get('experience'));else if(params.get('experience')==='ai')PQAIJourney.open();else if(params.get('experience')==='market')PQNightMarket.open(params.get('visit')==='1');else if(params.get('experience')==='cafe')PQCafeCase.open(params.get('film'));else if(params.get('experience')==='cafe-life'){PQStory3D.enter('cafe','xiaomei');G.show('social-screen');PQFirstDay.renderCafe();}else if(params.get('experience')==='chapters'){const requested=params.get('chapter');PQCampaign.open(PQChapterJourney.available(G.campaign,requested,PQCampaign.legacy())?requested:G.campaign.current);} }catch(e){ console.error('PQ boot error:', e);retry(); }
 }
 window.G = G;
 window.PLAYER_TPL = PLAYER_TPL;
