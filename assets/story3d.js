@@ -191,7 +191,7 @@
       if(!reduced&&!(caseMode&&PQCafeScene.view==='evidence'))this.dust.rotation.y=Math.sin(t*.08)*.025;
       if(window.PQCafeScene?.active)PQCafeScene.update(dt,t);
       this.dust.visible=e.tier>0;
-      if(this.kind==='cafe'){
+      if(this.kind==='cafe'&&!window.PQCafeLife?.active){
         for(const [id,key] of [['cafe-mei','xiaomei'],['cafe-li','lijie']]){
           const el=document.getElementById(id),rig=this.npcs[key];
           el.hidden=!document.getElementById('social-screen').classList.contains('active')||PQFirstDay.dialogOpen||(!G.firstDay.drink&&!window.PQCafeLife?.active)||!rig;

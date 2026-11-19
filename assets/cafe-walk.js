@@ -3,9 +3,10 @@
  'use strict';const N=PQCafeNavigation,T=THREE,$=id=>document.getElementById(id);
  const W={active:false,keys:{},joy:{x:0,z:0},route:[],yaw:0,overview:false,moving:false,
   init(){
-   $('social-screen').insertAdjacentHTML('beforeend',`<div id="cafe-walk-tools"><button id="cafe-overview" aria-pressed="false">查看全景</button><button id="cafe-menu" aria-expanded="false" aria-controls="cafe-actions">馆内手记</button></div><div id="cafe-stick" role="group" aria-label="移动摇杆"><span></span></div><button id="cafe-nearby" hidden></button><p id="cafe-walk-status" role="status"></p>`);
+   $('social-screen').insertAdjacentHTML('beforeend',`<div id="cafe-walk-tools"><button id="cafe-overview" aria-pressed="false">查看全景</button><button id="cafe-menu" aria-expanded="false" aria-controls="cafe-actions">馆内手记</button></div><div id="cafe-stick" role="group" aria-label="移动摇杆"><span></span></div><div id="cafe-context" role="group" aria-label="附近的交互目标" aria-live="polite" aria-atomic="true" hidden><button id="cafe-nearby"></button><button id="cafe-target-next" aria-label="切换附近的交互目标" hidden></button></div><p id="cafe-walk-status" role="status"></p>`);
    $('cafe-overview').onclick=()=>{this.overview=!this.overview;$('cafe-overview').textContent=this.overview?'回到身边':'查看全景';$('cafe-overview').setAttribute('aria-pressed',String(this.overview));};
    $('cafe-menu').onclick=()=>this.menu(!$('game').classList.contains('cafe-menu-open'));
+   $('cafe-target-next').onclick=()=>this.cycleTarget();
    $('cafe-nearby').onclick=()=>{if(this.nearby)this.request(this.nearby.id);};
    const stick=$('cafe-stick');
    const drag=e=>{if(e.pointerId!==this.stickId)return;const b=stick.getBoundingClientRect(),x=(e.clientX-b.left-b.width/2)/32,z=(e.clientY-b.top-b.height/2)/32,n=Math.max(1,Math.hypot(x,z));this.joy={x:x/n,z:z/n};stick.firstElementChild.style.transform=`translate(${this.joy.x*27}px,${this.joy.z*27}px)`;};
@@ -15,6 +16,7 @@
     if(!this.active||this.blocked()||e.altKey||e.metaKey||e.ctrlKey||e.target.closest?.('input,textarea,select,[contenteditable=true]'))return;
     const key=e.key.toLowerCase();if(['w','a','s','d','arrowup','arrowleft','arrowdown','arrowright'].includes(key)){e.preventDefault();e.stopImmediatePropagation();this.route=[];this.pending=null;this.menu(false);this.keys[key]=true;}
     if(key==='e'&&!e.repeat&&this.nearby){e.preventDefault();e.stopImmediatePropagation();this.request(this.nearby.id);}
+    if(key==='q'&&!e.repeat){e.preventDefault();e.stopImmediatePropagation();this.cycleTarget();}
     if(key==='escape'){this.stop();this.menu(false);}
    },true);
    window.addEventListener('keyup',e=>{delete this.keys[e.key.toLowerCase()];},true);
@@ -25,7 +27,7 @@
   stop(){this.keys={};this.releaseStick();this.route=[];this.pending=null;this.moving=false;},
   blocked(){return !this.active||PQCafeLife.vista||PQCafeLife.arrival||PQFirstDay.dialogOpen||PQPropInspector.active||PQLifeFilm.active||!$('social-screen').classList.contains('active');},
   attach(){
-   this.active=true;this.stop();this.yaw=0;this.overview=false;this.menu(false);$('game').classList.add('cafe-walk-mode');$('cafe-overview').textContent='查看全景';$('cafe-overview').setAttribute('aria-pressed','false');
+   this.active=true;this.stop();this.nearby=null;this.targetLock=null;this.promptMeasure=0;this.yaw=0;this.overview=false;this.menu(false);$('game').classList.add('cafe-walk-mode');$('cafe-overview').textContent='查看全景';$('cafe-overview').setAttribute('aria-pressed','false');
    this.makeShell();this.shell.visible=true;const r=PQStory3D,p=r.player.group.position,free=N.nearest(p,this.obstacles());if(free){p.x=free.x;p.z=free.z;}r.player.group.rotation.y=Math.PI;
    this.frame(r.focusTarget,r.cameraGoal);r.lookTarget.copy(r.focusTarget);r.camPosition.copy(r.cameraGoal);
    const canvas=PQIsland.renderer.domElement;this.canvas=canvas;
@@ -59,7 +61,7 @@
   touch(){return matchMedia('(pointer:coarse)').matches;},
   status(text){if($('cafe-walk-status').textContent!==text)$('cafe-walk-status').textContent=text;},
   request(id,done){
-   if(this.blocked())return;const target=this.targets().find(p=>p.id===id);if(!target)return;
+   if(this.blocked())return;this.targetLock=id;const target=this.targets().find(p=>p.id===id);if(!target)return;
    this.walkTo(target,()=>{this.stop();const p=PQStory3D.player.group.position,n=PQStory3D.npcs[id]?.group;if(n) {PQStory3D.player.group.rotation.y=Math.atan2(n.position.x-p.x,n.position.z-p.z);n.rotation.y=Math.atan2(p.x-n.position.x,p.z-n.position.z);}
     if(done)done();else if(id==='order'){PQCafeLife.spot='counter';PQCafeLife.render();this.menu(true);}else PQCafeLife.perform(id);
    },target.label);
@@ -86,10 +88,67 @@
   },
   update(t){
    if(!this.active)return;PQIsland.animateCharacter(PQStory3D.player,this.moving,PQIsland.environment.reducedMotion?0:t,0);
-   const p=PQStory3D.player.group.position,near=this.targets().filter(t=>N.dist(p,t)<1.05).sort((a,b)=>N.dist(p,a)-N.dist(p,b))[0];this.nearby=near;
-   const b=$('cafe-nearby');b.hidden=this.blocked()||!near;b.textContent=near?(this.touch()?'':'E · ')+near.label:'';
+   this.updateTargets();
    if(!this.route.length&&!this.blocked())this.marker.visible=false;
   },
-  detach(){if(!this.active)return;this.active=false;this.stop();this.menu(false);this.pointer=null;for(const [name,fn]of [['pointerdown',this.down],['pointermove',this.drag],['pointerup',this.up],['pointercancel',this.cancel]])this.canvas?.removeEventListener(name,fn);this.canvas=null;this.marker.visible=false;this.shell.visible=false;$('game').classList.remove('cafe-walk-mode');}
+  selectTarget(id){
+   if(this.blocked())return;const target=this.candidates?.find(t=>t.id===id);if(!target)return;
+   this.targetLock=id;this.nearby=target;this.updateTargets();
+  },
+  cycleTarget(){
+   if(this.blocked()||!this.candidates?.length)return;const i=this.candidates.findIndex(t=>t.id===this.nearby?.id);this.selectTarget(this.candidates[(i+1)%this.candidates.length].id);
+  },
+  updateTargets(){
+   const p=PQStory3D.player.group.position;
+   this.candidates=this.targets().filter(t=>!(t.id==='order'&&G.firstDay.drink)&&N.dist(p,t)<2.2);
+   const current=this.candidates.find(t=>t.id===this.nearby?.id),locked=this.candidates.find(t=>t.id===this.targetLock);
+   const closest=this.candidates.reduce((best,t)=>!best||N.dist(p,t)<N.dist(p,best)?t:best,null);
+   // A deliberate selection remains selected while in reach; equal-distance cups and notes never flicker.
+   this.nearby=locked||(current&&closest&&N.dist(p,current)<N.dist(p,closest)+.4?current:closest);
+   if(!locked)this.targetLock=null;
+   const near=this.nearby,hidden=this.blocked()||!near||this.moving||this.route.length>0||$('game').classList.contains('cafe-menu-open');
+   $('cafe-context').hidden=!!hidden;$('game').classList.toggle('cafe-context-open',!hidden);
+   const b=$('cafe-nearby'),label=near?(this.touch()?'':'E · ')+near.label:'';
+   if(b.textContent!==label)b.textContent=label;
+   const next=$('cafe-target-next');next.hidden=this.candidates.length<2;
+   const count=this.candidates.findIndex(t=>t.id===near?.id)+1,text=(this.touch()?'切换':'Q 切换')+' '+count+'/'+this.candidates.length;
+   if(next.textContent!==text)next.textContent=text;
+  },
+  layoutPrompts(rows){
+   const w=PQIsland,r=PQStory3D,width=w.renderer.domElement.clientWidth,height=w.renderer.domElement.clientHeight,screen={width,height},F=PQWorldFraming;
+   w.camera.updateMatrixWorld();this.projectPoint||=new T.Vector3();const v=this.projectPoint;
+   // Project a body volume, not a fixed 60px strip: close-up characters occupy much more screen space.
+   const projectBody=(position,radius,low,high)=>{let x0=Infinity,y0=Infinity,x1=-Infinity,y1=-Infinity;
+    for(const x of [-radius,radius])for(const y of [low,high])for(const z of [-.65,.65]){v.set(position.x+x,position.y+y,position.z+z).project(w.camera);const px=(v.x*.5+.5)*width,py=(-v.y*.5+.5)*height;x0=Math.min(x0,px);x1=Math.max(x1,px);y0=Math.min(y0,py);y1=Math.max(y1,py);}
+    return {x:x0-8,y:y0-8,width:x1-x0+16,height:y1-y0+16};
+   };
+   const hero=r.player.group.position,body=projectBody(hero,.95,0,2.95);this.heroRect=body;
+   const people=Object.values(r.npcs).filter(n=>n.group.visible).map(n=>projectBody(n.group.position,.85,.7,2.85));
+   const now=performance.now(),stamp=width+':'+height+':'+$('game').classList.contains('cafe-menu-open')+':'+this.touch();
+   if(this.promptStamp!==stamp||now>(this.promptMeasure||0)){
+    this.promptStamp=stamp;this.promptMeasure=now+150;this.promptObstacles=[];
+    for(const el of document.querySelectorAll('#social-screen .room-header,#cafe-walk-tools,#cafe-actions,#cafe-spots,#cafe-stick')){const style=getComputedStyle(el);if(el.hidden||style.display==='none'||style.visibility==='hidden')continue;const b=el.getBoundingClientRect();if(b.width&&b.height)this.promptObstacles.push({x:b.x,y:b.y,width:b.width,height:b.height});}
+    const safe=PQMobilePlay.insets;for(const b of [{x:0,y:0,width:safe.left,height},{x:width-safe.right,y:0,width:safe.right,height},{x:0,y:0,width,height:safe.top},{x:0,y:height-safe.bottom,width,height:safe.bottom}])if(b.width&&b.height)this.promptObstacles.push(b);
+   }
+   const occupied=[body,...people,...this.promptObstacles],dock=$('cafe-context');
+   if(!dock.hidden){
+    const size={width:dock.offsetWidth,height:dock.offsetHeight},anchor={x:width*.5,y:height-62};
+    const place=F.placeLabel(anchor,size,screen,occupied);dock.style.visibility=place?'':'hidden';
+    if(place){dock.style.left=place.x+'px';dock.style.top=place.y+'px';occupied.push(place);}
+   }
+   // Only tiny world markers remain. If a marker cannot stay near its object without covering the hero, hide it;
+   // the object remains selectable through the single context strip and Q / the touch switch button.
+   rows.sort((a,b)=>Number(b.id===this.nearby?.id)-Number(a.id===this.nearby?.id));
+   for(const row of rows){
+    const {id,b,point}=row;v.copy(point).project(w.camera);
+    b.hidden=this.blocked()||this.moving||this.route.length>0||Math.abs(v.x)>.96||Math.abs(v.y)>.96||v.z>1||v.z< -1||(!this.overview&&N.dist(hero,point)>3.1&&!this.candidates.some(t=>t.id===id));
+    b.classList.add('cafe-dot');b.classList.toggle('is-current',id===this.nearby?.id);b.setAttribute('aria-pressed',String(id===this.nearby?.id));
+    if(b.hidden)continue;
+    const anchor={x:(v.x*.5+.5)*width,y:(-v.y*.5+.5)*height},place=F.placeLabel(anchor,{width:44,height:44},screen,occupied);
+    const nearby=place&&Math.hypot(place.x+22-anchor.x,place.y+22-anchor.y)<76;
+    b.style.visibility=nearby?'':'hidden';if(nearby){b.style.transform='none';b.style.left=place.x+'px';b.style.top=place.y+'px';occupied.push(place);}
+   }
+  },
+  detach(){if(!this.active)return;this.active=false;this.stop();this.menu(false);this.pointer=null;for(const [name,fn]of [['pointerdown',this.down],['pointermove',this.drag],['pointerup',this.up],['pointercancel',this.cancel]])this.canvas?.removeEventListener(name,fn);this.canvas=null;for(const id of ['cafe-mei','cafe-li']){const b=$(id);b.style.left=b.style.top='0px';b.style.visibility='';b.classList.remove('cafe-dot','is-current');b.removeAttribute('aria-pressed');}$('cafe-context').hidden=true;$('game').classList.remove('cafe-context-open');this.marker.visible=false;this.shell.visible=false;$('game').classList.remove('cafe-walk-mode');}
  };window.PQCafeWalk=W;
 })();

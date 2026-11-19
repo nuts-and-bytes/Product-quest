@@ -4,7 +4,7 @@
  const C={active:false,vista:false,spot:'counter',room:null,
   init(){
    G.cafeLife=M.normalize(G.cafeLife);
-   $('social-screen').insertAdjacentHTML('beforeend',`<nav id="cafe-spots" aria-label="在咖啡馆走走"><button data-spot="counter">柜台</button><button data-spot="window">窗边</button><button data-spot="terrace">海风露台 ↗</button></nav><div id="cafe-life-pins" aria-label="可查看的物件"></div><i id="cafe-avatar-clearance" aria-hidden="true"></i><div id="cafe-arrival" hidden><span>阿凯推开门，走向你留的位置。</span><button id="cafe-arrival-skip">跳过动作</button></div><p id="cafe-life-hint" role="status">点人物聊聊，点桌上的物件拿起来看。</p>`);
+   $('social-screen').insertAdjacentHTML('beforeend',`<nav id="cafe-spots" aria-label="在咖啡馆走走"><button data-spot="counter">柜台</button><button data-spot="window">窗边</button><button data-spot="terrace">海风露台 ↗</button></nav><div id="cafe-life-pins" aria-label="可查看的物件"></div><div id="cafe-arrival" hidden><span>阿凯推开门，走向你留的位置。</span><button id="cafe-arrival-skip">跳过动作</button></div><p id="cafe-life-hint" role="status">点人物聊聊，点桌上的物件拿起来看。</p>`);
    $('cafe-arrival-skip').onclick=()=>this.finishArrival();
    $('cafe-spots').onclick=e=>{const b=e.target.closest('[data-spot]');if(b)this.go(b.dataset.spot);};
    $('game').insertAdjacentHTML('beforeend',`<section id="cafe-vista" aria-label="海风露台" hidden><header><div><span>BLUE MOUNTAIN / OUTSIDE</span><h2 id="vista-title">让海风吹一会儿。</h2></div><button id="vista-back">回到咖啡馆</button></header><nav aria-label="看向岛上的不同地方"><button data-view="bay">星火海湾</button><button data-view="garden">花信步道</button><button data-view="cafe">蓝山的屋檐</button></nav><footer><p id="vista-line"></p><button id="vista-keep" hidden>把这一幕画在明信片上</button></footer></section>`);
@@ -29,6 +29,7 @@
    };
    PQCafeWalk.attach();this.canvas.addEventListener('click',this.pick);
    $('cafe-mei').onclick=()=>this.interact('xiaomei');$('cafe-li').onclick=()=>this.interact('lijie');
+   for(const [id,key]of [['cafe-mei','xiaomei'],['cafe-li','lijie']]){$(id).onfocus=()=>{if($(id).matches(':focus-visible'))PQCafeWalk.selectTarget(key);};}
   },
   build(){
    const r=PQStory3D,root=new T.Group();r.scene.add(root);this.props={root};
@@ -41,8 +42,7 @@
    this.props.wall=r.text(['来自海风的一张明信片','这里，也留一个你的位置。'],-.45,3.5,-6.02,2.3,1.5,'#dfc28f','#365b51');root.add(this.props.wall);
    this.props.sent=r.text(['待寄出 · 给妈妈'],1.7,2.18,-3.1,1.15,.5,'#cfad7a','#365347');this.props.sent.rotation.x=-Math.PI/2;root.add(this.props.sent);
    r.ensureNpc('akai');r.npcs.akai.group.visible=false;r.ensureNpc('xiaomei');
-   this.pinRows=[['postcard','明信片 · 拿起来看看'],['note','留座便笺 · 翻一翻'],['cup','桌上的杯子']].map(([id,text])=>{const b=document.createElement('button');b.textContent=text;b.dataset.prop=id;b.onclick=()=>this.interact(id);$('cafe-life-pins').append(b);return {id,b};});
-   this.point=new T.Vector3();
+   this.pinRows=[['postcard','明信片 · 拿起来看看'],['note','留座便笺 · 翻一翻'],['cup','桌上的杯子']].map(([id,text])=>{const b=document.createElement('button');b.textContent=text;b.setAttribute('aria-label',text);b.dataset.prop=id;b.onclick=()=>this.interact(id);b.onfocus=()=>{if(b.matches(':focus-visible'))PQCafeWalk.selectTarget(id);};$('cafe-life-pins').append(b);return {id,b};});
   },
   sync(){
    if(!this.props||!this.active)return;const s=G.cafeLife,r=PQStory3D;
@@ -100,15 +100,13 @@
   },
   update(dt,t){
    if(!this.active)return;
-   PQCafeWalk.update(t);const w=PQIsland,width=w.renderer.domElement.clientWidth,height=w.renderer.domElement.clientHeight;
+   PQCafeWalk.update(t);const w=PQIsland;
    const guest=PQStory3D.npcs.akai,reduced=w.environment.reducedMotion||PQCafeCase.reduceMotion;
    if(this.arrival){const a=this.arrival;a.time+=dt;const u=Math.min(1,a.time/a.duration)*(a.points.length-1),index=Math.min(a.points.length-2,Math.floor(u)),from=a.points[index],to=a.points[index+1];guest.group.position.copy(from).lerp(to,u-index);guest.group.rotation.y=Math.atan2(to.x-from.x,to.z-from.z);w.animateCharacter(guest,true,reduced?0:t,3);if(u>=a.points.length-1||reduced)this.finishArrival();}
    else if(G.cafeLife.seat.choice&&guest.group.visible){guest.leftLeg.rotation.x=guest.rightLeg.rotation.x=-1.15;guest.leftArm.rotation.x=-.25;guest.rightArm.rotation.x=-.3;}
-   for(const row of this.pinRows){const p=this.props[row.id];this.point.copy(p.position);this.point.y+=.35;this.point.project(w.camera);row.b.style.left=(this.point.x*.5+.5)*width+'px';row.b.style.top=(-this.point.y*.5+.5)*height+'px';row.b.hidden=PQFirstDay.dialogOpen||this.vista||PQPropInspector.active||this.point.z>1||Math.abs(this.point.x)>.92||Math.abs(this.point.y)>.9||PQCafeNavigation.dist(PQStory3D.player.group.position,this.props[row.id].position)>3.1;}
-   // Reserve the hero's projected body as well as UI; a prop label must not hide the player.
-   const hero=PQStory3D.player.group.position,clear=$('cafe-avatar-clearance');this.point.copy(hero);this.point.y+=2.65;this.point.project(w.camera);const top=(-this.point.y*.5+.5)*height-6,x=(this.point.x*.5+.5)*width;
-   this.point.copy(hero);this.point.project(w.camera);const bottom=(-this.point.y*.5+.5)*height+6;clear.style.cssText=`left:${x-30}px;top:${top}px;width:60px;height:${Math.max(20,bottom-top)}px`;
-   PQMobilePlay.placePins('#cafe-life-pins button:not([hidden])','#social-screen .room-header,#cafe-actions,#cafe-spots,#cafe-mei,#cafe-li,#cafe-avatar-clearance',true);
+   const rows=this.pinRows.map(row=>({...row,point:this.props[row.id].position.clone().add(new T.Vector3(0,.35,0))}));
+   for(const [id,key]of [['cafe-mei','xiaomei'],['cafe-li','lijie']]){const npc=PQStory3D.npcs[key];if(npc?.group.visible)rows.push({id:key,b:$(id),point:npc.group.position.clone().add(new T.Vector3(0,2.8,0))});else $(id).hidden=true;}
+   PQCafeWalk.layoutPrompts(rows);
   },
   startVista(){
    if(!this.active||this.vista||PQPropInspector.active)return;PQCafeWalk.stop();PQFirstDay.closeDialog();const w=PQIsland,c=w.camera;

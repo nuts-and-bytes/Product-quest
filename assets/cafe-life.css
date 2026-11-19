@@ -26,7 +26,6 @@
 
 #cafe-arrival[hidden]{display:none!important}#cafe-arrival{position:absolute;left:50%;bottom:calc(var(--play-bottom) + 35px);transform:translateX(-50%);display:flex;gap:12px;align-items:center;padding:12px 16px;border:1px solid #cabd9466;background:#1b3838ef;border-radius:12px;max-width:calc(100% - 32px);font:13px/1.6 system-ui;color:#eee3c6;pointer-events:auto}#cafe-arrival button{min-width:80px;min-height:44px;background:#ddc18c;color:#243d33;border:0;border-radius:7px;cursor:pointer}.cafe-arriving #cafe-actions,.cafe-arriving #cafe-spots,.cafe-arriving #cafe-life-pins,.cafe-arriving #cafe-mei,.cafe-arriving #cafe-li,.cafe-arriving #cafe-life-hint{visibility:hidden}
 
-#cafe-avatar-clearance{position:absolute;visibility:hidden;pointer-events:none}
 
 /* Indoor exploration: the room is the primary interface. */
 #cafe-walk-tools,#cafe-stick,#cafe-nearby,#cafe-walk-status{display:none}
@@ -43,3 +42,20 @@
 @media(hover:hover) and (pointer:fine){.cafe-walk-mode #cafe-stick{display:none}}
 @media(orientation:landscape) and (max-height:600px){.cafe-walk-mode #cafe-walk-tools{top:calc(var(--play-top) + 50px)}#cafe-walk-tools button{font-size:11px;padding:8px 11px}.cafe-walk-mode #cafe-actions{top:calc(var(--play-top) + 98px)!important}.cafe-walk-mode #cafe-walk-status{font-size:10px;max-width:45%}.cafe-walk-mode #cafe-stick{width:86px;height:86px;bottom:calc(var(--play-bottom) + 45px)}#cafe-stick span{left:21px;top:21px}.cafe-walk-mode #cafe-nearby:not([hidden]){bottom:calc(var(--play-bottom) + 55px);font-size:12px}}
 @media(orientation:portrait){.cafe-walk-mode #cafe-walk-status{bottom:calc(var(--play-bottom) + 175px);max-width:70%;font-size:11px}.cafe-walk-mode #cafe-spots{left:50%;right:auto;transform:translateX(-50%)}.cafe-walk-mode #cafe-nearby:not([hidden]){bottom:calc(var(--play-bottom) + 115px);left:auto;right:var(--play-right);transform:none;max-width:60%}.cafe-walk-mode #cafe-actions{bottom:calc(var(--play-bottom) + 190px)!important;max-height:38%!important}}
+
+/* One readable action; nearby props and people use quiet, accessible point markers. */
+#cafe-context{display:none}#cafe-context[hidden],#cafe-target-next[hidden]{display:none!important}
+.cafe-walk-mode #cafe-context{position:absolute;width:max-content;display:flex;align-items:stretch;gap:4px;padding:4px;border:1px solid #ddc28a65;border-radius:12px;background:#183b35ed;box-shadow:0 5px 24px #102c2430;max-width:calc(100% - 24px);pointer-events:auto;z-index:4}
+.cafe-walk-mode #cafe-context #cafe-nearby{position:static;display:block;transform:none;max-width:none;min-height:44px;min-width:44px;white-space:nowrap;font:13px/1.4 system-ui;background:#e1c38c;color:#263e35;border:0;border-radius:8px;padding:10px 14px}
+#cafe-target-next{min-width:44px;min-height:44px;padding:8px 12px;border:0;border-radius:8px;background:transparent;color:#eee3c6;font:12px/1.4 system-ui;cursor:pointer;touch-action:manipulation}
+#cafe-target-next:hover{background:#36554b}#cafe-target-next:focus-visible{outline:3px solid #e7c988;outline-offset:1px}
+.cafe-walk-mode #social-screen .cafe-dot{position:absolute;width:44px;height:44px;min-width:44px;min-height:44px;padding:0;border:0;border-radius:50%;background:transparent;box-shadow:none;font-size:0;line-height:0;color:transparent;cursor:pointer;touch-action:manipulation}
+.cafe-walk-mode #social-screen .cafe-dot:after{content:'';position:absolute;width:9px;height:9px;left:17px;top:17px;border:1px solid #f2e7c6bd;border-radius:50%;background:#31584bde;box-shadow:0 1px 5px #112e2980;pointer-events:none}
+.cafe-walk-mode #social-screen .cafe-dot.is-current:after,.cafe-walk-mode #social-screen .cafe-dot:hover:after{width:13px;height:13px;left:15px;top:15px;background:#f1d08b;border-color:#fff2c9;box-shadow:0 0 0 3px #ead6a330,0 2px 6px #173b3380}
+.cafe-walk-mode #social-screen .cafe-dot:focus-visible{outline:2px solid #ead6a3;outline-offset:-4px}
+.cafe-context-open #cafe-walk-status{visibility:hidden}.conversation-open #cafe-context,.cafe-arriving #cafe-context{visibility:hidden}
+@media(orientation:landscape) and (max-height:600px){.cafe-walk-mode #cafe-context #cafe-nearby{font-size:12px;padding:8px 11px}#cafe-target-next{font-size:11px;padding:8px}.cafe-walk-mode #cafe-context{gap:2px;padding:2px}}
+@media(orientation:portrait){.cafe-walk-mode #cafe-context #cafe-nearby{font-size:12px;padding:8px 10px}#cafe-target-next{font-size:11px;padding:8px}}
+/* Keep the selector footprint stable when cycling from a short item name to a longer one. */
+.cafe-walk-mode #cafe-context #cafe-nearby{min-width:152px}#cafe-target-next{min-width:100px}
+@media(max-width:600px),(orientation:landscape) and (max-height:600px){.cafe-walk-mode #cafe-context #cafe-nearby{min-width:108px}#cafe-target-next{min-width:76px}}
