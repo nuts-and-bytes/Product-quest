@@ -8,9 +8,14 @@
 .ai-story-mode #choices .pxbtn{white-space:normal;text-align:left;flex-shrink:0}
 .ai-story-mode #ai-story-next{flex-shrink:0;background:#e2c993;color:#213f37;position:sticky;bottom:0;align-self:flex-end}
 .ai-story-mode #fb-btn,.ai-story-mode #quiz-next{position:sticky;bottom:0}
-#prop-copy table{border-collapse:collapse;width:100%;table-layout:fixed;overflow-wrap:anywhere}#prop-copy td,#prop-copy th{border:1px solid #829c8166;padding:8px;vertical-align:top;font-size:13px}#prop-copy .kh{font-size:17px;color:#edd49c;margin-bottom:16px}#prop-copy .src{font-size:12px;margin-top:16px;color:#b9c8b6}
+#prop-copy table{border-collapse:collapse;width:100%;table-layout:fixed;overflow-wrap:anywhere}#prop-copy td,#prop-copy th{border:1px solid #829c8166;padding:8px;vertical-align:top;font-size:13px}#prop-copy .kh{font-size:17px;color:#735b34;margin-bottom:16px}#prop-copy .src{font-size:12px;margin-top:16px;color:#526559}
 @media(max-width:600px){#ai-route{padding:18px}#ai-route h2{font-size:20px}.ai-story-mode #hud .loc{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}.ai-story-mode #hud{gap:6px}.ai-story-mode #trust-wrap{min-width:65px}.ai-story-mode #trust-heart{display:none}}
 .ai-story-mode #next-hint{display:none!important}
 .ai-story-mode #dtext,.ai-story-mode #choices{flex-shrink:0}
 .ai-story-mode #hud>button{flex-shrink:0;white-space:nowrap}
 @media(orientation:landscape) and (max-height:600px){.ai-story-mode #hud{height:50px;box-sizing:border-box;padding:2px 6px;flex-wrap:nowrap}.ai-story-mode #hud .loc{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}}
+
+.ai-story-mode #prop-inspector:has(#prop-reading:not([hidden]))>header,.ai-story-mode #prop-inspector:has(#prop-reading:not([hidden]))>footer{visibility:hidden}
+.ai-story-mode #prop-reading{inset:max(12px,var(--device-safe-top)) max(12px,var(--device-safe-right)) max(12px,var(--device-safe-bottom)) max(12px,var(--device-safe-left));display:flex;flex-direction:column;gap:12px;overflow:hidden}
+.ai-story-mode #prop-reading h3{flex-shrink:0;margin:0}.ai-story-mode #prop-reading:has(#prop-copy .kh)>h3{display:none}
+.ai-story-mode #prop-copy{min-height:0;flex:1;overflow:auto;overscroll-behavior:contain}.ai-story-mode #prop-read-close{position:static;flex-shrink:0;align-self:flex-start;min-height:44px}
