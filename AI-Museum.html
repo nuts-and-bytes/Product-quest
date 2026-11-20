@@ -3764,7 +3764,7 @@ canvas.addEventListener('pointerup',e=>{
   }
 });
 canvas.addEventListener('pointercancel',()=>drag=null);
-canvas.addEventListener('wheel',e=>{e.preventDefault();if(!selected)travel=THREE.MathUtils.clamp(travel+e.deltaY*(e.deltaMode?12:1)*.008,-3,3);},{passive:false});
+canvas.addEventListener('wheel',e=>{e.preventDefault();if(!selected && !e.ctrlKey){const unit=e.deltaMode?12:1;yaw-=e.deltaX*unit*.004;travel=THREE.MathUtils.clamp(travel+e.deltaY*unit*.008,-3,3);}},{passive:false});
 addEventListener('keydown',e=>{
  if(e.altKey||e.ctrlKey||e.metaKey)return;
  if(e.code==='Escape'&&selected){browse();return;}

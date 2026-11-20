@@ -1,5 +1,5 @@
 [environments.play]
-label = "增长与设计大陆试玩"
+label = "产品大冒险试玩"
 start = """
 node scripts/build-single-html.mjs dist/preview/index.html &&
 exec node scripts/serve-play.mjs dist/preview/index.html

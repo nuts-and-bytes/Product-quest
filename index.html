@@ -845,6 +845,7 @@
 <link rel="stylesheet" href="assets/scene-prompts.css?v=3.10.2">
 <link rel="stylesheet" href="assets/ai-journey.css?v=3.11.1">
 <link rel="stylesheet" href="assets/continent-course.css">
+<link rel="stylesheet" href="assets/term-display.css">
 </head>
 <body>
 <div id="game" class="world-mode" data-screen="landing">
@@ -1087,6 +1088,7 @@
       <button type="button" class="isl-tool" id="isl-arch-btn" onclick="PQIsland.toggleArchipelago()">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M3.6 9h16.8M3.6 15h16.8M12 3a13 13 0 0 1 0 18M12 3a13 13 0 0 0 0 18"/></svg>群岛全览
       </button>
+      <select data-camera-input></select><small data-camera-hint></small>
       <button type="button" class="isl-tool" id="isl-time-btn" onclick="PQIsland.cycleTimeOfDay()">🕒 实时</button>
     </div>
 
@@ -1120,6 +1122,7 @@
       <header><button id="field-menu"></button><button id="field-view"></button><button id="field-exit"></button></header>
       <h2 id="field-heading"></h2><p id="field-task" aria-live="polite"></p>
       <div id="field-sites"></div>
+      <div class="field-input"><button type="button" id="field-pan" aria-pressed="false">平移</button><button type="button" onclick="G.openDex()">术语图鉴</button><select data-camera-input></select><small data-camera-hint></small></div>
     </div>
     <dialog id="field-dialog" aria-labelledby="field-dialog-title"></dialog>
   </section>
@@ -1196,16 +1199,15 @@
   <div id="toast"></div>
 
   <!-- 术语速查弹窗 -->
-  <div id="term-pop"></div>
+  <dialog id="term-pop" aria-labelledby="term-title"></dialog>
 
   <!-- 术语图鉴 -->
-  <div class="modal" id="dex">
-    <h2><i data-pxi="book" data-size="20" data-color="var(--accent)"></i> 术语图鉴</h2>
+  <dialog class="modal" id="dex" aria-labelledby="dex-title">
+    <h2 id="dex-title">术语图鉴</h2>
     <div class="cnt" id="dex-cnt"></div>
-    <div id="dex-grid"></div>
-    <div id="dex-detail"></div>
+    <div class="dex-cabinet"><section class="dex-lectern"><div class="term-stage" id="dex-stage"></div><small class="term-gesture"></small><div id="dex-detail" aria-live="polite"></div></section><div id="dex-grid"></div></div>
     <button class="pxbtn center closebtn" onclick="G.closeModal('dex')">关闭</button>
-  </div>
+  </dialog>
 
   <!-- 档案馆 -->
   <div class="modal" id="archive">
@@ -1266,6 +1268,9 @@ if(_qp) window.OPC_SAVE_KEY = 'opc-pq-' + (/^[a-zA-Z0-9-]{1,80}$/.test(_qp) ? _q
 <script src="assets/continent-settlements.js"></script>
 <script src="assets/world-environment.js?v=3.11"></script>
 <script src="assets/ai-journey-state.js?v=3.11"></script>
+<script src="content/camera-help.js"></script>
+<script src="assets/camera-input.js"></script>
+<script src="assets/term-display.js"></script>
 <script src="assets/island3d.js?v=3.11"></script>
 <script src="assets/first-day-state.js?v=3.2"></script>
 <script src="content/pm/island-chapters.js?v=3.7"></script>

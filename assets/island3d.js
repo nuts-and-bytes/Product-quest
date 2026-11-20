@@ -2417,9 +2417,20 @@
       if(snap)Object.assign(this.curSpherical,this.spherical);
     },
 
+    detachFollow(on) {
+      this.detachedFollow = on;
+      const button = document.getElementById('field-pan');
+      button.textContent = on ? '定位' : '平移';
+      button.setAttribute('aria-pressed',String(on));
+      PQCameraInput.refresh(this);
+    },
+
     setMode(mode) {
+      if(this.detachedFollow)this.detachFollow(false);
+      document.getElementById('field-pan').hidden=mode==='fp';
       const previous=this.mode;this.rememberWalkView();this.visibility?.resetFollow();
       this.mode = mode;
+      PQCameraInput.refresh(this);
       this.walkGoal = null;
       if (this.goalRing) this.goalRing.visible = false;
       if (this.archipelago) this.setArchipelago(false);
@@ -2439,28 +2450,29 @@
       if (mode === 'fp') {
         this.fpYaw = this.playerYaw;
         this.fpPitch = -0.04;
-        this.setStatus('第一人称模式：拖拽环视街道，WASD / 方向键 / 点击地面行走，靠近建筑按 E 互动', 4200);
+        this.setStatus(PQCameraInput.trackpad ? PQCameraInput.hint(this) : '第一人称模式：拖拽环视街道，WASD / 方向键 / 点击地面行走，靠近建筑按 E 互动', 4200);
       } else if (mode === 'walk') {
         this.camTarget.x = this.playerPos.x;
         this.camTarget.y = 2.0;
         this.camTarget.z = this.playerPos.z;
         if(previous!=='walk')this.frameWalk();
-        this.setStatus('漫步模式：WASD / 方向键 或 点击地面移动立体小人，靠近建筑按 E 互动', 3800);
+        this.setStatus(PQCameraInput.trackpad ? PQCameraInput.hint(this) : '漫步模式：WASD / 方向键 或 点击地面移动立体小人，靠近建筑按 E 互动', 3800);
       } else if (mode === 'orbit') {
         this.spherical.radius = Math.max(24, Math.min(this.spherical.radius, 76));
         this.spherical.polar = 0.84;
-        this.setStatus('环绕模式：左键拖拽 360° 旋转视角，滚轮缩放，右键平移', 3000);
+        this.setStatus(PQCameraInput.trackpad ? PQCameraInput.hint(this) : '环绕模式：左键拖拽 360° 旋转视角，滚轮缩放，右键平移', 3000);
       } else {
         this.spherical.radius = 54;
         this.spherical.polar = 0.80;
         this.spherical.azimuth = 0.56;
-        this.setStatus('平移模式：拖拽探索星火岛，点击建筑开启关卡；在「视角」中切换第一人称与昼夜', 3200);
+        this.setStatus(PQCameraInput.trackpad ? PQCameraInput.hint(this) : '平移模式：拖拽探索星火岛，点击建筑开启关卡；在「视角」中切换第一人称与昼夜', 3200);
       }
     },
 
     setArchipelago(on, snap) {
       this.rememberWalkView();
       this.archipelago = !!on;
+      PQCameraInput.refresh(this);
       const btn = document.getElementById('isl-arch-btn');
       if (btn) btn.classList.toggle('active', this.archipelago);
 
@@ -2485,6 +2497,7 @@
     },
 
     recentre(snap) {
+      if(this.detachedFollow)this.detachFollow(false);
       this.visibility?.resetFollow();
       if (this.archipelago) this.setArchipelago(false, snap);
       if (!this.cinematicMode && (this.mode === 'walk' || this.mode === 'fp')) {
@@ -2718,7 +2731,7 @@
         }
 
         const isRight = prev.btn === 2 || e.shiftKey;
-        if (this.mode === 'pan' && !isRight && !this.archipelago && !this.cinematicMode) {
+        if (this.detachedFollow || this.mode === 'pan' && !isRight && !this.archipelago && !this.cinematicMode) {
           this._panByScreenDelta(dx, dy);
         } else if (this.mode === 'orbit' && isRight) {
           this._panByScreenDelta(dx, dy);
@@ -2741,18 +2754,11 @@
       canvas.addEventListener('pointerup', endPtr);
       canvas.addEventListener('pointercancel', (e) => { this.pointers.delete(e.pointerId); this.dragStart = null; this.pinchDist = 0; });
 
-      canvas.addEventListener('wheel', (e) => {
-        e.preventDefault();
-        if (this.mode === 'fp'||window.PQStory3D?.active||window.PQFirstDay?.dialogOpen) return;
-        const factor = e.deltaY * 0.045;
-        const maxR = this.archipelago ? Math.max(220,220/this.camera.aspect) : (this.cinematicMode?150:96);
-        const minR = this.mode === 'walk' ? 30 : 15;
-        this.spherical.radius = Math.max(minR, Math.min(maxR, this.spherical.radius + factor));
-        this.rememberWalkView();
-      }, { passive: false });
+      PQCameraInput.init(this);
+      PQCameraInput.bind(canvas,this);
 
       window.addEventListener('keydown', (e) => {
-        if (!this.running || this.cinematicMode || window.PQStory3D?.active || window.PQFirstDay?.dialogOpen || window.PQFirstDay?.transitioning || /INPUT|TEXTAREA|SELECT/.test(e.target.tagName) || (this.environment && !this.environment.panel.hidden)) return;
+        if (!this.running || this.cinematicMode || document.querySelector('#dex.show, #term-pop.show, dialog[open]') || window.PQStory3D?.active || window.PQFirstDay?.dialogOpen || window.PQFirstDay?.transitioning || /INPUT|TEXTAREA|SELECT/.test(e.target.tagName) || (this.environment && !this.environment.panel.hidden)) return;
         const k = e.key.toLowerCase();
         if (['arrowup','arrowdown','arrowleft','arrowright',' '].includes(k)) e.preventDefault();
         this.keys[k] = true;
@@ -3119,10 +3125,13 @@
       animateRig(this.playerRig, isMoving, timeSec, 0);
 
       if (this.mode === 'walk') {
-        const follow=this.visibility?.follow()||this.playerPos;
-        this.camTarget.x = follow.x;
-        this.camTarget.y = 2.1;
-        this.camTarget.z = follow.z;
+        if(isMoving && this.detachedFollow)this.detachFollow(false);
+        if(!this.detachedFollow){
+          const follow=this.visibility?.follow()||this.playerPos;
+          this.camTarget.x = follow.x;
+          this.camTarget.y = 2.1;
+          this.camTarget.z = follow.z;
+        }
         this._checkProximity();
       } else if (this.mode === 'fp') {
         this._checkProximity();

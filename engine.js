@@ -210,7 +210,7 @@ const G = {
       const l=e.target.closest&&e.target.closest('.tlink');
       if(l){ e.stopPropagation(); e.preventDefault(); this.termPop(l.dataset.tt,l.dataset.tk); return; }
       const p=e.target.closest&&e.target.closest('#term-pop');
-      if(p){ e.stopPropagation(); p.classList.remove('show'); }
+      if(p && (e.target===p || e.target.closest('.tp-close'))){ e.stopPropagation(); this.closeModal('term-pop'); }
     },true);
   },
   // 匿名统计（Umami未加载/被拦截时静默跳过）
@@ -249,8 +249,17 @@ const G = {
     const t = type==='gloss' ? (window.PQ.gloss||{})[key] : TERMS[key];
     if(!t) return; SFX.click();
     const p=document.getElementById('term-pop');
-    p.innerHTML=`<div class="tp-box"><b>${PQ.pxi('book',14,'var(--accent)')} ${t.name}</b><div class="tp-def">${t.def}</div>${t.src?`<div class="tp-src">${t.src}</div>`:''}<div class="tp-close">— 点击任意处关闭 —</div></div>`;
-    p.classList.add('show');
+    p.innerHTML=`<div class="tp-box"><div class="term-stage"></div><small class="term-gesture"></small><b id="term-title">${t.name}</b><div class="tp-def">${t.def}</div>${t.src?`<div class="tp-src">${t.src}</div>`:''}<button class="tp-close" type="button">关闭</button></div>`;
+    p.querySelector('.term-gesture').textContent=PQ.cameraHelp.cardHint;
+    this.openTermPanel(p);
+    PQTermDisplay.show(p.querySelector('.term-stage'),t);
+  },
+  openTermPanel(panel){
+    panel.classList.add('show');
+    panel.oncancel=e=>{e.preventDefault();this.closeModal(panel.id);};
+    if(!panel.open)panel.showModal();
+    panel.querySelector('button:not([disabled])')?.focus({preventScroll:true});
+    if(window.PQIsland?.keys)PQIsland.keys={};
   },
   save(){ try{ localStorage.setItem((window.OPC_SAVE_KEY || 'pmquest2'), JSON.stringify({trust:this.trust,unlocked:this.unlocked,notes:this.notes,progress:this.progress,avatar:this.avatar,stats:this.stats||{},exploration:this.exploration||{},fieldCourses:this.fieldCourses||{},firstDay:this.firstDay,cafeCase:this.cafeCase,lifeFilms:this.lifeFilms,cafeLife:this.cafeLife,campaign:this.campaign,nightMarket:window.PQNightMarketModel?PQNightMarketModel.pack(this.nightMarket):this.nightMarket})); }catch(e){} },
   load(){ try{ const d=JSON.parse(localStorage.getItem((window.OPC_SAVE_KEY || 'pmquest2'))); if(d){Object.assign(this,d); this.avatar=normalizeAvatar(d.avatar);} }catch(e){} },
@@ -417,6 +426,7 @@ const G = {
   },
 
   show(id, opts){
+    if(id!=='play-screen')PQTermDisplay.release(document.querySelector(".kcard .term-stage"));
     window.PQAIJourney?.close();
     if(window.PQPropInspector?.active)PQPropInspector.close(false);
     if(id!=='social-screen'&&window.PQCafeLife?.active)PQCafeLife.detach();
@@ -669,6 +679,7 @@ const G = {
   },
 
   playNode(){
+    PQTermDisplay.release(document.querySelector(".kcard .term-stage"));
     const lv=LEVELS[this.lvIdx];
     if(this.nodeIdx>=lv.script.length){ this.startQuiz(); return; }
     const node=lv.script[this.nodeIdx];
@@ -691,7 +702,9 @@ const G = {
       dtext.innerHTML=`<div class="kcard">${node.card}</div>`;
       SFX.unlock();
       const card=dtext.querySelector('.kcard');
-      card.onclick=(e)=>{ e.stopPropagation(); this.nodeIdx++; this.playNode(); };
+      const stage=document.createElement('div');stage.className='term-stage';card.prepend(stage);
+      PQTermDisplay.show(stage,{name:card.querySelector('.kh')?.textContent.replace(/^◆\s*/,'')||'知识卡',icon:TERMS[node.term]?.icon});
+      card.onclick=(e)=>{ e.stopPropagation(); if(e.target.closest('.term-stage'))return; this.nodeIdx++; this.playNode(); };
       return;
     }
 
@@ -927,13 +940,8 @@ const G = {
   },
   // 直达术语详情：打开图鉴并展开指定术语
   showTermDetail(key){
-    const t=TERMS[key]; if(!t)return;
-    this.renderDex();
-    document.getElementById('dex').classList.add('show');
-    const d=document.getElementById('dex-detail');
-    d.innerHTML=`<b style="color:var(--accent)">${PQ.pxi("spark",13,"var(--accent)")} ${t.name}</b><br>${t.def}<div class="src">${t.src}</div>`;
-    d.classList.add('show');
-    d.scrollIntoView({block:'nearest'});
+    if(!TERMS[key])return;
+    this.openDex(key);
   },
 
   endLevel(){
@@ -983,17 +991,31 @@ const G = {
     document.getElementById('dex-cnt').textContent=`已收集 ${this.unlocked.length} / ${keys.length}（完整版将收录 200+ 产品术语）`;
     keys.forEach(k=>{
       const t=TERMS[k], has=this.unlocked.includes(k);
-      const card=document.createElement('div'); card.className='dex-card'+(has?'':' locked');
-      card.innerHTML=`<div class="icon">${has?PQ.pxi("spark",22,"var(--accent)"):PQ.pxi("qmark",22,"#5b6b8c")}</div><div class="nm">${has?t.name:'？？？'}</div>`;
-      if(has) card.onclick=()=>{ SFX.click();
-        const d=document.getElementById('dex-detail');
-        d.innerHTML=`<b style="color:var(--accent)">${PQ.pxi("spark",13,"var(--accent)")} ${t.name}</b><br>${t.def}<div class="src">${t.src}</div>`;
-        d.classList.add('show');
-      };
+      const card=document.createElement('button');
+      card.type='button';card.className='dex-card'+(has?'':' locked');card.disabled=!has;
+      card.dataset.term=k;
+      card.innerHTML=`<span class="icon" aria-hidden="true">${has?(t.icon||'✦'):'◇'}</span><span class="nm">${has?t.name:'？？？'}</span>`;
+      if(has)card.onclick=()=>{SFX.click();this.selectTerm(k);};
       grid.appendChild(card);
     });
   },
-  openDex(){ SFX.click(); this.renderDex(); document.getElementById('dex').classList.add('show'); },
+  selectTerm(key){
+    const term=this.unlocked.includes(key)?TERMS[key]:null;
+    const d=document.getElementById('dex-detail');
+    d.innerHTML=term?`<b>${term.name}</b><p>${term.def}</p><div class="src">${term.src||''}</div>`:'';
+    d.classList.toggle('show',!!term);
+    for(const card of document.querySelectorAll('#dex-grid button:not(:disabled)')){
+      card.setAttribute('aria-pressed',String(card.dataset.term===key));
+    }
+    PQTermDisplay.show(document.getElementById('dex-stage'),term,true);
+  },
+  openDex(key){
+    SFX.click();this.renderDex();
+    const panel=document.getElementById('dex');
+    panel.querySelector('.term-gesture').textContent=PQ.cameraHelp.cardHint;
+    this.openTermPanel(panel);
+    this.selectTerm(key || this.unlocked.find(k=>TERMS[k]));
+  },
   openNotes(){ SFX.click();
     const list=document.getElementById('notes-list'); list.innerHTML='';
     const keys=Object.keys(NOTES);
@@ -1006,7 +1028,14 @@ const G = {
     });
     document.getElementById('notes').classList.add('show');
   },
-  closeModal(id){ SFX.click(); document.getElementById(id).classList.remove('show'); const d=document.getElementById('dex-detail'); if(d)d.classList.remove('show'); },
+  closeModal(id){
+    SFX.click();
+    const panel=document.getElementById(id);
+    panel.classList.remove('show');
+    if(panel.open && typeof panel.close==='function')panel.close();
+    const stage=panel.querySelector('.term-stage');
+    if(stage)PQTermDisplay.release(stage);
+  },
 
   /* ---------- 存档导出/导入（无后端的进度迁移方案） ---------- */
   exportSave(){
@@ -1102,6 +1131,7 @@ const G = {
 
 document.getElementById('dialog').addEventListener('click',e=>{ if(e.target.closest('#choices')||e.target.closest('.kcard'))return; G.advance(); });
 document.addEventListener('keydown',e=>{
+  if(document.querySelector('#dex[open],#term-pop[open]'))return;
   if((e.key===' '||e.key==='Enter')&&!/BUTTON|INPUT|TEXTAREA|SELECT/.test(e.target.tagName)){
     if(document.getElementById('play-screen').classList.contains('active')
       && !document.getElementById('feedback').classList.contains('show')
@@ -1128,7 +1158,7 @@ function bootPQ(){
     panel.querySelector('button').onclick=()=>location.reload();document.getElementById('game').appendChild(panel);
   };
   if(!window.THREE||!window.PQAI||!window.PQAIJourney||!window.PQScenePrompts||!window.PQIsland||!window.PQMobilePlay||!window.PQFirstDay||!window.PQStory3D||!window.PQCafeModel||!window.PQCafeScene||!window.PQCafeCase||!window.PQLifeState||!window.PQLifeFilm||!window.PQChapterJourney||!window.PQChapterRooms||!window.PQCafeLife||!window.PQCafeNavigation||!window.PQCafeWalk||!window.PQPropInspector||!window.PQPropLibrary||!window.PQChapterTable||!window.PQChapterScene||!window.PQCampaign||!window.PQNightMarket||!window.PQNightMarketScene||!window.PQNightMarketModel){retry();return;}
-  try{ G.init();const params=new URLSearchParams(location.search);if(['growth','design'].includes(params.get('experience')))PQFieldCourse.open(params.get('experience'));else if(params.get('experience')==='ai')PQAIJourney.open();else if(params.get('experience')==='market')PQNightMarket.open(params.get('visit')==='1');else if(params.get('experience')==='cafe')PQCafeCase.open(params.get('film'));else if(params.get('experience')==='cafe-life'){PQStory3D.enter('cafe','xiaomei');G.show('social-screen');PQFirstDay.renderCafe();}else if(params.get('experience')==='chapters'){const requested=params.get('chapter');PQCampaign.open(PQChapterJourney.available(G.campaign,requested,PQCampaign.legacy())?requested:G.campaign.current);} }catch(e){ console.error('PQ boot error:', e);retry(); }
+  try{ G.init();const params=new URLSearchParams(location.search);if(params.get('experience')==='dex')G.openDex();else if(params.get('experience')==='term' && Object.hasOwn(TERMS,params.get('term')))G.termPop('term',params.get('term'));else if(['growth','design'].includes(params.get('experience')))PQFieldCourse.open(params.get('experience'));else if(params.get('experience')==='ai')PQAIJourney.open();else if(params.get('experience')==='market')PQNightMarket.open(params.get('visit')==='1');else if(params.get('experience')==='cafe')PQCafeCase.open(params.get('film'));else if(params.get('experience')==='cafe-life'){PQStory3D.enter('cafe','xiaomei');G.show('social-screen');PQFirstDay.renderCafe();}else if(params.get('experience')==='chapters'){const requested=params.get('chapter');PQCampaign.open(PQChapterJourney.available(G.campaign,requested,PQCampaign.legacy())?requested:G.campaign.current);} }catch(e){ console.error('PQ boot error:', e);retry(); }
 }
 window.G = G;
 window.PLAYER_TPL = PLAYER_TPL;

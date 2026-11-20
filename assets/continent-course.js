@@ -349,6 +349,7 @@
   function leave() {
     panel().close();
     stopWalking();
+    if(PQIsland.detachedFollow)PQIsland.detachFollow(false);
     stations.dispose();
     $('map-screen').append($('isl-joy'));
     PQIsland.playerPos.copy(returnPosition);
@@ -377,6 +378,11 @@
   }
 
   function init() {
+    $('field-pan').onclick = () => {
+      stopWalking();
+      if(PQIsland.detachedFollow)PQIsland.recentre();
+      else PQIsland.detachFollow(true);
+    };
     $('field-view').onclick = () => {
       const firstPerson = PQIsland.mode !== 'fp';
       PQIsland.setMode(firstPerson ? 'fp' : 'walk');
