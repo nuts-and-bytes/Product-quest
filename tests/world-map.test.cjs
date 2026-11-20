@@ -28,3 +28,19 @@ test('every original story entrance remains reachable',()=>{
     assert.ok(W.findPath({x:-10.5,z:4.5},goal,buildings),b.name);
   }
 });
+
+test('all eight investigations connect both evidence counters, the workbench and the landing',()=>{
+  for(const island of W.regions.filter(r=>r.settlement)){
+    for(const lot of island.settlement.buildings){
+      const openAisle=['teahouse','glasshouse','ferry'].includes(lot.id);
+      assert.equal(W.canWalk(island.x+lot.x,island.z+lot.z,buildings),openAisle,lot.id);
+      if(openAisle)assert.ok(W.findPath({x:island.x,z:island.z},{x:island.x+lot.x,z:island.z+lot.z},buildings));
+    }
+    for(const stops of island.settlement.stops){
+      const sites=[{x:island.x-1,z:island.z+1},...stops.map(s=>({x:island.x+s.x,z:island.z+s.z}))];
+      for(const from of sites)for(const to of sites){
+        assert.ok(W.findPath(from,to,buildings),island.name+' '+JSON.stringify(to));
+      }
+    }
+  }
+});

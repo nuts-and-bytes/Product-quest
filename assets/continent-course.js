@@ -5,7 +5,6 @@
   const $ = id => document.getElementById(id);
   const courses = PQ.continentCourses;
   const ui = courses.ui;
-  const offsets = [[-4, -3], [1, 5], [5, 0]];
   let region, course, index, replay, pendingSite, stations, returnPosition, returnToOverview;
 
   const panel = () => $('field-dialog');
@@ -150,7 +149,8 @@
   }
 
   function point(i) {
-    return {x:region.x + offsets[i][0], z:region.z + offsets[i][1]};
+    const stop = region.settlement.stops[index][i];
+    return {x:region.x + stop.x, z:region.z + stop.z};
   }
 
   function distance(i) {
@@ -194,43 +194,9 @@
       parent.add(m);
       return m;
     }
-    // The tea pavilion and greenhouse give each investigation a distinct
-    // meeting place. All pieces share one geometry and four materials.
-    const shelter = new T.Group();
-    shelter.position.set(region.x + 4, 1.02, region.z - 6);
-    group.add(shelter);
-    for (const x of [-2.4, 2.4]) {
-      for (const z of [-1.6, 1.6]) box(shelter, x, 1.7, z, .17, 3.4, .17, 0);
-    }
-    box(shelter, 0, .1, 0, 5.5, .2, 3.8, 0);
-    if (region.id === 'growth') {
-      for (const side of [-1, 1]) {
-        const roof = box(shelter, 0, 3.8, side, 5.9, .23, 2.5, 1);
-        roof.rotation.x = side * .35;
-      }
-      box(shelter, 0, .9, -.4, 3.6, .2, .9, 0);
-      for (const x of [-1, 0, 1]) box(shelter, x, 1.13, -.4, .28, .28, .28, 2);
-    } else {
-      const glass = new T.MeshStandardMaterial({color:'#adede3',transparent:true,opacity:.36,depthWrite:false});
-      mats.push(glass);
-      box(shelter, 0, 2, -1.65, 4.8, 2.6, .06, 4);
-      for (const side of [-1, 1]) {
-        const pane = box(shelter, 0, 3.81, side * .84, 5, .12, 1.95, 4);
-        pane.rotation.x = side * .45;
-        for (const x of [-2.45, 0, 2.45]) {
-          const beam = box(shelter, x, 3.81, side * .84, .12, .17, 2, 2);
-          beam.rotation.x = side * .45;
-        }
-      }
-      for (const x of [-1.5, 0, 1.5]) {
-        box(shelter, x, .4, -.7, .9, .6, .8, 0);
-        box(shelter, x, .93, -.7, .43, .46, .45, 1);
-      }
-    }
     const exhibits = [];
-    const targets = offsets.map((_, i) => {
-      const site = new T.Group(), p = point(i);
-      site.position.set(p.x, 1.02, p.z);
+    const targets = region.settlement.stops[0].map((_, i) => {
+      const site = new T.Group();
       group.add(site);
       box(site, 0, .6, 0, .35, 1.2, .45, 0);
       box(site, 0, 1.2, 0, 2.2, .15, 1.1, 2);
@@ -245,11 +211,18 @@
       return site;
     });
     let guide;
+    group.visible = false;
     function stage(chapterIndex) {
+      group.visible = true;
+      targets.forEach((site, i) => {
+        const p = point(i);
+        site.position.set(p.x, 1.02, p.z - .85);
+      });
       if (guide) { guide.group.removeFromParent(); PQStory3D.disposeTree(guide.group); }
       const cast = region.id === 'growth' ? ['laoguan','citizen2','citizen6','laoguan'] : ['linyou','xiaoyu','linyou','akai'];
       guide = PQIsland.createCharacter(cast[chapterIndex]);
-      guide.group.position.set(region.x + 5, 1.04, region.z - 1.15);
+      const desk = point(2);
+      guide.group.position.set(desk.x + .95, 1.04, desk.z - 1.6);
       guide.group.rotation.y = -.55;
       group.add(guide.group);
       exhibits.forEach((site,i) => {
@@ -287,7 +260,8 @@
       });
     }
     PQIsland.scene.add(group);
-    return {targets, stage, dispose() {
+    const scenery = PQIsland.scene.getObjectByName(region.id + '-settlement');
+    return {targets, scenery, stage, dispose() {
       if (guide) PQStory3D.disposeTree(guide.group);
       group.removeFromParent();
       geometry.dispose();
@@ -365,17 +339,31 @@
     });
     window.addEventListener('keydown', e => {
       if (!region || panel().open || e.repeat || e.key.toLowerCase() !== 'e') return;
-      const near = offsets.findIndex((_, i) => distance(i) < 2.1);
-      if (near !== -1) inspect(near);
+      if (index === null) return;
+      const near = region.settlement.stops[index].map((_, i) => ({i, distance:distance(i)}))
+        .filter(site => site.distance < 2.1 && (site.i < 2 || record().seen === 3))
+        .sort((a,b) => a.distance - b.distance)[0];
+      if (near) inspect(near.i);
     });
   }
 
   function hit(raycaster) {
-    if (!region || panel().open) return false;
-    const hits = raycaster.intersectObjects(stations.targets, true);
-    if (!hits.length) return false;
-    const station = stations.targets.findIndex(site => site.getObjectById(hits[0].object.id));
-    travel(station);
+    if (!region || index === null || panel().open) return false;
+    const [hit] = raycaster.intersectObjects([...stations.targets, stations.scenery], true);
+    if (!hit) return false;
+    const station = stations.targets.findIndex(site => site.getObjectById(hit.object.id));
+    if (station >= 0) { travel(station); return true; }
+
+    // Clicking a shop front leads to the nearest active counter at that shop.
+    if (hit.point.y < 1.24) return false;
+    const x = hit.point.x - region.x;
+    const lot = PQWorldMap.lotAt(region, hit.point.x, hit.point.z, .5);
+    if (!lot) return false;
+    const counters = region.settlement.stops[index].map((stop,i) => ({...stop,i}))
+      .filter(stop => stop.building === lot.id && (stop.i < 2 || record().seen === 3));
+    counters.sort((a,b) => Math.abs(a.x-x) - Math.abs(b.x-x));
+    if (!counters.length) return false;
+    travel(counters[0].i);
     return true;
   }
 

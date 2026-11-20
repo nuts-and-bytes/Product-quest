@@ -169,9 +169,16 @@
       const treeMats=['#bf722c','#e8b45b','#ce9050','#a7b2c6','#e6adb5','#d58198'].map(c=>new T.MeshStandardMaterial({color:c,roughness:.85}));
       const trunkMat=new T.MeshStandardMaterial({color:'#695d50',roughness:1});
       W.regions.forEach((r,ri)=>{
+        if(r.settlement){
+          const {district,moving}=PQSettlements.build(r,bake);
+          if(r.id==='growth')this.waterWheel=moving;
+          else this.ferry=moving;
+          this.scene.add(district);
+          this.world.hitTargets.push(...district.children);
+        }
         for(let i=0;i<30;i++){
           const a=rand(i*7+ri*100)*Math.PI*2,rr=.48+rand(i*5+ri*200)*.39,x=r.x+Math.cos(a)*r.rx*rr,z=r.z+Math.sin(a)*r.rz*rr;
-          if(W.bridgeAt(x,z))continue;
+          if(W.bridgeAt(x,z)|| (r.settlement && (rr < .74 || W.lotAt(r,x,z,1.65))))continue;
           if(ri===1){
             const crystal=new T.Mesh(new T.ConeGeometry(.7+rand(i)*.7,3+rand(i*2)*3,5),new T.MeshStandardMaterial({color:i%2?'#729aa7':'#9bbfd0',roughness:.3,metalness:.25}));crystal.position.set(x,2.1,z);crystal.rotation.z=(rand(i)-.5)*.2;pieces.add(crystal);
           }else{
@@ -219,7 +226,7 @@
         const x=-36+rand(i*3+1)*126,z=-48+rand(i*3+2)*112,r=W.regionAt(x,z),d=W.mainDistance(x,z),radius=Math.hypot(x,z);
         if(W.bridgeAt(x,z)||!W.canWalk(x,z,PQ.buildings))continue;
         if(!r&&(d>.86||radius<16.5||z<-23))continue;
-        if(r&&Math.hypot(x-r.x,z-r.z)<5)continue;
+        if(r&&(Math.hypot(x-r.x,z-r.z)<5 || W.lotAt(r,x,z,2.5)))continue;
         if(PQ.buildings.some(b=>Math.abs(x-b.wx)<6&&Math.abs(z-b.wz)<6))continue;
         points.push({x,z,r});
       }
@@ -506,6 +513,10 @@
       const target=walking?w.playerPos:new T.Vector3(w.camCurTarget.x,0,w.camCurTarget.z),span=walking?30:w.archipelago?100:60;
       const sc=w.sunLight.shadow.camera;if(sc.right!==span){sc.left=sc.bottom=-span;sc.right=sc.top=span;sc.far=260;sc.near=1;sc.updateProjectionMatrix();}
       w.sunLight.target.position.set(target.x,0,target.z);w.sunLight.position.copy(c.sunPos).add(w.sunLight.target.position);
+      if(!this.reducedMotion){
+        this.waterWheel.rotation.z=t*.62;
+        this.ferry.rotation.x=.035*Math.sin(t*1.35);
+      }
       this.beacons.forEach((b,i)=>{b.crystal.rotation.y=t*.4;b.crystal.position.y=3.75+Math.sin(t*1.6+i)*.15;b.ring.rotation.y=t*.25;b.ring.rotation.z=Math.sin(t*.3)*.25;b.light.intensity=1.5+night*4;});
       if(this.flash){const b=this.beacons.find(b=>b.region===this.flash.region),age=this.time.value-this.flash.start;b.ring.scale.setScalar(1+age*1.4);b.ring.material.transparent=true;b.ring.material.opacity=Math.max(0,1-age/2);if(age>2){b.ring.scale.setScalar(1);b.ring.material.opacity=1;this.flash=null;}}
       if(!w.cinematicMode){

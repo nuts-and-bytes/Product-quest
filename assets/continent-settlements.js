@@ -1,0 +1,380 @@
+// Permanent outdoor sets. The course places its playable evidence at the public
+// counters in the same site plan. Batch the fixed pieces once, including patrons.
+(function () {
+  'use strict';
+  const T = THREE;
+  const timber = '#72432d', cedar = '#ae6941', brass = '#dfaa55', cream = '#fff0ca';
+  const ink = '#203e46', jade = '#45877c', mint = '#a1dbbe', coral = '#dc796f';
+  const glass = '#9bded9', slate = '#315b59', leaf = '#508350', clay = '#bd6a45';
+
+  function build(region, bake) {
+    const root = new T.Group();
+    root.name = region.id + '-settlement';
+    root.position.set(region.x, 1.015, region.z);
+    const solid = [], panes = [], signs = [], materials = new Map();
+    const surfaceMat = new T.MeshStandardMaterial({vertexColors:true,roughness:.82});
+    let moving;
+    const cube = new T.BoxGeometry(1,1,1), drum = new T.CylinderGeometry(.5,.5,1,12);
+    const bud = new T.IcosahedronGeometry(.5,0), loop = new T.TorusGeometry(.44,.06,5,18);
+    let base = root;
+
+    function piece(geo, x,y,z, w,h,d, tint) {
+      if (!materials.has(tint)) materials.set(tint,new T.MeshBasicMaterial({color:tint}));
+      const mesh = new T.Mesh(geo,materials.get(tint));
+      mesh.position.set(x,y,z);
+      mesh.scale.set(w,h,d);
+      base.add(mesh);
+      (tint === glass ? panes : solid).push(mesh);
+      return mesh;
+    }
+    const box = (...args) => piece(cube,...args);
+    const cylinder = (...args) => piece(drum,...args);
+    const oval = (...args) => piece(bud,...args);
+    function sign(x,y,z,width,height,text) {
+      signs.push({x:x+base.position.x, y, z:z+base.position.z, width,height,text});
+    }
+    function movingPart(x,y,z,draw) {
+      const lot=base, pivot=new T.Group(), first=solid.length;
+      lot.add(pivot);pivot.position.set(x,y,z);base=pivot;
+      draw();
+      moving=new T.Mesh(bake(solid.splice(first),pivot),surfaceMat);
+      moving.position.copy(lot.position).add(pivot.position);
+      moving.castShadow=moving.receiveShadow=true;
+      base=lot;
+    }
+    function beam(x,y,z, ex,ey,ez, width,tint) {
+      const axis = new T.Vector3(ex-x,ey-y,ez-z);
+      const mesh = box((x+ex)/2,(y+ey)/2,(z+ez)/2,width,axis.length(),width,tint);
+      mesh.quaternion.setFromUnitVectors(new T.Vector3(0,1,0),axis.normalize());
+    }
+    function table(x,z,width,depth,tint=cedar,height=1.1) {
+      box(x,height,z,width,.13,depth,tint);
+      for (const side of [-1,1]) box(x+side*(width/2-.16),height/2,z,.18,height,depth*.8,timber);
+    }
+    function pot(x,y,z,scale=1) {
+      oval(x,y+.32*scale,z,.88*scale,.65*scale,.7*scale,jade);
+      cylinder(x,y+.65*scale,z,.46*scale,.08*scale,.46*scale,brass);
+      beam(x+.29*scale,y+.33*scale,z,x+.59*scale,y+.56*scale,z,.13*scale,jade);
+      piece(loop,x-.36*scale,y+.38*scale,z,.49*scale,.56*scale,.6*scale,brass);
+    }
+    function planter(x,z,w,d) {
+      box(x,.24,z,w,.48,d,clay);
+      for (let i=0;i<5;i++) {
+        const xx=x+w*(i-2)/5, zz=z+(i%2-.5)*d*.42, h=.9+(i%3)*.2;
+        beam(xx,.46,zz,xx+.13,h,zz,.075,leaf);
+        oval(xx-.12,h-.17,zz,.48,.24,.35,jade);
+        for(let k=0;k<5;k++) {
+          const a=k*2*Math.PI/5;
+          oval(xx+.13+.15*Math.cos(a),h+.06,zz+.15*Math.sin(a),.30,.23,.30,i%2?coral:'#ecb14c');
+        }
+        oval(xx+.13,h+.16,zz,.22,.16,.22,cream);
+      }
+    }
+    function person(x,z,shirt,{seated=false, bag=false, hair=timber}={}) {
+      const hips=seated?.52:.76;
+      for(const side of [-1,1]) {
+        box(x+side*.14,.32,z+(seated?.24:0),.21,.64,.24,ink);
+        box(x+side*.14,.10,z+(seated?.33:.09),.24,.18,.35,slate);
+        if(seated)box(x+side*.14,.56,z+.12,.21,.2,.43,ink);
+      }
+      box(x,hips+.27,z,.58,.6,.37,shirt);
+      for(const side of [-1,1]) beam(x+side*.31,hips+.48,z,x+side*.36,hips+.06,z+.14,.15,shirt);
+      box(x,hips+.87,z,.43,.49,.39,'#e7b28c');
+      box(x,hips+1.09,z-.025,.47,.18,.44,hair);
+      if(bag)box(x+.38,.65,z+.17,.36,.42,.22,brass);
+    }
+    function lamp(x,z,height) {
+      box(x,height/2,z,.12,height,.12,timber);
+      box(x+.23,height,z,.58,.12,.14,timber);
+      cylinder(x+.42,height-.35,z,.44,.56,.44,'#ffca72');
+      for(const yy of [height-.66,height-.06]) cylinder(x+.42,yy,z,.47,.08,.47,slate);
+    }
+    function awning(w,d,h,tint) {
+      for(const x of [-w/2+.15,w/2-.15])box(x,h/2,0,.16,h,.18,timber);
+      for(let i=0;i<7;i++){
+        const x=w*((i+.5)/7-.5), color=i%2?cream:tint;
+        box(x,h,0,w/7+.015,.12,d,color).rotation.x=.09;
+        box(x,h-.19,d/2,w/7,.28,.07,color);
+      }
+    }
+    function roof(w,d,h) {
+      const rise=d*.27;
+      for(const side of [-1,1]) {
+        const panel=box(0,h+rise/2,side*d/4,w,.21,Math.hypot(d/2,rise),slate);
+        panel.rotation.x=side*Math.atan2(rise,d/2);
+        for(let x=-w/2+.14;x<w/2;x+=.55)
+          beam(x,h+rise+.12,0,x,h+.12,side*d/2,.11,'#537174');
+        box(0,h,side*d/2,w+.18,.21,.19,timber);
+      }
+      cylinder(0,h+rise+.17,0,.22,w+.18,.22,brass).rotation.z=Math.PI/2;
+    }
+    function teaHouse(){
+      box(0,.055,0,8,.11,4.2,cedar);
+      box(0,1.8,-1.94,7.8,3.4,.18,cream);
+      for(const x of [-3.8,-1.35,1.35,3.8]){
+        for(const z of [-1.85,1.85])box(x,1.97,z,.23,3.75,.24,timber);
+      }
+      for(const side of [-1,1]){
+        box(side*3.81,1.93,0,.16,.22,3.8,brass);
+        for(let k=-2;k<=2;k++)box(side*3.81,2.48,k*.73,.14,1.24,.1,timber);
+      }
+      box(0,3.58,1.85,8,.44,.24,timber);
+      roof(8.8,4.9,3.88);
+      table(-1.9,.55,2.6,1.1);pot(-1.9,1.17,.55);
+      for(const x of [-2.6,-1.2])cylinder(x,1.3,.81,.23,.24,.23,cream);
+      table(2,.72,2.4,.95);person(2,-.02,clay);
+      for(let i=0;i<5;i++)cylinder(-3.1+i*.47,1.38,-1.52,.32,.53,.32,i%2?jade:clay);
+      box(-2.1,1.06,-1.52,3,.15,.6,timber);
+      for(const x of [-3.3,3.3])cylinder(x,3.1,2,.48,.69,.48,'#f1b04f');
+      pot(0,5.15,0,1.75);
+      sign(0,3.59,2.005,2.97,.59,'林间茶馆');
+    }
+    function postcardStand(){
+      awning(3.3,2.1,2.7,clay);table(0,.2,2.9,1);
+      for(let i=0;i<4;i++){
+        box(-.98+i*.65,1.44,.3,.5,.66,.07,cream).rotation.x=-.12;
+        box(-.98+i*.65,1.45,.37,.34,.31,.04,i%2?jade:brass);
+      }
+      person(.1,-.62,jade);
+      sign(0,.92,.73,2.6,.43,'访客分群木牌');
+    }
+    function waterClock(){
+      box(0,.18,0,3.1,.36,2.45,'#889388');
+      for(const x of [-1.25,1.25])box(x,2,0,.2,4,.2,timber);
+      for(let i=0;i<4;i++){
+        const x=-.95+i*.63,y=3.48-i*.67;
+        cylinder(x,y,-.12,.72,.26,.72,brass);
+        cylinder(x,y+.15,-.12,.57,.04,.57,'#63b5ae');
+        cylinder(x+.20,y-.34,-.06,.07,.64,.07,'#8bd5ce');
+      }
+      box(0,.56,0,2.85,.27,1.5,jade);
+      box(0,.72,0,2.54,.06,1.24,'#81c8c0');
+      movingPart(.18,1.37,.7,()=>{
+        piece(loop,0,0,0,1.65,1.65,1.55,cedar);
+        cylinder(0,0,.03,.25,.27,.25,brass).rotation.x=Math.PI/2;
+        for(let j=0;j<8;j++){
+          const a=j*Math.PI/4,x=.76*Math.cos(a),y=.76*Math.sin(a);
+          beam(0,0,0,x,y,0,.075,timber);
+          box(x,y,0,.32,.10,.4,brass).rotation.z=a;
+        }
+      });
+      sign(0,.43,1.24,2.55,.42,'首日漏斗水钟');
+    }
+    function experiment(){
+      for(const x of [-2.15,.1])box(x,1.8,-.55,.19,3.6,.19,timber);
+      box(-1,3.56,-.55,2.7,.22,.25,timber);
+      for(let i=0;i<6;i++){
+        const x=-2+i*.37, len=.75+i*.14;
+        beam(x,3.5,-.55,x,3.03,-.55,.045,cream);
+        cylinder(x,3.02-len/2,-.55,.17,len,.17,i%2?jade:brass);
+      }
+      sign(-1,3.78,-.52,2.7,.43,'双周留存风铃架');
+      table(1.35,0,1.9,1.4);
+      for(const x of [.94,1.78]){
+        box(x,1.21,0,.74,.15,1.15,cream);
+        for(let j=0;j<4;j++)oval(x+.14*(j%2),1.4,-.35+j*.23,.23,.18,.23,x<1?clay:jade);
+      }
+    }
+    function harbor(){
+      for(const x of [-1.6,1.6])box(x,1.5,-.35,.28,3,.3,timber);
+      box(0,3.1,-.35,4.9,2.7,.27,ink);
+      box(0,3.1,-.17,4.55,2.34,.10,'#277d75');
+      oval(-1.1,3.1,-.08,1.48,1.4,.12,brass);
+      for(let i=0;i<3;i++)box(1.03,3.62-i*.45,-.07,1.48-i*.29,.16,.07,cream);
+      sign(0,4.14,-.17,3.85,.54,'港口大屏广告');
+      box(0,.45,.38,4.8,.24,1.3,cedar);
+      for(const x of [-2,2])cylinder(x,.78,.7,.35,.67,.35,timber);
+    }
+    function referral(){
+      awning(4.6,2.45,2.9,jade);table(0,.34,4.1,1);
+      pot(-1.1,1.17,.35);
+      for(let i=0;i<4;i++)box(.13+i*.37,1.25,.45,.26,.16,.43,brass);
+      sign(0,2.67,1.3,3.4,.46,'茶客带友赠半壶茶');
+      person(.95,-.65,'#db9d4d');person(-1.55,-.6,'#79988b');
+    }
+    function conservatory(){
+      const rx=4.6, spring=2.45, rise=2.75, depth=4.45;
+      box(0,.055,0,9.2,.11,4.6,'#e7d3b3');
+      for(let k=0;k<8;k++)box(0,.122,-2+k*.54,.66,.03,.19,brass);
+      for(const side of [-1,1]){
+        box(side*rx,spring/2,0,.08,spring,depth,glass);
+        for(const z of [-depth/2,0,depth/2])box(side*rx,spring/2,z,.15,spring,.15,jade);
+      }
+      // Ribbed barrel vault with clear glazing and open central entrance.
+      for(let i=0;i<10;i++){
+        const a=i*Math.PI/10,b=(i+1)*Math.PI/10;
+        const x=rx*Math.cos(a), y=spring+rise*Math.sin(a);
+        const xx=rx*Math.cos(b), yy=spring+rise*Math.sin(b);
+        box((x+xx)/2,(y+yy)/2,0,Math.hypot(xx-x,yy-y),.055,depth,glass).rotation.z=Math.atan2(yy-y,xx-x);
+        for(const z of [-depth/2,0,depth/2])beam(x,y,z,xx,yy,z,.13,jade);
+        box(x,y,0,.1,.13,depth+.12,cream);
+      }
+      for(const z of [-depth/2, depth/2]){
+        for(const x of [-3.6,-2.4,-1.2,1.2,2.4,3.6]){
+          const h=spring+rise*Math.sqrt(1-(x/rx)**2);
+          box(x,h/2,z,.11,h,.11,jade);
+          if(Math.abs(x)>2)box(x,1.37,z,1.17,2.2,.05,glass);
+        }
+        box(0,2.5,z,8.98,.14,.19,cream);
+      }
+      planter(-2.62,0,2.55,1.6);planter(2.58,0,2.55,1.6);
+      for(let i=0;i<5;i++){
+        const a=i*Math.PI*2/5;
+        oval(.43*Math.cos(a),3.84+.43*Math.sin(a),2.33,.75,.75,.19,coral);
+      }
+      oval(0,3.84,2.45,.55,.55,.15,brass);
+      sign(0,2.63,2.37,2.86,.5,'珊瑚花园');
+    }
+    function kiosk(){
+      box(0,.12,0,3.15,.24,2.05,cream);
+      box(.45,1.2,0,1.15,2.3,.66,jade);
+      box(.45,1.82,.38,.94,1.03,.085,ink);
+      for(let i=0;i<3;i++)box(.45,2.10-i*.26,.445,.68,.14,.03,i===2?coral:mint);
+      box(.45,1.01,.39,.52,.10,.1,cream);
+      box(0,3.03,0,3.45,.22,2.1,coral).rotation.z=.05;
+      box(-1.1,1.5,-.45,.17,3,.18,jade);
+      sign(0,2.87,1.095,3.2,.53,'花信自助预约亭');
+      person(-.86,.42,'#cc9474',{bag:true,hair:'#c8bbb0'});
+    }
+    function ticketOffice(){
+      box(0,1.15,-.45,3.4,2.3,1.5,'#f3cbba');
+      box(0,1.65,.32,2.6,1.14,.09,ink);
+      box(0,1.08,.55,3,.17,.66,cream);
+      box(0,2.66,-.09,3.85,.28,2.7,jade);
+      sign(0,2.36,.38,2.8,.43,'人工窗口');
+      for(let i=0;i<4;i++)piece(loop,-1.03+i*.67,1.67,.42,.43,.55,.25,brass);
+    }
+    function studio(){
+      for(const x of [-2.05,2.05])box(x,1.55,-1.23,.15,3.1,.15,jade);
+      box(0,3.18,-.2,4.9,.19,3.6,coral).rotation.x=-.09;
+      box(0,2.15,-1.17,3.9,1.64,.14,timber);
+      sign(0,2.99,1.66,3.38,.45,'三步纸面草图板');
+      for(let i=0;i<5;i++)box(-1.47+i*.73,2.16+(i%2)*.17,-1.06,.56,.77,.05,i<3?cream:mint);
+      table(0,.42,4.15,1.15,'#cd8076');
+      for(let i=0;i<3;i++)box(-.9+i*.85,1.2,.44,.56,.045,.77,cream);
+    }
+    function trial(){
+      table(0,-.18,4.36,1.45,cream);
+      sign(0,.9,.59,2.81,.43,'五人实测观察表');
+      for(const x of [-1.25,1.22]){
+        box(x,1.39,-.24,1.08,.68,.14,ink).rotation.x=-.25;
+        box(x,1.42,-.12,.88,.47,.06,jade).rotation.x=-.25;
+      }
+      person(-.35,-.7,'#a39bb6',{bag:true});
+      for(const x of [-1.5,1.5])cylinder(x,.41,.81,.58,.8,.58,coral);
+    }
+    function access(){
+      box(0,.23,0,4.6,.46,2.6,'#e6c0ae');
+      box(-1.2,1.84,-.61,1.9,2.7,.3,ink);
+      box(-1.2,1.88,-.43,1.59,2.25,.12,cream);
+      for(let i=0;i<4;i++)box(-1.2,2.53-i*.42,-.32,1.32-i*.19,.21,.05,i%2?slate:coral);
+      table(1,.27,2.1,1.05);
+      box(1.11,1.69,.12,1.43,.85,.12,slate);
+      box(1.11,1.72,.21,1.22,.63,.05,mint);
+      box(.95,1.21,.52,1.13,.07,.42,ink);
+      piece(loop,1.88,1.4,.36,.55,.64,.45,coral);
+      box(0,3.44,-.35,4.78,.16,2.45,jade);
+      sign(0,3.34,.91,3.63,.47,'强光对比度灯箱');
+      for(const x of [-2.17,2.17])box(x,1.77,-.91,.15,3.46,.15,jade);
+    }
+    function ferry(){
+      for(let i=0;i<8;i++)box(-1.63+i*.47,.16,0,.43,.27,1.83,cedar);
+      for(const x of [-1.64,1.64])cylinder(x,.59,-.6,.22,1.14,.22,cream);
+      box(1.42,1.58,-.54,.96,1.22,.16,slate);
+      box(1.42,.67,-.54,.16,1.35,.16,jade);
+      for(let i=0;i<3;i++)box(1.42,1.89-i*.31,-.43,.75-i*.13,.09,.06,cream);
+      // A moored passenger launch sits immediately beyond the pier.
+      movingPart(0,-.78,5.55,()=>{
+        oval(0,0,0,4.65,.91,1.65,jade);
+        box(.14,.46,0,2.62,.67,1.09,cream);
+        for(let i=0;i<4;i++)box(-.79+i*.58,.53,.58,.38,.34,.06,slate);
+        box(.12,.88,0,2.94,.17,1.31,coral);
+      });
+    }
+
+    const builders={teahouse:teaHouse, postcards:postcardStand, waterClock, experiment, harbor, referral,
+      glasshouse:conservatory, kiosk, ticketOffice, studio, trial, access, ferry};
+    for(const lot of region.settlement.buildings){
+      base=new T.Group();base.position.set(lot.x,0,lot.z);root.add(base);
+      builders[lot.id]();
+    }
+    base=root;
+    const tea=region.id==='growth';
+    // Separate promenades and aprons connect each public counter to the island square.
+    const surface=tea?'#ccae7c':'#eee0c6';
+    for(const lot of region.settlement.buildings){
+      const z=lot.z+lot.depth/2+1.27;
+      box(lot.x,.027,z,lot.width+.55,.052,2.55,surface);
+      if(lot.id==='ferry')continue;
+      const count=Math.ceil(Math.abs(z-1.05)/.82);
+      for(let j=1;j<count;j++){
+        const pathZ=1.05+(z-1.05)*j/count;
+        if(!PQWorldMap.lotAt(region,region.x+lot.x,region.z+pathZ,.12))
+          box(lot.x,.055,pathZ,tea?1.49:1.76,.06,.71,tea?'#ae8961':'#e1c8ab');
+      }
+    }
+    for(let i=-5;i<=5;i++)box(i*1.87,.03,1.05,1.8,.06,2.03,surface);
+    const pier=region.settlement.pier;
+    for(let j=0;j<pier.planks;j++){
+      const z=pier.first+j*.52;
+      box(pier.x,.095,z,pier.width,.16,.48,cedar);
+      if(j%3===0)for(const side of [-1,1])
+        cylinder(pier.x+side*pier.width/2,-.06,z,.18,1.38,.18,timber);
+    }
+    if(tea){
+      for(const x of [-6.5,-4.7,-2.9]){
+        for(let j=0;j<4;j++)oval(x,.6,7.4+j*.62,1.67,.91,.93,j%2?'#769851':'#60874f');
+      }
+      lamp(-7.5,2.9,2.8);lamp(4.3,3.65,2.8);
+      table(-5,3.5,2.3,.95);pot(-5,1.17,3.5,.8);
+      person(-5.7,2.86,'#72878b',{seated:true});
+      box(-5.7,.38,2.85,.63,.76,.6,timber);
+    }else{
+      planter(-11,-3.5,3.5,1.05);planter(9,-.7,3.1,.91);
+      for(const x of [-6.6,-4.25]){
+        for(const z of [.2,1.65])cylinder(x,.51,z,.13,1.02,.13,jade);
+        beam(x,.88,.2,x,.88,1.65,.07,coral);
+      }
+      person(-5.4,.65,'#7ca6a0',{bag:true});
+      person(-5.6,2.27,'#c39071',{hair:'#dcd0b8'});
+    }
+
+    const district=new T.Group();district.name=root.name;district.position.copy(root.position);
+    const opaque=new T.Mesh(bake(solid,root),surfaceMat);
+    opaque.castShadow=opaque.receiveShadow=true;district.add(opaque);
+    if(panes.length){
+      const glazing=new T.Mesh(bake(panes,root),new T.MeshStandardMaterial({vertexColors:true,transparent:true,opacity:.34,side:T.DoubleSide,depthWrite:false,roughness:.25}));
+      district.add(glazing);
+    }
+    // All plaques use the original story wording and share one offline texture.
+    const canvas=document.createElement('canvas');
+    canvas.width=512;canvas.height=1024;
+    const ctx=canvas.getContext('2d'), positions=[], uvs=[], indices=[];
+    signs.forEach(({x,y,z,width,height,text},i)=>{
+      const top=i*96;
+      ctx.fillStyle=region.id==='growth'?timber:slate;
+      ctx.fillRect(0,top,512,88);
+      ctx.strokeStyle=region.id==='growth'?brass:mint;
+      ctx.lineWidth=4;ctx.strokeRect(6,top+6,500,76);
+      ctx.fillStyle=cream;ctx.font='bold 48px system-ui,sans-serif';
+      ctx.textAlign='center';ctx.textBaseline='middle';
+      ctx.fillText(text,256,top+44,474);
+      const l=x-width/2,r=x+width/2,t=y+height/2,b=y-height/2;
+      positions.push(l,b,z,r,b,z,r,t,z,l,t,z);
+      const maxV=1-(top+1)/1024,minV=1-(top+87)/1024;
+      uvs.push(0,minV,1,minV,1,maxV,0,maxV);
+      const n=i*4;indices.push(n,n+1,n+2,n,n+2,n+3);
+    });
+    const atlas=new T.CanvasTexture(canvas);atlas.colorSpace=T.SRGBColorSpace;
+    const boards=new T.BufferGeometry();
+    boards.setAttribute('position',new T.Float32BufferAttribute(positions,3));
+    boards.setAttribute('uv',new T.Float32BufferAttribute(uvs,2));boards.setIndex(indices);
+    district.add(new T.Mesh(boards,new T.MeshBasicMaterial({map:atlas})));
+    district.add(moving);
+    for(const mesh of district.children)mesh.userData.continentId=region.id;
+    for(const g of [cube,drum,bud,loop])g.dispose();
+    for(const mat of materials.values())mat.dispose();
+    return {district, moving};
+  }
+  window.PQSettlements = {build};
+})();
