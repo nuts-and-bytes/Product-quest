@@ -36,6 +36,7 @@
   function dialog(title, body) {
     stopWalking();
     const d = panel();
+    d.classList.remove('field-conversation');
     d.replaceChildren();
     node('small', region.continent + ' / ' + region.name, d);
     const h = node('h2', title, d);
@@ -101,15 +102,53 @@
     button(d, ui.returnMap, leave);
   }
 
+  function interview(i) {
+    const evidence = chapter().evidence[i];
+    const d = dialog(evidence.title);
+    d.classList.add('field-conversation');
+    const exchange = node('div', '', d);
+    exchange.className = 'field-exchange';
+    const portrait = node('canvas', '', exchange);
+    portrait.setAttribute('aria-hidden', 'true');
+    const speech = node('div', '', exchange);
+    speech.setAttribute('aria-live', 'polite');
+    speech.setAttribute('aria-atomic', 'true');
+    const name = node('strong', '', speech);
+    name.className = 'field-speaker';
+    const line = node('p', '', speech);
+    let turn = 0;
+    const advance = button(d, '', () => {
+      if (++turn < evidence.dialogue.length) {
+        showTurn();
+        return;
+      }
+      record().seen |= 1 << i;
+      persist();
+      const note = dialog(evidence.title, evidence.body);
+      button(note, ui.resume, depart);
+    });
+    function showTurn() {
+      const {speaker, line: words} = evidence.dialogue[turn];
+      name.textContent = speaker;
+      line.textContent = words;
+      drawSprite(portrait, speakerRig(speaker), {pedestal:false});
+      advance.textContent = turn + 1 < evidence.dialogue.length ? ui.dialogueNext : ui.readRecord;
+    }
+    showTurn();
+  }
+
+  function speakerRig(speaker) {
+    const cast = {'老关':'laoguan', '阿棠':'citizen2', '苏禾':'citizen6',
+      '林柚':'linyou', '小雨':'xiaoyu', '阿凯':'akai', '陈阿婆':'chengrandma', '你':'me'};
+    return cast[speaker.split(' · ')[0]] || 'citizen1';
+  }
+
   function inspect(i) {
     if (index === null) return;
     const c = chapter(), r = record();
+    stations.host(i);
     if (i < 2) {
-      r.seen |= 1 << i;
-      persist();
-      const e = c.evidence[i];
-      const d = dialog(e.title, e.body);
-      button(d, ui.resume, depart);
+      interview(i);
       return;
     }
     if (r.seen !== 3) return;
@@ -210,7 +249,21 @@
       }
       return site;
     });
-    let guide;
+    const hosts = new Map();
+    let cast = [];
+    function host(i) {
+      const actor = hosts.get(cast[i]);
+      targets[i].add(actor);
+      actor.position.set(i === 1 ? -1.04 : 1.04, .02, -.56);
+      actor.rotation.y = i === 1 ? .48 : -.48;
+    }
+    function clearHosts() {
+      for (const actor of hosts.values()) {
+        actor.removeFromParent();
+        PQStory3D.disposeTree(actor);
+      }
+      hosts.clear();
+    }
     group.visible = false;
     function stage(chapterIndex) {
       group.visible = true;
@@ -218,13 +271,14 @@
         const p = point(i);
         site.position.set(p.x, 1.02, p.z - .85);
       });
-      if (guide) { guide.group.removeFromParent(); PQStory3D.disposeTree(guide.group); }
-      const cast = region.id === 'growth' ? ['laoguan','citizen2','citizen6','laoguan'] : ['linyou','xiaoyu','linyou','akai'];
-      guide = PQIsland.createCharacter(cast[chapterIndex]);
-      const desk = point(2);
-      guide.group.position.set(desk.x + .95, 1.04, desk.z - 1.6);
-      guide.group.rotation.y = -.55;
-      group.add(guide.group);
+      clearHosts();
+      const c = chapter();
+      cast = [...c.evidence.map(e => speakerRig(e.dialogue[1].speaker)), speakerRig(c.speaker)];
+      cast.forEach((key,i) => {
+        if (hosts.has(key)) return;
+        hosts.set(key, PQIsland.createCharacter(key).group);
+        host(i);
+      });
       exhibits.forEach((site,i) => {
         site.clear();
         const form = (region.id === 'growth' ? [['board','book'],['funnel','book'],['bells','tray'],['book','chips']] : [['board','book'],['cards','board'],['book','cards'],['light','book']])[chapterIndex][i];
@@ -261,8 +315,8 @@
     }
     PQIsland.scene.add(group);
     const scenery = PQIsland.scene.getObjectByName(region.id + '-settlement');
-    return {targets, scenery, stage, dispose() {
-      if (guide) PQStory3D.disposeTree(guide.group);
+    return {targets, scenery, stage, host, dispose() {
+      clearHosts();
       group.removeFromParent();
       geometry.dispose();
       mats.forEach(m => m.dispose());

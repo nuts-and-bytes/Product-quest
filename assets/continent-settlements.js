@@ -11,20 +11,20 @@
     const root = new T.Group();
     root.name = region.id + '-settlement';
     root.position.set(region.x, 1.015, region.z);
-    const solid = [], panes = [], signs = [], materials = new Map();
+    const solid = [], panes = [], lights = [], signs = [], materials = new Map();
     const surfaceMat = new T.MeshStandardMaterial({vertexColors:true,roughness:.82});
     let moving;
     const cube = new T.BoxGeometry(1,1,1), drum = new T.CylinderGeometry(.5,.5,1,12);
     const bud = new T.IcosahedronGeometry(.5,0), loop = new T.TorusGeometry(.44,.06,5,18);
     let base = root;
 
-    function piece(geo, x,y,z, w,h,d, tint) {
+    function piece(geo, x,y,z, w,h,d, tint, batch=tint === glass ? panes : solid) {
       if (!materials.has(tint)) materials.set(tint,new T.MeshBasicMaterial({color:tint}));
       const mesh = new T.Mesh(geo,materials.get(tint));
       mesh.position.set(x,y,z);
       mesh.scale.set(w,h,d);
       base.add(mesh);
-      (tint === glass ? panes : solid).push(mesh);
+      batch.push(mesh);
       return mesh;
     }
     const box = (...args) => piece(cube,...args);
@@ -89,6 +89,21 @@
       cylinder(x+.42,height-.35,z,.44,.56,.44,'#ffca72');
       for(const yy of [height-.66,height-.06]) cylinder(x+.42,yy,z,.47,.08,.47,slate);
     }
+    function lanternLine(from,to) {
+      const count=7;
+      const point=t=>[from[0]+(to[0]-from[0])*t,
+        from[1]+(to[1]-from[1])*t-.53*Math.sin(Math.PI*t),from[2]+(to[2]-from[2])*t];
+      for(let i=1;i<=count;i++){
+        const end=point(i/count);
+        beam(...point((i-1)/count),...end,.046,timber);
+        if(i===count)continue;
+        const [x,y,z]=end, shade=tea?(i%2?'#ef9745':'#ffcb70'):(i%2?'#ffbfab':'#ffe7ba');
+        beam(x,y,z,x,y-.22,z,.033,timber);
+        const glow=oval(x,y-.42,z,.42,.49,.42,shade,lights);
+        cylinder(x,y-.68,z,.17,.09,.17,brass);
+        glow.rotation.y=i;
+      }
+    }
     function awning(w,d,h,tint) {
       for(const x of [-w/2+.15,w/2-.15])box(x,h/2,0,.16,h,.18,timber);
       for(let i=0;i<7;i++){
@@ -107,6 +122,33 @@
         box(0,h,side*d/2,w+.18,.21,.19,timber);
       }
       cylinder(0,h+rise+.17,0,.22,w+.18,.22,brass).rotation.z=Math.PI/2;
+    }
+    function dryingLoft() {
+      // Open louvres above the tea-room roof, with stacked bamboo trays.
+      const x=-2.55, z=-.5;
+      for(const dx of [-1.05,1.05]) for(const dz of [-.8,.8])
+        box(x+dx,5.52,z+dz,.18,3.84,.18,timber);
+      for(let shelf=0;shelf<4;shelf++){
+        const y=5.05+shelf*.55;
+        box(x,y,z,2.36,.13,1.86,cedar);
+        for(const dx of [-.53,.53]){
+          cylinder(x+dx,y+.12,z,.85,.15,.85,brass);
+          oval(x+dx,y+.23,z,.7,.19,.64,'#777e42');
+        }
+      }
+      for(const dx of [-1.09,1.09]) for(let i=0;i<4;i++)
+        box(x+dx,5.2+i*.52,z,.12,.27,1.86,'#9d6140').rotation.z=dx*.24;
+      for(const side of [-1,1]){
+        box(x,7.55,z+side*.61,2.92,.18,1.48,'#4d665a').rotation.x=side*.37;
+        box(x,7.25,z+side*1.28,3.05,.16,.16,brass);
+      }
+      beam(x-1.65,7.84,z,x+1.65,7.84,z,.17,timber);
+      // Loading hoist and the bundle under its pulley.
+      beam(x-1.02,6.85,z+.61,x-1.02,7.09,z+2.08,.16,timber);
+      piece(loop,x-1.02,6.92,z+2,.41,.41,.5,brass);
+      beam(x-1.02,6.88,z+2,x-1.02,5.75,z+2,.05,cream);
+      cylinder(x-1.02,5.47,z+2,.76,.56,.76,cedar);
+      for(const y of [5.26,5.6])cylinder(x-1.02,y,z+2,.79,.07,.79,brass);
     }
     function teaHouse(){
       box(0,.055,0,8,.11,4.2,cedar);
@@ -127,6 +169,7 @@
       box(-2.1,1.06,-1.52,3,.15,.6,timber);
       for(const x of [-3.3,3.3])cylinder(x,3.1,2,.48,.69,.48,'#f1b04f');
       pot(0,5.15,0,1.75);
+      dryingLoft();
       sign(0,3.59,2.005,2.97,.59,'林间茶馆');
     }
     function postcardStand(){
@@ -223,6 +266,26 @@
         oval(.43*Math.cos(a),3.84+.43*Math.sin(a),2.33,.75,.75,.19,coral);
       }
       oval(0,3.84,2.45,.55,.55,.15,brass);
+      // A glazed octagonal lantern and petal-shaped copper ribs break the ridge line.
+      const lanternHeight=5.26;
+      cylinder(0,lanternHeight,0,3.6,.25,3.6,jade);
+      cylinder(0,lanternHeight+.69,0,3.15,1.26,3.15,glass);
+      for(let i=0;i<8;i++){
+        const a=i*Math.PI/4, x=Math.cos(a), z=Math.sin(a);
+        beam(1.6*x,lanternHeight,1.6*z,1.6*x,6.64,1.6*z,.1,cream);
+        beam(1.85*x,6.53,1.85*z,.9*x,7.32,.9*z,.16,jade);
+        beam(.9*x,7.32,.9*z,0,7.58,0,.11,brass);
+        oval(1.08*x,6.87,1.08*z,1.32,.33,.63,i%2?'#80bfb3':'#e3a49b').rotation.y=-a;
+      }
+      cylinder(0,7.66,0,.26,.76,.26,brass);
+      for(const side of [-1,1]){
+        for(let i=0;i<5;i++){
+          const x=side*(1.55+i*.57),y=2.85+Math.sin(i*.73)*.54;
+          beam(x-side*.4,y-.25,2.3,x,y,2.37,.08,leaf);
+          oval(x,y+.11,2.38,.44,.24,.27,jade);
+          oval(x+.13,y-.14,2.49,.23,.25,.22,coral);
+        }
+      }
       sign(0,2.63,2.37,2.86,.5,'珊瑚花园');
     }
     function kiosk(){
@@ -246,7 +309,11 @@
     }
     function studio(){
       for(const x of [-2.05,2.05])box(x,1.55,-1.23,.15,3.1,.15,jade);
-      box(0,3.18,-.2,4.9,.19,3.6,coral).rotation.x=-.09;
+      for(let i=0;i<9;i++){
+        const x=(i-4)*.55, color=i%2?'#f4d6af':coral;
+        box(x,3.18,-.2,.55,.13,3.6,color).rotation.x=-.09;
+        oval(x,3.24,1.61,.57,.46,.12,color);
+      }
       box(0,2.15,-1.17,3.9,1.64,.14,timber);
       sign(0,2.99,1.66,3.38,.45,'三步纸面草图板');
       for(let i=0;i<5;i++)box(-1.47+i*.73,2.16+(i%2)*.17,-1.06,.56,.77,.05,i<3?cream:mint);
@@ -313,7 +380,16 @@
           box(lot.x,.055,pathZ,tea?1.49:1.76,.06,.71,tea?'#ae8961':'#e1c8ab');
       }
     }
-    for(let i=-5;i<=5;i++)box(i*1.87,.03,1.05,1.8,.06,2.03,surface);
+    for(let i=-5;i<=5;i++){
+      box(i*1.87,.03,1.05,1.85,.06,2.03,surface);
+      for(const side of [-1,1]){
+        box(i*1.87,.076,1.05+side*.94,1.83,.045,.15,tea?'#a17e52':'#c79e8f');
+        for(let j=0;j<3;j++){
+          const x=i*1.87+(j-1)*.61;
+          box(x,.074,1.05+side*.46,.56,.029,.72,tea?(j===1?'#d5b887':'#c4a377'):(j===1?'#e6d8bd':'#f2e3cb'));
+        }
+      }
+    }
     const pier=region.settlement.pier;
     for(let j=0;j<pier.planks;j++){
       const z=pier.first+j*.52;
@@ -321,15 +397,136 @@
       if(j%3===0)for(const side of [-1,1])
         cylinder(pier.x+side*pier.width/2,-.06,z,.18,1.38,.18,timber);
     }
-    if(tea){
-      for(const x of [-6.5,-4.7,-2.9]){
-        for(let j=0;j<4;j++)oval(x,.6,7.4+j*.62,1.67,.91,.93,j%2?'#769851':'#60874f');
+    function shoreGarden() {
+      // Keep the approaches open. Build the bank out toward the water so
+      // the outer profile has coves, ledges and planting at different heights.
+      for(let i=0;i<36;i++){
+        const a=i*Math.PI/18, x=Math.cos(a)*region.rx, z=Math.sin(a)*region.rz;
+        if(PQWorldMap.bridgeAt(region.x+x,region.z+z) ||
+           (z>0 && Math.abs(x-pier.x)<3)) continue;
+        const size=1.3+.52*Math.cos(3*a+.8);
+        oval(x,-.59,z,size*2,.8,size*1.45,tea?'#856952':'#ae9c8e').rotation.y=-a;
+        oval(x*.986,-.19,z*.986,size*1.65,.57,size*1.29,tea?'#b39264':'#dfc5ae');
+        if(i%3===0){
+          const xx=x*1.045, zz=z*1.045;
+          oval(xx,-.93,zz,1.65,.67,1.2,tea?'#756859':'#978e86');
+          for(let j=0;j<3;j++){
+            const offset=(j-1)*.22;
+            beam(x+offset,.02,z,x+offset*2,.55+j*.19,z+.18,.065,tea?brass:jade);
+          }
+        }
       }
+    }
+    function grove(x,z,height,blossom) {
+      const bark=blossom?'#765858':timber;
+      const crownColors=blossom?['#d88999','#e6a7ae','#f3c3bc']:['#a65d2e','#c67c35','#e7ad51'];
+      cylinder(x,height*.23,z,.48,height*.46,.45,bark);
+      for(let i=0;i<5;i++){
+        const a=i*2.4+x, spread=height*(.22-i*.028);
+        const xx=x+Math.cos(a)*spread, zz=z+Math.sin(a)*spread, y=height*(.53+i*.09);
+        beam(x,height*(.31+i*.07),z,xx,y,zz,.17,bark);
+        oval(xx,y+.32,zz,spread+1.45,blossom?1.23:1.62,spread+1.22,crownColors[i%3]);
+        oval(xx+.29,y+.76,zz+.15,spread+.94,.91,spread+.8,crownColors[(i+1)%3]);
+      }
+    }
+    function teaTerraces() {
+      for(let row=0;row<3;row++){
+        const x=-6.9+row*1.55, z=7.2+row*.55, y=.19+row*.21;
+        box(x,y/2,z,1.48,y,3.65,'#967656');
+        for(let j=0;j<6;j++){
+          const zz=z-1.46+j*.58;
+          box(x+.71,y*.69,zz,.14,y*.69+.11,.52,'#b39773');
+          oval(x,y+.36,zz,1.38,.92,.9,'#526e42');
+          oval(x+.17,y+.63,zz+.06,1.04,.49,.66,j%2?'#95a65a':'#849952');
+        }
+      }
+      // An open cargo sampan beside the working pier.
+      const x=pier.x+2.15,z=10.15;
+      oval(x,-.68,z,1.75,1.13,4.66,'#66483b');
+      oval(x,-.25,z,1.45,.37,3.87,cedar);
+      for(const dz of [-.98,.02,1.02]){
+        box(x,-.03,z+dz,1.18,.12,.25,cream);
+        cylinder(x,.28,z+dz,.64,.59,.64,'#ad8050');
+        cylinder(x,.49,z+dz,.67,.075,.67,timber);
+      }
+      beam(x,-.08,z-1.88,pier.x+.91,.46,z-2.55,.05,cream);
+      grove(-11,-5.1,5.4,false);grove(6.8,-9,6.5,false);grove(12.35,1.4,4.8,false);
+      grove(-8.6,7.2,3.4,false);grove(-2.6,-10.8,4.1,false);
+      // Courtyard lanterns run from the shop roof to the postcard and tea stalls.
+      lanternLine([-3.8,3.8,-5.15],[-10,2.85,1.75]);
+      lanternLine([3.8,3.8,-5.15],[.25,3.04,5.18]);
+      for(let i=0;i<4;i++){
+        const x=4.5+(i%2)*1.04,z=10.05+Math.floor(i/2)*1.14;
+        box(x,.41,z,.86,.78,.84,cedar);
+        for(const dx of [-.32,.32])box(x+dx,.43,z,.09,.87,.89,brass);
+        beam(x-.32,.09,z+.44,x+.32,.78,z+.44,.07,timber);
+      }
+    }
+    function gardenWalk() {
+      // Repeated floral arches frame the walk from the landing to the glasshouse.
+      for(const z of [8.25,10.15,12.05]){
+        for(const side of [-1,1]){
+          const x=side*.94;
+          cylinder(x,.2,z,.43,.4,.43,cream);
+          beam(x,.36,z,x,2.52,z,.105,jade);
+          beam(x,2.52,z,side*.64,3.03,z,.105,jade);
+          beam(side*.64,3.03,z,0,3.26,z,.105,jade);
+          for(let k=0;k<4;k++){
+            const xx=x-side*k*.16, y=2.38+k*.22;
+            oval(xx,y,z+.08,.45,.28,.28,leaf);
+            oval(xx+.12,y+.12,z+.17,.28,.24,.21,k%2?coral:'#f3c3b6');
+          }
+        }
+      }
+      for(const side of [-1,1]){
+        beam(side*.94,2.51,8.22,side*.94,2.51,12.1,.08,jade);
+        for(let i=0;i<6;i++){
+          const z=8.4+i*.64;
+          box(side*.46,.193,z,.23,.025,.23,i%2?mint:coral).rotation.y=Math.PI/4;
+        }
+      }
+      grove(-12,-5,4.6,true);grove(8.1,-9.3,5.55,true);grove(12.8,2.7,4.1,true);
+      grove(-10,6.7,3.5,true);grove(4.6,10,3.85,true);
+      // Sweeping low beds follow the two outer banks, leaving the doors and ferry approach clear.
+      for(const [start,end] of [[-.53,.56],[2.42,3.46]]){
+        for(let i=0;i<13;i++){
+          const a=start+(end-start)*i/12;
+          const x=region.rx*.83*Math.cos(a), z=region.rz*.83*Math.sin(a);
+          if(PQWorldMap.bridgeAt(x+region.x,z+region.z))continue;
+          const hedge=oval(x,.26,z,1.48,.65,1.23,'#60946c');
+          hedge.rotation.y=-a;
+          for(let j=0;j<4;j++){
+            const spin=i*1.85+j*2.3;
+            const xx=x+Math.cos(spin)*.42,zz=z+Math.sin(spin)*.34;
+            const color=['#e48699','#f5c899','#e4aec4'][(i+j)%3];
+            oval(xx,.55+(j%2)*.11,zz,.35,.39,.36,color);
+            oval(xx+.04,.72+(j%2)*.11,zz,.16,.09,.16,cream);
+          }
+          oval(x*1.052,.12,z*1.052,.65,.34,.62,'#e8d8bd');
+        }
+      }
+      lanternLine([-10.9,3.18,.41],[-6.1,3.07,-4.15]);
+      lanternLine([5.5,2.58,-5.48],[8.1,2.8,-4.13]);
+      // Tile rosettes tie the arrival court to the flower emblem above the entrance.
+      for(const x of [-7,0,6]){
+        cylinder(x,.076,1.05,1.67,.034,1.67,'#dfb8a3');
+        for(let i=0;i<6;i++){
+          const a=i*Math.PI/3;
+          const tile=oval(x+Math.cos(a)*.41,.106,1.05+Math.sin(a)*.41,.62,.065,.27,i%2?jade:cream);
+          tile.rotation.y=-a;
+        }
+        cylinder(x,.124,1.05,.29,.035,.29,brass);
+      }
+    }
+    shoreGarden();
+    if(tea){
+      teaTerraces();
       lamp(-7.5,2.9,2.8);lamp(4.3,3.65,2.8);
       table(-5,3.5,2.3,.95);pot(-5,1.17,3.5,.8);
       person(-5.7,2.86,'#72878b',{seated:true});
       box(-5.7,.38,2.85,.63,.76,.6,timber);
     }else{
+      gardenWalk();
       planter(-11,-3.5,3.5,1.05);planter(9,-.7,3.1,.91);
       for(const x of [-6.6,-4.25]){
         for(const z of [.2,1.65])cylinder(x,.51,z,.13,1.02,.13,jade);
@@ -342,6 +539,7 @@
     const district=new T.Group();district.name=root.name;district.position.copy(root.position);
     const opaque=new T.Mesh(bake(solid,root),surfaceMat);
     opaque.castShadow=opaque.receiveShadow=true;district.add(opaque);
+    district.add(new T.Mesh(bake(lights,root),new T.MeshBasicMaterial({vertexColors:true})));
     if(panes.length){
       const glazing=new T.Mesh(bake(panes,root),new T.MeshStandardMaterial({vertexColors:true,transparent:true,opacity:.34,side:T.DoubleSide,depthWrite:false,roughness:.25}));
       district.add(glazing);

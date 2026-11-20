@@ -56,6 +56,14 @@ export async function run(page, gameURL) {
     for (const evidence of chapter.evidence) {
       await page.click('#field-sites button:has-text(' + JSON.stringify(evidence.title) + ')');
       await expectDialog(evidence.title);
+      for (const [i, turn] of evidence.dialogue.entries()) {
+        assert.deepEqual(await page.evaluate(() => [
+          document.querySelector('.field-speaker')?.textContent,
+          document.querySelector('.field-exchange p')?.textContent
+        ]), [turn.speaker, turn.line]);
+        await clickDialog(i + 1 < evidence.dialogue.length ? data.ui.dialogueNext : data.ui.readRecord);
+      }
+      assert.equal(await page.evaluate(() => document.querySelector('#field-dialog p').textContent), evidence.body);
       await clickDialog(data.ui.resume);
     }
     await page.click('#field-sites button:last-child');

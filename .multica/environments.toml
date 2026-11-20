@@ -2,7 +2,7 @@
 label = "增长与设计大陆试玩"
 start = """
 node scripts/build-single-html.mjs dist/preview/index.html &&
-exec python3 -m http.server "$MULTICA_PORT" --bind 127.0.0.1 --directory dist/preview
+exec node scripts/serve-play.mjs dist/preview/index.html
 """
 url = "http://127.0.0.1:$MULTICA_PORT/"
 ttl = "168h"

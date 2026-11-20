@@ -16,6 +16,11 @@ for (const id of ['growth', 'design']) {
     for (const c of route.chapters) {
       assert.equal(c.evidence.length, 2);
       assert.ok(c.evidence.every(e => e.title && e.body));
+      for (const e of c.evidence) {
+        assert.equal(e.dialogue[0].speaker, '你');
+        assert.ok(e.dialogue.length >= 2 && e.dialogue[1].speaker !== e.dialogue[0].speaker);
+        assert.ok(e.dialogue.every(turn => turn.speaker && turn.line.trim()));
+      }
       assert.equal(new Set(c.actions.map(a => a.result)).size, 3);
       assert.ok(c.actions[c.best].title);
     }

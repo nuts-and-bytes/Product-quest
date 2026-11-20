@@ -165,9 +165,6 @@
 
     createBiomes(){
       const pieces=new T.Group();this.scene.add(pieces);
-      const stem=new T.CylinderGeometry(.16,.26,2.2,6),crown=new T.IcosahedronGeometry(1.7,1);
-      const treeMats=['#bf722c','#e8b45b','#ce9050','#a7b2c6','#e6adb5','#d58198'].map(c=>new T.MeshStandardMaterial({color:c,roughness:.85}));
-      const trunkMat=new T.MeshStandardMaterial({color:'#695d50',roughness:1});
       W.regions.forEach((r,ri)=>{
         if(r.settlement){
           const {district,moving}=PQSettlements.build(r,bake);
@@ -175,15 +172,13 @@
           else this.ferry=moving;
           this.scene.add(district);
           this.world.hitTargets.push(...district.children);
-        }
-        for(let i=0;i<30;i++){
-          const a=rand(i*7+ri*100)*Math.PI*2,rr=.48+rand(i*5+ri*200)*.39,x=r.x+Math.cos(a)*r.rx*rr,z=r.z+Math.sin(a)*r.rz*rr;
-          if(W.bridgeAt(x,z)|| (r.settlement && (rr < .74 || W.lotAt(r,x,z,1.65))))continue;
-          if(ri===1){
-            const crystal=new T.Mesh(new T.ConeGeometry(.7+rand(i)*.7,3+rand(i*2)*3,5),new T.MeshStandardMaterial({color:i%2?'#729aa7':'#9bbfd0',roughness:.3,metalness:.25}));crystal.position.set(x,2.1,z);crystal.rotation.z=(rand(i)-.5)*.2;pieces.add(crystal);
-          }else{
-            const st=new T.Mesh(stem,trunkMat);st.position.set(x,2.1,z);pieces.add(st);
-            const cr=new T.Mesh(crown,treeMats[ri===0?i%3:4+i%2]);cr.position.set(x,3.7,z);cr.scale.set(1+rand(i)*.5,.9+rand(i*2),1);pieces.add(cr);
+        }else{
+          for(let i=0;i<30;i++){
+            const a=rand(i*7+ri*100)*Math.PI*2,rr=.48+rand(i*5+ri*200)*.39;
+            const x=r.x+Math.cos(a)*r.rx*rr,z=r.z+Math.sin(a)*r.rz*rr;
+            if(W.bridgeAt(x,z))continue;
+            const crystal=new T.Mesh(new T.ConeGeometry(.7+rand(i)*.7,3+rand(i*2)*3,5),new T.MeshStandardMaterial({color:i%2?'#729aa7':'#9bbfd0',roughness:.3,metalness:.25}));
+            crystal.position.set(x,2.1,z);crystal.rotation.z=(rand(i)-.5)*.2;pieces.add(crystal);
           }
         }
         const b=new T.Group();b.position.set(r.x+3,1.02,r.z-2);

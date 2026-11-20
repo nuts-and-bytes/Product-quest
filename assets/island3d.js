@@ -342,6 +342,7 @@
   }
 
   const ROLE_PROFILES = {
+    chengrandma: { style:'bun', outfit:'sweater', hair:'#c2b6a8', skin:'#e8c2a5', eyeColor:'#6a5042', cloth:'#b7786e', pants:'#575767', glasses:'gold', prop:'none' },
     boss:     { style: 'slick',    outfit: 'suit',       hair: '#c9d4e8', skin: '#fff0e2', eyeColor: '#4876c4', cloth: '#4576d6', tie: '#ff6b6b', pants: '#4d6ea8', glasses: 'none',  prop: 'coffee',  brow: 'stern' },
     xiaomei:  { style: 'long',     outfit: 'sweater',    hair: '#ff96b0', skin: '#fff1e6', eyeColor: '#ff7096', cloth: '#59d697', pants: '#ffffff', glasses: 'none',  prop: 'coffee',  hairpin: '#ffd15c' },
     lijie:    { style: 'bun',      outfit: 'suit',       hair: '#a682eb', skin: '#fff0e2', eyeColor: '#8d6ce6', cloth: '#9a75e8', tie: '#ffd966', pants: '#584b8c', glasses: 'gold',  prop: 'laptop',  brow: 'sharp' },
@@ -1027,9 +1028,9 @@
           let col = '#6b5a47';
           if (y === h) {
             if (d > 0.84) col = '#ebd29d';
-            else if (isAutumn) col = (hash2(x, z) > 0.5 ? '#bfa26a' : '#b3a075');
+            else if (isAutumn) col = Math.sin(x*.37)+Math.cos(z*.49) > 0 ? '#9d9e5c' : '#acaa6d';
             else if (isCrystal) col = (hash2(x, z) > 0.5 ? '#7e9d9c' : '#8fa9a4');
-            else col = (hash2(x, z) > 0.5 ? '#c1b0a0' : '#a2b496');
+            else col = Math.cos(x*.35+z*.18)+Math.sin(z*.46) > 0 ? '#91b779' : '#a2bf82';
           }
           vg.set(x, y, z, col);
         }
