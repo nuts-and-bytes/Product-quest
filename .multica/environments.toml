@@ -1,0 +1,8 @@
+[environments.play]
+label = "产品大冒险试玩"
+start = """
+node scripts/build-single-html.mjs dist/preview/index.html &&
+exec node scripts/serve-play.mjs dist/preview/index.html
+"""
+url = "http://127.0.0.1:$MULTICA_PORT/"
+ttl = "168h"

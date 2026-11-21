@@ -28,7 +28,10 @@
       window.addEventListener('keydown',e=>{
         if(/INPUT|TEXTAREA|SELECT/.test(e.target.tagName)||e.repeat)return;
         if(this.dialogOpen){if((e.key==='Enter'||e.key===' ')&&e.target.tagName!=='BUTTON'){e.preventDefault();e.stopImmediatePropagation();$('journey-options').querySelector('button')?.click();}return;}
-        if(e.key.toLowerCase()==='e'&&this.guided()&&$('map-screen').classList.contains('active')){e.preventDefault();e.stopImmediatePropagation();this.act();}
+        if(e.key.toLowerCase()==='e'&&this.guided()&&$('map-screen').classList.contains('active')){
+          if(PQIsland.environment.courseHere)return;
+          e.preventDefault();e.stopImmediatePropagation();this.act();
+        }
       },true);
       G.save();
     },
