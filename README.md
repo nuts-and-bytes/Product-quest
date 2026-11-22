@@ -1,88 +1,95 @@
+<div align="center">
+
 # 产品经理大冒险 · Product Quest
 
-在 3D 开放群岛里探索、交谈和调查，用证据尝试解决问题，再观察选择带来的后果。原有产品经理剧情闯关仍可继续游玩。
+**从一个想法，到一整个世界——在四块 3D 开放大陆与星潮 AI 博物馆里，用现场证据和动手实验学做产品。**
 
-[进入开放群岛](https://nuts-and-bytes.github.io/Product-quest/) · [继续八章岛上故事](https://nuts-and-bytes.github.io/Product-quest/?experience=chapters) · [在咖啡馆走走](https://nuts-and-bytes.github.io/Product-quest/?experience=cafe-life) · [直接进入蓝山调查](https://nuts-and-bytes.github.io/Product-quest/?experience=cafe) · [观看岛上清晨](https://nuts-and-bytes.github.io/Product-quest/?experience=cafe&film=morning) · [版本记录](CHANGELOG.md) · [English](#english)
+<p>
+  <a href="https://nuts-and-bytes.github.io/Product-quest/"><strong>登岛试玩 ↗</strong></a> ·
+  <a href="https://nuts-and-bytes.github.io/Product-quest/AI-Museum.html"><strong>走进星潮 AI 博物馆 ↗</strong></a> ·
+  <a href="https://nuts-and-bytes.github.io/Product-quest/?experience=cafe-life">蓝山咖啡馆</a> ·
+  <a href="CHANGELOG.md">更新日志</a> ·
+  <a href="#english">English</a>
+</p>
 
-## 当前可以玩什么
+<br />
 
-| 入口 | 玩法 |
-| --- | --- |
-| 开放群岛 | 漫游星火岛、琥珀林地、星潮观测站与珊瑚花园；行走、交互、收集手记，查看章节成果 |
-| 增长大陆 · 琥珀林地 | 在林间茶馆调查分群、首约漏斗、留存实验和渠道投放，按现场证据行动，观察结果并调整方案 |
-| 设计大陆 · 珊瑚花园 | 和花房团队改进预约亭，走完现场观察、纸面原型、可用性测试和无障碍交付 |
-| 入职第一天 | 创建角色，跟随引导进入总部与咖啡馆，继续原有序章 |
-| 蓝山日常 · 3.10 | 点击地面、键盘或手机摇杆走动；绕过桌椅与人物，靠近交谈和全屏检视物件，发现明信片与留座支线，走到门口看海 |
-| 蓝山调查 | 交谈、读取订单和现场线索，圈出依据，组合试营业方案，再比较结果与复盘 |
-| 岛上的片刻 | 观看与调查状态关联的实时 3D 演出；可暂停、跳过或重看，结尾依据实际试验结果变化 |
-| 周末夜市副本 · 3.8 | 和夏青摆摊：交换工作台、备货开价、接单制作交杯、中场调整；长凳或取餐架与人物记忆留在岛上，可回访、可继续经营 |
-| 八章岛上故事 · 3.7 | 从纸信封、通勤班车到夜市值班、定价与天台复盘；在 8 个 3D 场景中交谈、查看实物、动手试验，后续回应实际留下的记录 |
-| 原有章节练习 | 37 关均使用 3D 室内场景，原有剧情、决策题、术语、方法卡、评级与作品集继续保留 |
+<img src="screenshots/hero-archipelago.jpg" alt="Product Quest 3D 开放群岛实景" width="880" />
 
-新故事以生活中的任务推进，原有 37 关可从建筑面板或完成页进入。截图目录同时保留版本演进中的画面，当前交互以在线版本为准。
+</div>
 
-## 第一次怎么玩
+## 为什么做它
 
-打开首页后创建角色或继续已有进度。电脑可用 WASD / 方向键行走、Shift 奔跑、E 互动、J 手记、H 取景；手机使用界面摇杆与触屏按钮。
+如果学做产品不是背框架、刷名词，而是推门走进一家遇到麻烦的咖啡馆，或者站在海边灯塔改建的 AI 博物馆里亲手搭实验台呢？
 
-跑图保持高视角，挡住主角和当前交互人物的建筑会局部让开。左上角任务卡可展开详情；右下角「视角」切换观察方式，「更多」打开画质、手记和存档等功能。
+**Product Quest** 把产品思维、AI 实战、增长拆解与设计方法装进了四座相连的 3D 小岛。在这里没有标准答案的打分器——你可以先在街区里四处逛逛、和店员及常客聊天、翻看现场实物，再在预算与行动限制里挑出自己的方案，亲眼看店里的生意和人物反应如何随你的决定改变。
 
-手机支持横屏游玩，旋转时保留当前进度；支持的浏览器可点「全屏」。横屏和桌面宽屏将对话放到人物侧边。章节证据可以靠近查看，第一章方案卡可直接在桌面上选择、替换和撤回，完整说明仍可展开阅读。
+## 四块大陆与星潮 AI 博物馆
 
-想直接试调查，可以打开蓝山调查入口。先看现场和交谈，再选择你想验证的猜测与试验。每个情境有行动和预算限制，阅读与整理不扣行动。周三早高峰和周末手冲日的瓶颈不同，没有跨情境通吃的方案。
+| <img src="screenshots/tide-museum.jpg" width="430" alt="星潮 AI 博物馆与上下文实验台" /> | <img src="screenshots/cafe-life.jpg" width="430" alt="蓝山咖啡馆 3D 室内行走与交谈" /> |
+| :---: | :---: |
+| *星潮 AI 博物馆（Tide Museum）：馆长石头、上下文实验台与像素放映厅* | *蓝山咖啡馆：自由走动、切换交互目标、翻看实物与海风露台* |
 
-完成第一天后，夏青会约你带着信封和收据去波波奶茶店。左上角每次只给出一处赴约地点。章节内可以交谈、读实物、排列流程、运行模拟、比较结果和留下复盘；失败也能继续。首次完成的决定会传到后续故事，回访练习不会改写它。也可以从[八章故事入口](https://nuts-and-bytes.github.io/Product-quest/?experience=chapters)接着当前存档玩。
+| <img src="screenshots/growth-continent.jpg" width="430" alt="增长大陆琥珀林地常驻街区" /> | <img src="screenshots/04-world.png" width="430" alt="星火岛夜景与四大陆群岛" /> |
+| :---: | :---: |
+| *增长大陆 · 琥珀林地：林间茶馆的 4 章现场增长调查* | *星火群岛夜景：自由切换昼夜与视角，步行漫游四座小岛* |
 
-## 本地运行与单文件版本
+### 当前可玩内容（22 故事章节 · 63 成长关卡）
 
-需要 Python 3；测试和打包还需要 Node.js。
+| 区域 | 你可以体验什么 | 直达入口 |
+| :--- | :--- | :---: |
+| **产品大陆 · 星火岛** | 蓝山咖啡馆自由行走与排队调查、周末夜市摆摊副本、八章 90 天生存故事（含 3 个开放式天台结局），以及保留的 37 关经典 3D 室内练习（含数据法医机制） | [开放群岛 ↗](https://nuts-and-bytes.github.io/Product-quest/) |
+| **AI 大陆 · 星潮观测站** | 5 章 18 关 AI 产品实战：从打破“全能聊天框”幻觉，到 RAG 语义切块、Golden Eval 与防提示词注入、Agent 物理权限闸门与大厂竞品突围 | [潮汐工坊 ↗](https://nuts-and-bytes.github.io/Product-quest/?experience=ai) |
+| **星潮 AI 博物馆（Tide Museum）** | 独立第一人称 3D 常驻空间：和馆长「石头」在灯塔茶桌聊 AI 门道，翻看 2026 AI 编年史展签、上手上下文便签实验台、在像素放映厅看短片 | [走进博物馆 ↗](https://nuts-and-bytes.github.io/Product-quest/AI-Museum.html) |
+| **增长大陆 · 琥珀林地** | 常驻林间茶馆街区 + 4 章现场调查：访客分群、首约激活漏斗、留存实验与渠道投放取舍 | [登岛调查 ↗](https://nuts-and-bytes.github.io/Product-quest/?experience=growth) |
+| **设计大陆 · 珊瑚花园** | 常驻花房街区 + 4 章预约亭改造：现场观察、纸面原型、可用性测试与无障碍交付 | [登岛调查 ↗](https://nuts-and-bytes.github.io/Product-quest/?experience=design) |
 
-```sh
+> 电脑端支持 `WASD` / 方向键行走、`Shift` 奔跑、`Q` 切换附近目标、`E` 交互、`J` 手记、触控板双指环顾；手机端支持虚拟摇杆与横屏自适应，旋转不丢进度。
+
+## 快速开始
+
+纯静态运行，只需 Python 3；跑自动测试或打包单文件 HTML 需要 Node.js。
+
+```bash
 git clone https://github.com/nuts-and-bytes/Product-quest.git
 cd Product-quest
 python3 -m http.server 8765
 ```
 
-打开 <http://localhost:8765/>。可分别执行现有检查与打包：
+浏览器打开 <http://localhost:8765/>（或直接访问 <http://localhost:8765/AI-Museum.html> 体验星潮 AI 博物馆）。
 
-```sh
-node --test tests/*.test.cjs
-node scripts/build-single-html.mjs
+```bash
+node --test tests/*.test.cjs        # 运行自动化测试套件
+node scripts/build-single-html.mjs  # 打包离线单文件 dist/Product-Quest.html
 ```
 
-单文件产物为 `dist/Product-Quest.html`。打包工具内联本地脚本、样式和剧情，并移除远程统计；实际产物大小以本次构建为准。
+<details>
+<summary><strong>代码结构、存档与模拟边界</strong></summary>
 
-## 存档、模型与边界
+<br />
 
-- 进度保存在当前浏览器；换设备、浏览器、域名或改用单文件版本前，先使用导出和导入存档。
-- 咖啡馆使用确定性排队模型，后续八章使用各自的固定试验条件；顾客、生活与经营情境为虚构。没有联网 AI 评分，结果不是现实经营预测。
-- 四块大陆均有可玩的课程。首页可直达增长或设计大陆，两地各有四章。每章收齐两处证据后可在工作台尝试三种方案，完成后可在章节目录回看结果或重玩。AI 大陆章节目录也可打开独立的第一人称博物馆。
-- 自动画质会按帧耗时调整；低性能设备可选择流畅档。历史桌面验证不能替代真实手机验收，也不保证所有设备的帧率。
-- 章节与调查是学习机制原型，尚不能据此声称已证明学习效果或真实工作能力。
+- **核心目录**：
+  - `engine.js`、`content/pm/`、`content/ai/`、`content/continent-courses.js`：引擎与四块大陆剧情、案例、术语和博物馆剧本
+  - `assets/island3d.js`、`assets/world-map.js`、`assets/continent-settlements.js`：3D 开放群岛、常驻街区与视角可见性
+  - `assets/tide-museum.js`、`assets/tide-films.js`、`AI-Museum.html`：第一人称星潮 AI 博物馆、便签实验台与放映厅
+  - `docs/`：各玩法与交互系统的设计说明（[开放世界](docs/open-world.md) · [AI 大陆适配](docs/ai-presentation.md) · [蓝山调查](docs/cafe-case.md) · [室内行走](docs/cafe-walking.md) · [八章故事](docs/island-chapters.md) · [手机横屏](docs/mobile-play.md)）
+- **存档与模拟边界**：
+  - 所有进度保存在当前浏览器本地，跨设备或换域名迁移前请使用内置的导出/导入存档功能。
+  - 咖啡馆排队、增长与 AI 实验均由确定性状态模型驱动，不接入联网 AI 打分，所有人物、店铺与经营数据为虚构教学情境。
+  - 帧率随设备性能变化，可在游戏内「更多」切换画质档位。
+- **反馈与许可**：问题或内容纠错欢迎提 [Issue](https://github.com/nuts-and-bytes/Product-quest/issues)。代码拟采用 MIT，剧情与知识内容拟采用 CC BY-NC 4.0（仓库后续将补齐独立 LICENSE 文件）。
 
-## 代码与玩法说明
-
-| 内容 | 入口 |
-| --- | --- |
-| 原有剧情与章节 | `engine.js`、`content/` |
-| 群岛、导航与画质 | [开放世界说明](docs/open-world.md)、`assets/world-map.js`、`assets/island3d.js` |
-| 户外镜头、遮挡与标签 | [户外可见性说明](docs/outdoor-visibility.md)、`assets/world-visibility.js`、`assets/world-framing.js` |
-| 手机横屏与场景内道具 | [横屏与桌面卡片说明](docs/mobile-play.md)、`assets/mobile-play.js`、`assets/chapter-table.js` |
-| 调查模型与预算 | [蓝山调查](docs/cafe-case.md)、`assets/cafe-case-state.js` |
-| 阿晨交谈与线索 | [3D 对话说明](docs/cafe-dialogue.md) |
-| 八章任务、存档与伏笔 | [岛上章节](docs/island-chapters.md)、`content/pm/island-chapters.js`、`assets/chapter-journey-state.js` |
-| 任务关联演出 | [岛上的片刻](docs/island-life.md)、`assets/island-life-state.js` |
-
-问题、玩法反馈或知识引用纠错可提交 [Issue](https://github.com/nuts-and-bytes/Product-quest/issues)。
-
-## 许可
-
-原有说明声明代码采用 MIT，剧情与知识内容采用 CC BY-NC 4.0。当前仓库没有独立 LICENSE 文件；维护者仍需补齐对应许可与第三方内容说明。本次不代选或更改许可。
+</details>
 
 ## English
 
-Product Quest combines an explorable 3D island world with product-decision gameplay. Explore, talk to characters, investigate the Blue Mountain café and compare deterministic experiments. Eight connected 3D chapters carry the café encounters into research, prototyping, technical failures, launches, growth, pricing and a final retrospective. Task-linked realtime scenes reflect the selected experiment; the 37 original lessons remain playable in 3D rooms.
+**Product Quest** is a browser-based 3D open-archipelago game for learning product, AI, growth, and design through field investigation rather than memorizing frameworks.
 
-[Play](https://nuts-and-bytes.github.io/Product-quest/) or [start the café investigation](https://nuts-and-bytes.github.io/Product-quest/?experience=cafe). Serve the repository with `python3 -m http.server 8765`; run existing checks with `node --test tests/*.test.cjs` and build the standalone HTML with `node scripts/build-single-html.mjs`.
+Explore four interconnected 3D islands—**Spark Island** (Blue Mountain Café investigation, weekend night market, an 8-chapter 90-day story, and 37 classic 3D lessons), **Star Tide Observatory** (5 chapters / 18 AI product levels plus the standalone first-person **Tide Museum** with an interactive workbench and pixel screenings), **Amber Grove** (4 growth investigation chapters), and **Coral Garden** (4 design chapters).
 
-Progress is browser-local; export before moving to another device or origin. The café is a fictional, simplified simulation, not a business forecast or validated learning-outcome claim. Performance depends on the device. The repository still needs standalone license files matching its stated code/content licenses.
+- [Play online ↗](https://nuts-and-bytes.github.io/Product-quest/) · [Enter the Tide Museum ↗](https://nuts-and-bytes.github.io/Product-quest/AI-Museum.html)
+- Run locally: `python3 -m http.server 8765`, run tests with `node --test tests/*.test.cjs`, or build the standalone offline HTML with `node scripts/build-single-html.mjs`.
+
+---
+
+<p align="center">made by <a href="https://heystone.site/">stone</a> · 为 AI 世界留一点人味</p>
