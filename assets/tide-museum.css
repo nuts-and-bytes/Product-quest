@@ -29,10 +29,14 @@
   background: #592f2c;
   color: #ffdfa2;
 }
-#tide-markers button[data-inserted="true"] { background: #d6e0c6; }
-#tide-markers button[data-quoted="true"] { background: #ffe7a2; box-shadow: 0 0 13px 3px #ffc04f; }
-#tide-markers mark { background: none; color: inherit; }
-#tide-markers button[data-quoted="true"] mark { background: #8d5524; color: #fff6d8; border-radius: 3px; padding: 1px 3px; }
+#tide-markers button.tide-note-target {
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
 aside.visiting { border-radius: 10px; }
 aside .secondary { color: #efe3ca; border: 1px solid #978663; background: #153631; }
 aside .primary { background: #f4d79e; color: #19362e; font-weight: 700; }
@@ -43,6 +47,8 @@ aside[data-mode="computer"] {
   width: min(47rem, calc(100vw - 20px));
   max-height: 45dvh;
 }
+aside[data-mode="computer"][data-tray-state="loaded"] #readout { border-left-color: #a3d6b4; }
+aside[data-mode="computer"][data-tray-state="sourced"] #readout { border-left-color: #ffdd89; }
 aside[data-mode="computer"] .reading,
 aside[data-mode="shelf"] .reading { padding: 10px 15px; }
 aside[data-mode="computer"] #station-title,
@@ -85,4 +91,36 @@ body:has(aside[data-mode="roaming"]) #aim { display: block; }
   aside[data-mode="computer"] #readout { margin: 5px 0 0; padding: 5px 7px; font-size: .88rem; }
   aside[data-mode="computer"] nav button,
   aside[data-mode="screen"] nav button { padding-inline: 8px; font-size: 13px; }
+}
+@media (orientation: landscape) and (max-height: 500px) and (min-width: 520px) {
+  aside[data-mode="computer"] {
+    top: max(8px, env(safe-area-inset-top));
+    right: max(8px, env(safe-area-inset-right));
+    bottom: max(8px, env(safe-area-inset-bottom));
+    left: auto;
+    transform: none;
+    width: clamp(220px, 37vw, 335px);
+    max-height: none;
+    overflow: hidden;
+  }
+  aside[data-mode="computer"] .reading {
+    flex: 1;
+    min-height: 0;
+    padding: 10px;
+  }
+  aside[data-mode="computer"] #station-title { font-size: 1.05rem; }
+  aside[data-mode="computer"] #status { font-size: .9rem; line-height: 1.55; }
+  aside[data-mode="computer"] nav {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    padding: 6px;
+  }
+}
+@media (orientation: landscape) and (min-width: 520px) and (max-height: 500px) {
+  @media (max-width: 730px), (max-height: 360px) {
+    aside[data-mode="computer"] .reading { display: flex; flex-direction: column; }
+    aside[data-mode="computer"] .reading > * { flex: none; }
+    aside[data-mode="computer"] #readout { order: 1; }
+    aside[data-mode="computer"] #status { order: 2; margin-top: 8px; }
+  }
 }

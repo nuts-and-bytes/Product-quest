@@ -40,6 +40,11 @@
       },
       get active() { return active; },
       get result() { return result; },
+      get feedback() {
+        if (!active) return 'idle';
+        if (result?.source) return 'sourced';
+        return trays[active].size ? 'loaded' : 'empty';
+      },
       get completedMarket() { return completedMarket; }
     };
   }

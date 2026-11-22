@@ -22,7 +22,12 @@ async function inlinePage(name) {
 }
 
 let html = await inlinePage('index.html');
-const museum = await inlinePage('AI-Museum.html');
+const workbench = 'museum/models/workbench.glb';
+const workbenchBytes = await readFile(resolve(root, workbench));
+const museum = (await inlinePage('AI-Museum.html')).replace(
+  JSON.stringify(workbench),
+  JSON.stringify('data:model/gltf-binary;base64,'+workbenchBytes.toString('base64')),
+);
 if (process.argv[3]) {
   const target = resolve(process.argv[3]);
   await mkdir(dirname(target), {recursive: true});

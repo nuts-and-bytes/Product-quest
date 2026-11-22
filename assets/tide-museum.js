@@ -24,6 +24,7 @@
   const local = (s, x, y, z) => s.group.localToWorld(point(x, y, z));
   const coarse = matchMedia('(pointer:coarse)');
   const reduced = matchMedia('(prefers-reduced-motion: reduce)');
+  const sideConsole = matchMedia('(orientation: landscape) and (max-height: 500px) and (min-width: 520px)');
   const stand = camera.position.clone();
   const viewRotation = new THREE.Euler(0,0,0,'YXZ');
   const targetRot = new THREE.Quaternion();
@@ -36,6 +37,7 @@
   let gestureUntil = 0, power = 'off', readyAt = 0, bootStep = 0;
   let testedEmpty = false, testedDates = false, resetDone = false, touchedReel = false;
   let frameKey = '', brightness = 1, lastFocus = null;
+  let deskFov = 65;
   let archived = false;
   try { archived = localStorage.getItem('pq-museum-design-record') === '1'; } catch {}
 
@@ -57,25 +59,43 @@
   const noteKeys = {market:['market'], dates:['yesterday','today']};
   const experiments = {market:computer.experiments[0],dates:computer.experiments[1]};
   const noteCopy = {market:experiments.market.note,...experiments.dates.notes};
+  // Coordinates match the two cut channels in the Blender tray.
+  const slotCenters = [.823, 1.141];
+  const slotColors = {idle:0xa8865c, empty:0xefbb72, loaded:0xa3d6b4, sourced:0xffdd89};
+  let slotCues;
   const notes = {};
   for (const [i,id] of ['market','yesterday','today'].entries()) {
     const group = new THREE.Group();
     lab.group.add(group);
-    box(group,0,0,0,.34,.024,.18,[0xeec582,0xe9c89a,0xd3dfb1][i]);
-    const paper = placard(group,0,.013,0,.33,.17,(ctx,w,h) => {
+    box(group,0,0,0,.25,.018,.13,[0xeec582,0xe9c89a,0xd3dfb1][i]);
+    const {ctx,texture} = canvasTexture(512, 266);
+    const paper = new THREE.Mesh(new THREE.PlaneGeometry(.248,.128),new THREE.MeshBasicMaterial({map:texture}));
+    paper.position.y = .0095;
+    paper.rotation.x = -Math.PI/2;
+    group.add(paper);
+    function paintNote(quoted) {
+      const {width:w,height:h}=ctx.canvas;
       ctx.fillStyle = ['#f7d38c','#eac79a','#d4e2b4'][i];
       ctx.fillRect(0,0,w,h);
-      ctx.fillStyle = '#342e24';ctx.textAlign = 'center';
-      ctx.font = 'bold 71px system-ui';
-      ctx.fillText(noteCopy[id].text,w/2,h*.59,w-50);
-      ctx.fillRect(w*.12,h*.74,w*.76,5);
-    });
-    paper.rotation.x = -Math.PI/2;
-    const glow = new THREE.MeshBasicMaterial({ color:0xffe29a, transparent:true, opacity:.55, depthWrite:false });
-    const border = new THREE.Mesh(new THREE.PlaneGeometry(.375,.212),glow);
-    border.position.y = .002;border.rotation.x = -Math.PI/2;
+      ctx.font = 'bold 52px system-ui';
+      const {text,highlightText} = noteCopy[id];
+      const start = text.indexOf(highlightText);
+      const x = (w - ctx.measureText(text).width)/2;
+      if (quoted) {
+        ctx.fillStyle = '#fff6cc';
+        ctx.fillRect(x+ctx.measureText(text.slice(0,start)).width-6,96,ctx.measureText(highlightText).width+12,67);
+      }
+      ctx.fillStyle = '#342e24';
+      ctx.fillText(text,x,148);
+      ctx.fillRect(36,179,w-72,4);
+      texture.needsUpdate = true;
+    }
+    paintNote(false);
+    const glow = new THREE.MeshBasicMaterial({color:0xffdf83});
+    const border = new THREE.Mesh(new THREE.PlaneGeometry(.262,.144),glow);
+    border.position.y = -.007;border.rotation.x = -Math.PI/2;
     group.add(border);
-    notes[id] = {group,border};
+    notes[id] = {group,border,paintNote,seat:point(0,0,0)};
   }
 
   const screenX = 4.75;
@@ -120,6 +140,9 @@
   }
   function setPanel(message, actions, detail = '') {
     const oldText = nav.contains(document.activeElement) && document.activeElement.textContent;
+    if (mode==='computer' && (status.textContent!==message || readout.textContent!==detail)) {
+      card.querySelector('.reading').scrollTop=0;
+    }
     if (status.textContent !== message) status.textContent = message;
     readout.hidden = !detail;
     if (readout.textContent !== detail) readout.textContent = detail;
@@ -158,6 +181,7 @@
     reels.replaceChildren();
     travel = 0; keys.clear();resetStick();
     card.querySelector('.reading').scrollTop=0;
+    frameDesk();
   }
   function leave(stop = true) {
     if (stop && playback.showing) stopFilm();
@@ -245,15 +269,31 @@
     const group = noteKeys[labState.active] || ['market'];
     for (const [id,note] of Object.entries(notes)) {
       const i = group.indexOf(id);
+      const wasVisible=note.group.visible;
       note.group.visible = i>=0;
       if (i<0) continue;
       const inTray = labState.has(id);
-      const pair=group.length===2;
-      const x=pair ? .75+.38*i : inTray ? .91 : 1.28;
-      const z=inTray ? .35 : (pair ? .15 : .26);
-      note.group.position.set(x,deskReady ? 1.125 : 1.08,z);
-      note.group.rotation.y = inTray ? 0 : (i===0 ? -.13 : .12);
-      note.border.visible = labState.result?.source===id;
+      note.seat.set(slotCenters[i],inTray ? 1.085 : 1.073,inTray ? .274 : .438);
+      if (!wasVisible || note.group.position.y===0 || reduced.matches) note.group.position.copy(note.seat);
+      const quoted = labState.result?.source===id;
+      if (note.border.visible!==quoted) note.paintNote(quoted);
+      note.border.visible = quoted;
+      const marker = noteMarkers[id];
+      marker.dataset.inserted = String(inTray);
+      marker.dataset.quoted = String(quoted);
+      marker.setAttribute('aria-label',noteText(id));
+    }
+    if (workbenchModel && !slotCues) {
+      slotCues = slotCenters.map((_,i)=>{
+        const cue = workbenchModel.getObjectByName('NoteSlot'+(i+1));
+        if (cue) cue.material = new THREE.MeshBasicMaterial();
+        return cue;
+      });
+    }
+    for (const [i,cue] of (slotCues || []).entries()) {
+      const id = noteKeys[labState.active]?.[i];
+      const state = !id ? 'idle' : labState.result?.source===id ? 'sourced' : labState.has(id) ? 'loaded' : 'empty';
+      cue?.material.color.setHex(slotColors[state]);
     }
   }
   function experimentText() {
@@ -288,7 +328,9 @@
   }
   function drawTerminal(rows) {
     const ctx=terminalTexture.ctx;
-    const color = labState.result?.source ? '#fad587' : '#b7e2c5';
+    const state=labState.feedback;
+    const color={idle:'#b7e2c5',empty:'#efbb72',loaded:'#a3d6b4',sourced:'#ffdd89'}[state];
+    canvas.dataset.trayState = state;
     ctx.fillStyle=power==='off'?'#102521':'#133c39';
     ctx.fillRect(0,0,640,354);
     if (power!=='off') {
@@ -298,10 +340,41 @@
       ctx.fillStyle=color;ctx.font='700 28px system-ui';
       ctx.fillText(power==='booting' ? computer.power.bootHeader : computer.title,28,49,575);
       ctx.fillRect(29,70,577,2);
-      ctx.font='600 30px system-ui';
       const lines=power==='booting' ? computer.power.bootLines.slice(0,bootStep+1) :
         labState.active ? rows : Object.values(experiments).map(experiment=>experiment.tabLabel);
-      lines.forEach((row,i)=>ctx.fillText(row,30,138+i*65,580));
+      if (state==='idle' || power!=='on') {
+        ctx.font='600 30px system-ui';
+        lines.forEach((row,i)=>ctx.fillText(row,30,138+i*65,580));
+      } else {
+        ctx.font='600 31px system-ui';
+        ctx.fillText(lines[0],29,122,578);
+        ctx.fillStyle=state==='sourced' ? '#443f28' : state==='loaded' ? '#254e44' : '#263b34';
+        ctx.fillRect(28,147,580,180);
+        ctx.fillStyle=color;
+        ctx.fillRect(28,147,6,180);
+        ctx.lineWidth=3;
+        if (state==='sourced') {
+          ctx.strokeStyle=color;
+          ctx.beginPath();ctx.moveTo(50,185);ctx.lineTo(59,194);ctx.lineTo(75,175);ctx.stroke();
+        } else if (state==='loaded') {
+          ctx.fillRect(51,175,22,20);
+        } else {
+          ctx.strokeStyle=color;
+          ctx.strokeRect(51,175,22,20);
+        }
+        let y=193;
+        for (const [i,line] of lines.slice(1).entries()) {
+          ctx.font=i===0 ? '700 32px system-ui' : '500 25px system-ui';
+          let row='';
+          for (const char of line) {
+            if (row && ctx.measureText(row+char).width>496) {
+              ctx.fillText(row,89,y);y+=42;row='';
+            }
+            row+=char;
+          }
+          ctx.fillText(row,89,y);y+=46;
+        }
+      }
     }
     terminalTexture.texture.needsUpdate=true;
   }
@@ -315,6 +388,7 @@
     const {prompt,rows}=experimentText();
     drawTerminal(rows);
     if (mode !== 'computer') return;
+    card.dataset.trayState = labState.feedback;
     heading.hidden=false;
     heading.textContent=power==='booting' ? computer.power.bootHeader :
       experiments[labState.active]?.title || computer.power.menuHeader;
@@ -429,20 +503,17 @@
   powerMarker.title=ui.openComputer;
   const shelfMarker=marker('shelf',ui.openFilmRack,openShelf);
   const noteMarkers=Object.fromEntries(Object.keys(notes).map(id=>{
-    const copy=noteCopy[id];
-    const el=marker(id,copy.text,()=>toggleNote(id));
-    const i=copy.text.indexOf(copy.highlightText);
-    const mark=document.createElement('mark');
-    mark.textContent=copy.highlightText;
-    el.replaceChildren(copy.text.slice(0,i),mark,copy.text.slice(i+copy.highlightText.length));
+    const el=marker(id,'',()=>toggleNote(id));
+    el.className='tide-note-target';
     return [id,el];
   }));
   const placement=point(0,0,0);
-  function place(el, world, visible, bottom = Infinity) {
+  function place(el, world, visible, panel) {
     if(!visible) { el.hidden=true;return; }
     placement.copy(world).project(camera);
-    const x=(placement.x+1)*innerWidth/2, y=Math.min(bottom,(1-placement.y)*innerHeight/2);
-    el.hidden=placement.z>1 || placement.z<0 || x<22 || x>innerWidth-22 || y<22 || y>innerHeight-24;
+    const x=(placement.x+1)*innerWidth/2, y=(1-placement.y)*innerHeight/2;
+    const covered=panel && x+22>panel.left && x-22<panel.right && y+22>panel.top && y-22<panel.bottom;
+    el.hidden=placement.z>1 || placement.z<0 || x<22 || x>innerWidth-22 || y<22 || y>innerHeight-24 || Boolean(covered);
     if(el.hidden) return;
     el.style.left=x+'px';el.style.top=y+'px';
   }
@@ -450,14 +521,11 @@
     const pointing = mode==='talk' && now()<gestureUntil;
     place(powerMarker,local(lab,.74,1.26,.23),mode==='roaming'&&nearby===lab || pointing&&talking===lab);
     place(shelfMarker,local(cinema,2.03,1.71,.03),mode==='roaming'&&nearby===cinema || pointing&&talking===cinema);
-    const abovePanel=mode==='computer' ? card.getBoundingClientRect().top-25 : Infinity;
+    const panel=mode==='computer' ? card.getBoundingClientRect() : null;
     for(const [id,note] of Object.entries(notes)) {
       const el=noteMarkers[id];
       const visible=mode==='computer'&&power==='on'&&Boolean(noteKeys[labState.active]?.includes(id));
-      el.dataset.inserted=String(labState.has(id));
-      el.dataset.quoted=String(labState.result?.source===id);
-      el.setAttribute('aria-label',noteText(id));
-      place(el,lab.group.localToWorld(note.group.position.clone().add(point(0,.04,.025))),visible,abovePanel);
+      place(el,local(lab,note.group.position.x,note.group.position.y+.01,note.group.position.z),visible,panel);
     }
   }
 
@@ -469,9 +537,19 @@
     if(clear(stand.x,z))stand.z=clamp(z,-10.45,10.45);
   }
   const ray=new THREE.Raycaster();
+  const trayPlane=new THREE.Plane(point(0,1,0),-1.086);
+  const trayHit=point(0,0,0);
   function tap(e) {
-    if(mode!=='roaming' || !nearby) return;
+    if(mode!=='computer' && (mode!=='roaming' || !nearby)) return;
     ray.setFromCamera({x:e.clientX/innerWidth*2-1,y:1-e.clientY/innerHeight*2},camera);
+    if(mode==='computer') {
+      const slots = power==='on' && noteKeys[labState.active];
+      if (!slots || !workbenchModel || !ray.ray.intersectPlane(trayPlane,trayHit)) return;
+      lab.group.worldToLocal(trayHit);
+      const slot=slotCenters.findIndex(x=>Math.abs(trayHit.x-x)<.134);
+      if (slots[slot] && trayHit.z>.188 && trayHit.z<.378) toggleNote(slots[slot]);
+      return;
+    }
     const hit=ray.intersectObject(nearby.group,true)[0];
     if(!hit || hit.distance>4) return;
     const p=nearby.group.worldToLocal(hit.point);
@@ -532,6 +610,18 @@
 
   const up=point(0,1,0), stoneLocal=point(0,0,0);
   const portraitFov=79;
+  function frameDesk() {
+    deskFov = 65;
+    if (mode==='computer' && sideConsole.matches) {
+      const openWidth=card.getBoundingClientRect().left;
+      camera.setViewOffset(innerWidth,innerHeight,(innerWidth-openWidth)/2,0,innerWidth,innerHeight);
+      // Keep the screen's left edge in the open part of shorter landscape views.
+      const widen = Math.max(1, .54*innerHeight/(openWidth/2-12));
+      deskFov = THREE.MathUtils.radToDeg(2*Math.atan(Math.tan(THREE.MathUtils.degToRad(65/2))*widen));
+    } else if (camera.view?.enabled) {
+      camera.clearViewOffset();
+    }
+  }
   function updateCamera(dt) {
     const portrait=camera.aspect<.9;
     let position=stand,target;
@@ -551,7 +641,7 @@
       targetRot.setFromRotationMatrix(targetMatrix);
     } else targetRot.setFromEuler(viewRotation.set(pitch,yaw,0,'YXZ'));
     camera.quaternion.slerp(targetRot,blend);
-    const fov=portrait&&target?portraitFov:65;
+    const fov=portrait&&target ? portraitFov : mode==='computer' ? deskFov : 65;
     if(camera.fov!==fov) {camera.fov=fov;camera.updateProjectionMatrix();}
     camera.updateMatrixWorld();
   }
@@ -588,6 +678,7 @@
     camera.aspect=innerWidth/innerHeight;
     camera.updateProjectionMatrix();
     renderer.setSize(innerWidth,innerHeight,false);
+    frameDesk();
   }
   resize();addEventListener('resize',resize);
   open('roaming');showPrompt(true);showComputer();
@@ -605,6 +696,12 @@
       const remaining=readyAt-now(), step=clamp(Math.floor((.85-remaining)/.27),0,2);
       if(remaining<=0){power='on';showComputer();}
       else if(step!==bootStep){bootStep=step;showComputer();}
+    }
+    if (workbenchModel && !slotCues) syncDesk();
+    for (const {group,seat} of Object.values(notes)) {
+      if (!group.visible || group.position.equals(seat)) continue;
+      if (reduced.matches || group.position.distanceToSquared(seat)<.000001) group.position.copy(seat);
+      else group.position.lerp(seat,1-Math.exp(-dt*24));
     }
     updateCamera(dt);
     updateFilm(dt);

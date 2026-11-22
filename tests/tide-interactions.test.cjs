@@ -14,6 +14,30 @@ test('the night market answers from the current tray and reset returns the note'
   assert.equal(lab.completedMarket, true);
 });
 
+test('tray feedback updates before the next answer and clears the citation on withdrawal', () => {
+  const lab = createWorkbench();
+  assert.equal(lab.feedback, 'idle');
+  lab.select('market');
+  lab.ask();
+  assert.equal(lab.feedback, 'empty');
+  lab.toggle('market');
+  assert.equal(lab.result, null);
+  assert.equal(lab.feedback, 'loaded');
+  lab.ask();
+  assert.equal(lab.feedback, 'sourced');
+  lab.toggle('market');
+  assert.equal(lab.result, null);
+  assert.equal(lab.feedback, 'empty');
+  assert.equal(lab.ask().answer, 'missing');
+  lab.select('dates');
+  lab.toggle('today');
+  lab.toggle('yesterday');
+  lab.ask();
+  lab.toggle('today');
+  assert.equal(lab.feedback, 'loaded');
+  assert.equal(lab.ask().source, 'yesterday');
+});
+
 test('today wins in either order and removing it invalidates the answer', () => {
   const lab = createWorkbench();
   lab.select('dates');
