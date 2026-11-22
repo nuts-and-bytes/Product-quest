@@ -199,7 +199,8 @@
     if (station === lab) {
       const {openings,questions:q}=dialogue.stone;
       const why = labState.completedMarket ? q.whyCorrect.replyAfterExp1Note :
-        testedEmpty ? q.whyCorrect.replyAfterEmptyOnly : q.whyCorrect.replyBeforePowerOrUntried;
+        labState.has('market') ? openings.afterNoteInserted :
+          testedEmpty ? q.whyCorrect.replyAfterEmptyOnly : q.whyCorrect.replyBeforePowerOrUntried;
       setPanel(message || openings[stoneState()], [
         action(q.howToPlay.label, () => {
           gestureUntil=now()+5;

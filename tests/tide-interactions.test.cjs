@@ -29,6 +29,18 @@ test('today wins in either order and removing it invalidates the answer', () => 
   }
 });
 
+test('a note stays in its original tray when the player returns to the menu or switches experiments', () => {
+  const lab = createWorkbench();
+  lab.select('market');
+  lab.toggle('market');
+  lab.select(null);
+  assert.equal(lab.has('market'), true);
+  lab.select('dates');
+  assert.equal(lab.has('market'), true);
+  assert.deepEqual(lab.ask(), {answer:'unknownToday', source:null});
+  assert.equal(lab.completedMarket, false);
+});
+
 test('pause freezes the frame and resume starts from the same elapsed time', () => {
   const screening = createScreening(24);
   screening.play(0);

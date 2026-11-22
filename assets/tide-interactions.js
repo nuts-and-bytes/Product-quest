@@ -3,6 +3,7 @@
 
   function createWorkbench() {
     const trays = { market: new Set(), dates: new Set() };
+    const trayFor = {market:'market', yesterday:'dates', today:'dates'};
     let active = null;
     let result = null;
     let completedMarket = false;
@@ -12,10 +13,10 @@
         active = experiment;
         result = null;
       },
-      has(note) { return trays[active]?.has(note) ?? false; },
+      has(note) { return trays[trayFor[note]]?.has(note) ?? false; },
       toggle(note) {
+        if (active !== trayFor[note]) return;
         const tray = trays[active];
-        if (!tray || (active === 'market') !== (note === 'market')) return;
         if (tray.has(note)) tray.delete(note);
         else tray.add(note);
         result = null;
