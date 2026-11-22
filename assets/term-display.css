@@ -1,0 +1,77 @@
+/* A reference cabinet in the same timber, brass and green as the island workshops. */
+#dex,#term-pop {
+  --ink:#263b34; --vellum:#f3e8cb; --brass:#b79862;
+  position:fixed; inset:0; margin:auto; box-sizing:border-box;
+  color:var(--ink); max-width:100vw; max-height:100dvh;
+  font-family:system-ui,sans-serif; text-shadow:none;
+}
+#dex::backdrop,#term-pop::backdrop { background:rgba(10,25,24,.71); }
+#dex {
+  width:min(1040px,95vw); height:min(720px,92dvh); padding:clamp(14px,2.6vw,30px);
+  border:1px solid #cbb384; border-radius:14px;
+  background:linear-gradient(120deg,#244740,#17352f 65%,#223e34);
+  box-shadow:0 18px 65px #08191680;
+}
+#dex h2 { color:#f7eccd; font:600 clamp(21px,3vw,32px)/1.2 Georgia,serif; letter-spacing:.045em; margin:0; }
+#game.world-mode #dex { padding:clamp(14px,2.6vw,30px); }
+#dex .cnt { color:#d6d9be; margin:5px 0 16px; font-size:13px; }
+.dex-cabinet { display:grid; grid-template-columns:minmax(0,1.27fr) minmax(0,1fr); gap:16px; min-height:0; flex:1; }
+.dex-lectern { min-height:0; overflow:auto; background:var(--vellum); border-radius:7px; }
+.term-stage { min-width:0; overflow:hidden; position:relative; isolation:isolate; cursor:grab; touch-action:none;
+  background:radial-gradient(ellipse at 42% 9%,#71867a,transparent 70%),linear-gradient(138deg,#3d554d,#223d39); }
+.term-stage:before { content:'';position:absolute;z-index:-1;left:22%;right:18%;bottom:9%;height:10%;border-radius:50%;background:#152c27;filter:blur(12px);opacity:.58; }
+.term-stage:active { cursor:grabbing; }
+.term-stage:focus-visible { outline:3px solid #e0bc75;outline-offset:-3px; }
+.term-stage canvas { display:block;width:100%;height:100%; }
+#dex-stage { height:clamp(155px,31vh,300px); }
+.dex-lectern:has(#dex-detail:not(.show)) { display:flex;flex-direction:column; }
+.dex-lectern:has(#dex-detail:not(.show)) #dex-stage { flex:1; }
+.term-gesture { display:block; color:#e2e1c7; font:12px/1.5 system-ui,sans-serif; background:#29483e; text-align:center;padding:5px 9px; }
+#dex-detail { margin:0;padding:16px 20px;border:0;border-radius:0;background:transparent;color:var(--ink);line-height:1.65; }
+#dex-detail b,#term-title { color:#23483c; font-size:19px; }
+#dex-detail p { margin:.45em 0; }
+#dex-detail .src,#term-pop .tp-src { color:#5c6558; line-height:1.55; }
+#dex-grid {
+  display:grid;grid-template-columns:repeat(auto-fill,minmax(86px,1fr));grid-auto-rows:112px;align-content:start;
+  padding:8px 8px 14px;gap:8px;overflow:auto;overscroll-behavior:contain;
+  background:repeating-linear-gradient(to bottom,#2b3228 0,#39372b 106px,#896740 107px,#715437 113px,#262b24 117px,#2b3228 120px);
+  border:1px solid #736346;border-radius:7px;
+}
+#dex-grid .dex-card {
+  position:relative;align-self:end; min-width:0; height:96px; margin:0 4px 6px; padding:6px 4px 6px 10px;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:5px;
+  color:#f7e8bd;background:linear-gradient(90deg,#153f39 4%,#708368 6%,#325e53 10%,#476655);
+  border:1px solid #b29b69;border-radius:2px 5px 4px 2px;
+  box-shadow:3px -2px 0 #cfbd95,5px -3px 0 #574c39,4px 4px 6px #101c1680;
+  transform:perspective(400px) rotateY(-9deg); text-align:center; font:inherit;
+}
+#dex-grid .dex-card .icon { font-size:20px; line-height:1.2; }
+#dex-grid .dex-card .nm { color:inherit; margin:0; font-size:12px;line-height:1.3; overflow-wrap:anywhere; }
+#dex-grid .dex-card.locked { color:#b3b4a2; border-color:#737662; background:linear-gradient(90deg,#343d36,#556054 8%,#404c43 13%); opacity:.8; }
+#dex-grid .dex-card:is(:hover,:focus-visible,[aria-pressed=true]):enabled { transform:perspective(400px) translateY(-4px) rotateY(0deg); border-color:#ffe0a3; }
+#dex .closebtn,#term-pop .tp-close { color:#f6ebc9;background:#36564a;border:1px solid #a79875;border-radius:6px;box-shadow:none;text-shadow:none;padding:8px 17px;font:inherit;cursor:pointer; }
+#term-pop { background:transparent; border:0; padding:0; width:min(525px,94vw); height:fit-content; overflow:visible; }
+#term-pop .tp-box { width:100%;max-height:88dvh;max-width:none; box-sizing:border-box;overflow:auto;color:var(--ink);background:var(--vellum);
+  padding:0 clamp(16px,3vw,26px) 18px;border:1px solid var(--brass);border-radius:11px;font:15px/1.68 system-ui,sans-serif; }
+#term-pop .term-stage { height:clamp(135px,30vh,230px); margin-inline:calc(-1 * clamp(16px,3vw,26px)); }
+#term-pop .term-gesture { margin:0 calc(-1 * clamp(16px,3vw,26px)) 12px; }
+#term-pop .tp-box>b { color:#23483c;font-size:20px; }
+#term-pop .tp-close { display:block; margin:12px 0 0 auto; }
+.kcard .term-stage { height:145px;border-radius:6px;margin-bottom:7px; }
+#toast { background:linear-gradient(115deg,#23493e,#395e49); border:1px solid #e0c596; box-shadow:3px 4px 0 #a78e69,5px 7px 0 #514a37; }
+[data-camera-input] { color:#203d35;background:#f3ecd9;border:1px solid #b3ab90;border-radius:5px;padding:5px; }
+[data-camera-hint] { line-height:1.4;font-size:12px; }
+#isl-toolbar [data-camera-hint] { color:inherit; flex-basis:100%; }
+.field-input { display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-top:8px; }
+.field-input small { flex:1 1 125px; }
+@media(max-width:650px){
+  #dex { width:97vw;height:94dvh; }
+  .dex-cabinet { grid-template-columns:1fr;grid-template-rows:minmax(0,1.55fr) minmax(100px,1fr);gap:9px; }
+  #dex-stage { height:clamp(112px,19dvh,180px); }
+  #dex .cnt { margin-bottom:8px; }
+  #dex-grid { grid-template-columns:repeat(auto-fill,minmax(72px,1fr)); }
+  #dex .closebtn { margin-top:7px; }
+  #dex-detail { padding:10px 13px; }
+}
+@media(max-height:490px) and (min-width:651px){ #dex-stage { height:104px; } #dex {padding:9px 16px;} #dex .cnt {margin:2px 0 5px;} }
+@media(pointer:coarse){ .field-input [data-camera-hint],.field-input [data-camera-input] { display:none; } }

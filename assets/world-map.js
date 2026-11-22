@@ -9,6 +9,43 @@
     { id:'design', name:'珊瑚花园', continent:'设计大陆', x:29, z:53, rx:18, rz:14, color:'#f5a1ac',
       title:'让每一步都能被理解', text:'路径、灯光和地标让你知道自己在哪里，也知道下一步能做什么。界面设计同样需要清晰的反馈和可预期的行动。回到阳光社区，重新观察一个真实生活场景。', building:'home' }
   ];
+  // Lots are in island-local metres. Each chapter uses two evidence counters
+  // and a decision counter along the public-facing side of these buildings.
+  function settlement(lots, chapters) {
+    const buildings = Object.fromEntries(lots.map(([id,x,z,width,depth]) => [id,{id,x,z,width,depth}]));
+    const stops = chapters.map(row => row.map(([id,offset]) => {
+      const b = buildings[id];
+      return {building:id, x:b.x+offset, z:b.z+b.depth/2+1.35};
+    }));
+    return {buildings:Object.values(buildings), stops};
+  }
+  regions[0].settlement = settlement([
+    ['teahouse',0,-7,8,4.2], ['postcards',-10,1.7,3.2,2],
+    ['waterClock',-7.7,-5.6,3.2,2.6], ['experiment',8,-4.8,4.8,3],
+    ['harbor',6,5.7,5,2.5], ['referral',-2,5.1,4.6,2.4]
+  ], [
+    [['postcards',0],['teahouse',-2.6],['teahouse',2.6]],
+    [['waterClock',0],['teahouse',-2.6],['teahouse',2.6]],
+    [['experiment',-1.7],['experiment',1.7],['teahouse',2.6]],
+    [['harbor',0],['referral',-1.5],['referral',1.5]]
+  ]);
+  regions[2].settlement = settlement([
+    ['glasshouse',1,-7.7,9.2,4.6], ['kiosk',-5,-3.7,3.1,2],
+    ['ticketOffice',8,-4,3.6,2.8], ['studio',-9,1.6,4.4,3],
+    ['trial',-2,4.6,4.6,2], ['access',8,3.8,4.6,2.6],
+    ['ferry',0,9.5,3.8,1.9]
+  ], [
+    [['kiosk',0],['ticketOffice',0],['glasshouse',0]],
+    [['studio',0],['glasshouse',-2.7],['glasshouse',1.7]],
+    [['trial',-1.7],['trial',1.7],['kiosk',0]],
+    [['access',-1.7],['access',1.7],['glasshouse',1.7]]
+  ]);
+  regions[0].settlement.pier = {x:6, first:7.22, planks:12, width:2.25};
+  regions[2].settlement.pier = {x:0, first:10.59, planks:8, width:1.48};
+  function lotAt(region,x,z,margin) {
+    return region.settlement?.buildings.find(b =>
+      Math.abs(x-region.x-b.x) < b.width/2+margin && Math.abs(z-region.z-b.z) < b.depth/2+margin);
+  }
   const routes = [
     {id:'amber-way', name:'拾光栈道', points:[[25,-9],[35,-9],[44,-16],[53,-28],[62,-36]]},
     {id:'tide-way', name:'星潮长桥', points:[[29,8],[38,8],[50,8],[61,13],[72,13]]},
@@ -32,7 +69,22 @@
   function canWalk(x,z,buildings) {
     if(!Number.isFinite(x)||!Number.isFinite(z)) return false;
     const region=regionAt(x,z);
-    if(region) return Math.hypot(x-region.x-3,z-region.z+2)>1.45;
+    if(region) {
+      const dx=x-region.x, dz=z-region.z;
+      if(Math.hypot(dx-3,dz+2)<=1.45)return false;
+      const lot=lotAt(region,x,z,.22);
+      if(!lot)return true;
+      const aisle=Math.abs(dx-lot.x)<.85;
+      if(lot.id==='glasshouse')return aisle;
+      if(lot.id==='teahouse')return aisle && dz>lot.z-lot.depth/2+.45;
+      if(lot.id==='ferry')return aisle;
+      return false;
+    }
+    for(const r of regions){
+      const pier=r.settlement?.pier;
+      if(pier && Math.abs(x-r.x-pier.x)<pier.width/2-.1 &&
+        z>=r.z+pier.first-.26 && z<=r.z+pier.first+(pier.planks-1)*.52+.24)return true;
+    }
     if(bridgeAt(x,z)) return true;
     if(mainDistance(x,z)>.94) return false;
     if(z<-24) return false; // Scenic cliffs are deliberately outside the walking surface.
@@ -64,5 +116,5 @@
     }
     return null;
   }
-  root.PQWorldMap={regions,routes,distanceToSegment,mainDistance,regionAt,bridgeAt,canWalk,findPath};
+  root.PQWorldMap={regions,routes,lotAt,distanceToSegment,mainDistance,regionAt,bridgeAt,canWalk,findPath};
 })(typeof window==='undefined'?globalThis:window);

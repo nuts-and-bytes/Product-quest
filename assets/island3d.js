@@ -342,6 +342,7 @@
   }
 
   const ROLE_PROFILES = {
+    chengrandma: { style:'bun', outfit:'sweater', hair:'#c2b6a8', skin:'#e8c2a5', eyeColor:'#6a5042', cloth:'#b7786e', pants:'#575767', glasses:'gold', prop:'none' },
     boss:     { style: 'slick',    outfit: 'suit',       hair: '#c9d4e8', skin: '#fff0e2', eyeColor: '#4876c4', cloth: '#4576d6', tie: '#ff6b6b', pants: '#4d6ea8', glasses: 'none',  prop: 'coffee',  brow: 'stern' },
     xiaomei:  { style: 'long',     outfit: 'sweater',    hair: '#ff96b0', skin: '#fff1e6', eyeColor: '#ff7096', cloth: '#59d697', pants: '#ffffff', glasses: 'none',  prop: 'coffee',  hairpin: '#ffd15c' },
     lijie:    { style: 'bun',      outfit: 'suit',       hair: '#a682eb', skin: '#fff0e2', eyeColor: '#8d6ce6', cloth: '#9a75e8', tie: '#ffd966', pants: '#584b8c', glasses: 'gold',  prop: 'laptop',  brow: 'sharp' },
@@ -1027,9 +1028,9 @@
           let col = '#6b5a47';
           if (y === h) {
             if (d > 0.84) col = '#ebd29d';
-            else if (isAutumn) col = (hash2(x, z) > 0.5 ? '#bfa26a' : '#b3a075');
+            else if (isAutumn) col = Math.sin(x*.37)+Math.cos(z*.49) > 0 ? '#9d9e5c' : '#acaa6d';
             else if (isCrystal) col = (hash2(x, z) > 0.5 ? '#7e9d9c' : '#8fa9a4');
-            else col = (hash2(x, z) > 0.5 ? '#c1b0a0' : '#a2b496');
+            else col = Math.cos(x*.35+z*.18)+Math.sin(z*.46) > 0 ? '#91b779' : '#a2bf82';
           }
           vg.set(x, y, z, col);
         }
@@ -1037,12 +1038,7 @@
     }
     const group = new THREE.Group();
     group.position.set(c.wx, 0, c.wz);
-    group.add(makeVoxelMesh(vg, 1.0, [0, 0, 0], { roughness: 0.84 }));
-    const hit = new THREE.Mesh(
-      new THREE.CylinderGeometry(11, 11, 10, 12),
-      new THREE.MeshBasicMaterial({ visible: false })
-    );
-    hit.position.y = 4;
+    const hit = makeVoxelMesh(vg, 1.0, [0, 0, 0], { roughness: 0.84 });
     hit.userData = { continentId: c.id };
     group.add(hit);
     return { group, hit, data: c };
@@ -2421,9 +2417,20 @@
       if(snap)Object.assign(this.curSpherical,this.spherical);
     },
 
+    detachFollow(on) {
+      this.detachedFollow = on;
+      const button = document.getElementById('field-pan');
+      button.textContent = on ? '定位' : '平移';
+      button.setAttribute('aria-pressed',String(on));
+      PQCameraInput.refresh(this);
+    },
+
     setMode(mode) {
+      if(this.detachedFollow)this.detachFollow(false);
+      document.getElementById('field-pan').hidden=mode==='fp';
       const previous=this.mode;this.rememberWalkView();this.visibility?.resetFollow();
       this.mode = mode;
+      PQCameraInput.refresh(this);
       this.walkGoal = null;
       if (this.goalRing) this.goalRing.visible = false;
       if (this.archipelago) this.setArchipelago(false);
@@ -2443,28 +2450,29 @@
       if (mode === 'fp') {
         this.fpYaw = this.playerYaw;
         this.fpPitch = -0.04;
-        this.setStatus('第一人称模式：拖拽环视街道，WASD / 方向键 / 点击地面行走，靠近建筑按 E 互动', 4200);
+        this.setStatus(PQCameraInput.trackpad ? PQCameraInput.hint(this) : '第一人称模式：拖拽环视街道，WASD / 方向键 / 点击地面行走，靠近建筑按 E 互动', 4200);
       } else if (mode === 'walk') {
         this.camTarget.x = this.playerPos.x;
         this.camTarget.y = 2.0;
         this.camTarget.z = this.playerPos.z;
         if(previous!=='walk')this.frameWalk();
-        this.setStatus('漫步模式：WASD / 方向键 或 点击地面移动立体小人，靠近建筑按 E 互动', 3800);
+        this.setStatus(PQCameraInput.trackpad ? PQCameraInput.hint(this) : '漫步模式：WASD / 方向键 或 点击地面移动立体小人，靠近建筑按 E 互动', 3800);
       } else if (mode === 'orbit') {
         this.spherical.radius = Math.max(24, Math.min(this.spherical.radius, 76));
         this.spherical.polar = 0.84;
-        this.setStatus('环绕模式：左键拖拽 360° 旋转视角，滚轮缩放，右键平移', 3000);
+        this.setStatus(PQCameraInput.trackpad ? PQCameraInput.hint(this) : '环绕模式：左键拖拽 360° 旋转视角，滚轮缩放，右键平移', 3000);
       } else {
         this.spherical.radius = 54;
         this.spherical.polar = 0.80;
         this.spherical.azimuth = 0.56;
-        this.setStatus('平移模式：拖拽探索星火岛，点击建筑开启关卡；在「视角」中切换第一人称与昼夜', 3200);
+        this.setStatus(PQCameraInput.trackpad ? PQCameraInput.hint(this) : '平移模式：拖拽探索星火岛，点击建筑开启关卡；在「视角」中切换第一人称与昼夜', 3200);
       }
     },
 
     setArchipelago(on, snap) {
       this.rememberWalkView();
       this.archipelago = !!on;
+      PQCameraInput.refresh(this);
       const btn = document.getElementById('isl-arch-btn');
       if (btn) btn.classList.toggle('active', this.archipelago);
 
@@ -2489,6 +2497,7 @@
     },
 
     recentre(snap) {
+      if(this.detachedFollow)this.detachFollow(false);
       this.visibility?.resetFollow();
       if (this.archipelago) this.setArchipelago(false, snap);
       if (!this.cinematicMode && (this.mode === 'walk' || this.mode === 'fp')) {
@@ -2577,7 +2586,7 @@
           el.innerHTML = `<span class="pin-nm">${c.data.name}</span><span class="pin-badge side">可探索</span>`;
           el.onclick = (e) => {
             e.stopPropagation();
-            this.environment.focusRegion(c.data.id);
+            this.environment.selectRegion(c.data.id);
           };
           layer.appendChild(el);
           this._labelEls['c_' + c.data.id] = el;
@@ -2683,7 +2692,12 @@
         this.pointers.set(e.pointerId, { x: e.clientX, y: e.clientY, btn: e.button });
         if (this.pointers.size === 1) {
           this.dragStart = { x: e.clientX, y: e.clientY, moved: 0, btn: e.button };
+          if (this.archipelago && e.button === 0) {
+            // The overview can still be zooming when a player presses the beach.
+            this.dragStart.mapRay = this._rayAt(e.clientX, e.clientY).clone();
+          }
         } else if (this.pointers.size === 2) {
+          this.dragStart = null;
           const pts = [...this.pointers.values()];
           this.pinchDist = Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y);
         }
@@ -2717,7 +2731,7 @@
         }
 
         const isRight = prev.btn === 2 || e.shiftKey;
-        if (this.mode === 'pan' && !isRight && !this.archipelago && !this.cinematicMode) {
+        if (this.detachedFollow || this.mode === 'pan' && !isRight && !this.archipelago && !this.cinematicMode) {
           this._panByScreenDelta(dx, dy);
         } else if (this.mode === 'orbit' && isRight) {
           this._panByScreenDelta(dx, dy);
@@ -2733,25 +2747,18 @@
         this.pointers.delete(e.pointerId);
         if (this.pointers.size < 2) this.pinchDist = 0;
         if (wasSingle && this.dragStart && this.dragStart.moved < 7 && this.dragStart.btn === 0) {
-          this._handleTap(e.clientX, e.clientY);
+          this._handleTap(e.clientX, e.clientY, this.dragStart.mapRay);
         }
         if (this.pointers.size === 0) this.dragStart = null;
       };
       canvas.addEventListener('pointerup', endPtr);
       canvas.addEventListener('pointercancel', (e) => { this.pointers.delete(e.pointerId); this.dragStart = null; this.pinchDist = 0; });
 
-      canvas.addEventListener('wheel', (e) => {
-        e.preventDefault();
-        if (this.mode === 'fp'||window.PQStory3D?.active||window.PQFirstDay?.dialogOpen) return;
-        const factor = e.deltaY * 0.045;
-        const maxR = this.archipelago ? Math.max(220,220/this.camera.aspect) : (this.cinematicMode?150:96);
-        const minR = this.mode === 'walk' ? 30 : 15;
-        this.spherical.radius = Math.max(minR, Math.min(maxR, this.spherical.radius + factor));
-        this.rememberWalkView();
-      }, { passive: false });
+      PQCameraInput.init(this);
+      PQCameraInput.bind(canvas,this);
 
       window.addEventListener('keydown', (e) => {
-        if (!this.running || this.cinematicMode || window.PQStory3D?.active || window.PQFirstDay?.dialogOpen || window.PQFirstDay?.transitioning || /INPUT|TEXTAREA|SELECT/.test(e.target.tagName) || (this.environment && !this.environment.panel.hidden)) return;
+        if (!this.running || this.cinematicMode || document.querySelector('#dex.show, #term-pop.show, dialog[open]') || window.PQStory3D?.active || window.PQFirstDay?.dialogOpen || window.PQFirstDay?.transitioning || /INPUT|TEXTAREA|SELECT/.test(e.target.tagName) || (this.environment && !this.environment.panel.hidden)) return;
         const k = e.key.toLowerCase();
         if (['arrowup','arrowdown','arrowleft','arrowright',' '].includes(k)) e.preventDefault();
         this.keys[k] = true;
@@ -2806,19 +2813,30 @@
       this.camTarget.z = Math.max(-48, Math.min(66, this.camTarget.z));
     },
 
-    _handleTap(clientX, clientY) {
-      if(window.PQStory3D?.active||window.PQFirstDay?.dialogOpen||window.PQFirstDay?.transitioning)return;
-      const rect = this.renderer.domElement.getBoundingClientRect();
+    _rayAt(clientX, clientY, rect = this.renderer.domElement.getBoundingClientRect()) {
       const ndc = new THREE.Vector2(
         ((clientX - rect.left) / rect.width) * 2 - 1,
         -((clientY - rect.top) / rect.height) * 2 + 1
       );
       this.raycaster.setFromCamera(ndc, this.camera);
+      return this.raycaster.ray;
+    },
 
-      const hits = this.raycaster.intersectObjects(this.hitTargets, false).filter(hit=>!hit.object.userData.buildingId||!this.visibility?.throughCutout(hit.object.userData.buildingId,clientX-rect.left,clientY-rect.top));
+    _handleTap(clientX, clientY, mapRay) {
+      if(window.PQStory3D?.active||window.PQFirstDay?.dialogOpen||window.PQFirstDay?.transitioning)return;
+      const rect = this.renderer.domElement.getBoundingClientRect();
+      if (mapRay && this.archipelago) this.raycaster.ray.copy(mapRay);
+      else this._rayAt(clientX, clientY, rect);
+
+      if (window.PQFieldCourse?.active && PQFieldCourse.hit(this.raycaster)) return;
+      const hits = window.PQFieldCourse?.active ? [] : this.raycaster.intersectObjects(this.hitTargets, false).filter(hit=>!hit.object.userData.buildingId||!this.visibility?.throughCutout(hit.object.userData.buildingId,clientX-rect.left,clientY-rect.top));
       if (hits.length > 0) {
         const ud = hits[0].object.userData;
-        if (ud.expeditionId) { this.environment.inspect(ud.expeditionId); return; }
+        if (ud.expeditionId) {
+          if (ud.expeditionId === 'ai' || this.mode === 'walk' || this.mode === 'fp') this.environment.inspect(ud.expeditionId);
+          else this.environment.selectRegion(ud.expeditionId);
+          return;
+        }
         if (ud.buildingId) { this.focusBuilding(ud.buildingId); return; }
         if (ud.milestoneId) {
           const item = this.milestones.find((m) => m.ms.id === ud.milestoneId);
@@ -2833,8 +2851,7 @@
           return;
         }
         if (ud.continentId && this.mode !== 'walk' && this.mode !== 'fp') {
-          const cont = this.continents.find((c) => c.data.id === ud.continentId);
-          if (cont) this.environment.focusRegion(cont.data.id);
+          this.environment.selectRegion(ud.continentId);
           return;
         }
       }
@@ -2901,6 +2918,7 @@
       if(window.PQNightMarketScene&&typeof G!=='undefined'&&G.nightMarket)PQNightMarketScene.worldUpdate(dt);
       this._updateAmbient(dt, tSec);
       this._updateCamera(dt, now, tSec);
+      window.PQFieldCourse?.update();
       this.environment.update(dt, tSec);
       this.environment.render();
       if (now - (this._portraitTime || 0) > 66) {
@@ -3107,10 +3125,13 @@
       animateRig(this.playerRig, isMoving, timeSec, 0);
 
       if (this.mode === 'walk') {
-        const follow=this.visibility?.follow()||this.playerPos;
-        this.camTarget.x = follow.x;
-        this.camTarget.y = 2.1;
-        this.camTarget.z = follow.z;
+        if(isMoving && this.detachedFollow)this.detachFollow(false);
+        if(!this.detachedFollow){
+          const follow=this.visibility?.follow()||this.playerPos;
+          this.camTarget.x = follow.x;
+          this.camTarget.y = 2.1;
+          this.camTarget.z = follow.z;
+        }
         this._checkProximity();
       } else if (this.mode === 'fp') {
         this._checkProximity();
