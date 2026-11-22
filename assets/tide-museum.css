@@ -1,0 +1,132 @@
+/* The controls stay low in the frame so the exhibits remain the focus. */
+:root {
+  --tide-paper: #f0dcb1;
+  --tide-ink: #16352d;
+  --tide-line: #c2a67868;
+}
+[hidden] { display: none !important; }
+#tide-markers { position: fixed; inset: 0; pointer-events: none; }
+#tide-markers button {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  min-width: 44px;
+  max-width: min(65vw, 210px);
+  white-space: nowrap;
+  border: 1px solid #fff3b1;
+  box-shadow: 0 4px 14px #1d1a2080;
+  pointer-events: auto;
+  font-size: 13px;
+  font-weight: 700;
+}
+#tide-markers button[data-spot="power"] {
+  padding: 0;
+  width: 44px;
+  border-radius: 100%;
+  font-size: 24px;
+  outline: 3px solid #dbbe7866;
+}
+#tide-markers button[data-spot="shelf"] {
+  background: #592f2c;
+  color: #ffdfa2;
+}
+#tide-markers button.tide-note-target {
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+}
+aside.visiting { border-radius: 10px; }
+aside .secondary { color: #efe3ca; border: 1px solid #978663; background: #153631; }
+aside .primary { background: #f4d79e; color: #19362e; font-weight: 700; }
+aside[data-mode="shelf"] { width: min(39rem, calc(100vw - 24px)); }
+aside[data-mode="shelf"] .reading { padding: 10px 15px; }
+aside[data-mode="shelf"] #station-title { margin-bottom: 2px; }
+
+.tide-at-computer aside[data-mode="computer"] {
+  top: auto;
+  right: auto;
+  bottom: max(8px, env(safe-area-inset-bottom));
+  left: max(8px, env(safe-area-inset-left));
+  width: max-content;
+  max-width: calc(100vw - 20px);
+  max-height: none;
+  transform: none;
+  overflow: visible;
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+}
+aside[data-mode="computer"] nav {
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+  padding: 0;
+  border: 0;
+}
+aside[data-mode="computer"] nav button {
+  min-height: 44px;
+  padding: 5px 11px;
+  margin: 0;
+  font-size: clamp(.82rem, 2.3vw, .94rem);
+}
+aside[data-mode="computer"] nav button.secondary {
+  color: #f4ead7;
+  background: #153631;
+}
+aside[data-mode="computer"] .reading,
+aside[data-mode="computer"] .tide-note-shortcut:not(:focus-visible) {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  min-height: 0;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+.tide-focus-note #tide-markers button[data-spot="market"] {
+  border-radius: 9px;
+  outline: 2px solid #ffdd89;
+  outline-offset: 2px;
+  box-shadow: 0 0 9px #ffdd895a;
+}
+#tide-reels {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px;
+  margin-top: 8px;
+}
+#tide-reels:empty { display: none; }
+#tide-reels button {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 4px;
+  align-content: start;
+  background: #25423a;
+  border: 1px solid var(--tide-line);
+  color: var(--tide-paper);
+  text-align: left;
+  line-height: 1.25;
+  padding: 8px 9px 9px;
+}
+#tide-reels button[aria-pressed="true"] { color: var(--tide-ink); background: var(--tide-paper); }
+#tide-reels button span { font-variant-numeric: tabular-nums; font-size: 12px; }
+#tide-reels button small { font-size: 11px; line-height: 1.35; }
+#tide-progress { display: block; width: 100%; height: 4px; margin: 0; accent-color: #f2ce8e; }
+aside[data-mode="screen"] { width: max-content; max-width: calc(100vw - 18px); }
+aside[data-mode="screen"] .reading { padding: 5px 12px; text-align: center; }
+aside[data-mode="screen"] #status { font-size: .86rem; }
+aside[data-mode="screen"] nav { gap: 5px; padding: 4px 7px; justify-content: center; }
+body:has(aside[data-mode="roaming"]) #stick { display: grid; }
+body:has(aside[data-mode="roaming"]) #aim { display: block; }
+@media (pointer: fine) { body:has(aside[data-mode="roaming"]) #stick { display: none; } }
+@media (max-width: 620px), (max-height: 500px) {
+  #tide-markers button:not([data-spot="power"]) { padding-inline: 8px; }
+  aside[data-mode="computer"] .reading,
+  aside[data-mode="shelf"] .reading { padding: 7px 9px; }
+  aside[data-mode="shelf"] .reading { overflow: auto; }
+  aside[data-mode="screen"] nav button { padding-inline: 8px; font-size: 13px; }
+}

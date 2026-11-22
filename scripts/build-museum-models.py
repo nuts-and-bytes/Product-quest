@@ -1,5 +1,6 @@
 """Build the museum miniatures with Blender 5.3 (-b -P scripts/build-museum-models.py).
-Optional MUSEUM_REVIEW_DIR retains editable .blend files; BLENDER_QA_DIR runs qa_check.
+Optional MUSEUM_MODEL selects one model; MUSEUM_REVIEW_DIR retains editable .blend
+files; BLENDER_QA_DIR runs qa_check.
 Coordinates below use (right, toward visitor, height); sizes are full widths for boxes
 and radii for ellipsoids. Geometry colours travel in one shared vertex-colour material.
 """
@@ -207,6 +208,48 @@ def lamp():
     rod((x,.027,1.655),(x,.027,1.689),.146,"ffe0a0",.151,24)
 
 
+def note_tray():
+    # Open at the visitor end so the notes slide forward into the two seats.
+    tray = box(.982,.266,1.088,.67,.224,.056,deep,0)
+    tray.name = "NoteTray"
+    centers = (.823, 1.141)
+    for x in centers:
+        bpy.ops.mesh.primitive_cube_add(size=1, location=at(x,.307,1.125))
+        cutter = bpy.context.object
+        cutter.dimensions = (.268,.21,.100)
+        recess = tray.modifiers.new("Open paper channel", "BOOLEAN")
+        recess.operation = "DIFFERENCE"
+        recess.solver = "EXACT"
+        recess.object = cutter
+        bpy.context.view_layer.objects.active = tray
+        bpy.ops.object.modifier_apply(modifier=recess.name)
+        bpy.data.objects.remove(cutter, do_unlink=True)
+
+    tray.data.materials.clear()
+    tray.data.materials.append(surface)
+    pigment = tray.data.color_attributes["Pigment"]
+    for face in tray.data.polygons:
+        # The low well floor and inner walls read as depth beside the brass trim.
+        if face.normal.z > .9 and face.center.z > .02:
+            rgb = (.69, .48, .28, 1.)
+        elif face.center.z > -.02:
+            rgb = (.12, .20, .19, 1.)
+        else:
+            continue
+        for corner in face.loop_indices:
+            pigment.data[corner].color_srgb = rgb
+    rim = tray.modifiers.new("Soft tray edges", "BEVEL")
+    rim.width = .006
+    rim.segments = 2
+    rim.affect = "EDGES"
+    parts.remove(tray)
+
+    for index, x in enumerate(centers, start=1):
+        cue = box(x,.184,1.120,.13,.023,.012,"fff4d5",0)
+        cue.name = f"NoteSlot{index}"
+        parts.remove(cue)
+
+
 def workbench():
     cabinet()
     lamp()
@@ -219,13 +262,13 @@ def workbench():
     for row in range(3):
         for i in range(9):
             box(-.026+i*.071,.223+row*.067,1.127,.055,.047,.019,cream if i<8 else honey,.007)
-    box(.986,.307,1.084,.67,.21,.051,walnut,.018)
     box(1.154,-.021,1.219,.55,.291,.304,deep,.036)
     for x in (1.012,1.285):
         rod((x,.12,1.233),(x,.161,1.233),.081,brass,n=20)
         rod((x,.157,1.233),(x,.17,1.233),.064,cream,n=20)
         rod((x,.175,1.229),(x+.032,.175,1.259),.006,ink)
     join("Workbench")
+    note_tray()
 
 
 def projection():
@@ -248,9 +291,11 @@ def projection():
     join("Projection")
 
 
-for name,builder in (("stone",stone),("workbench",workbench),("projection",projection)):
+builders = {"stone":stone, "workbench":workbench, "projection":projection}
+selected = os.getenv("MUSEUM_MODEL")
+for name in (selected,) if selected else builders:
     begin()
-    builder()
+    builders[name]()
     bpy.context.view_layer.update()
     if REVIEW:
         folder=Path(REVIEW).resolve()
@@ -269,5 +314,6 @@ for name,builder in (("stone",stone),("workbench",workbench),("projection",proje
             raise RuntimeError(f"{name} failed geometry review: {report['errors']}")
     OUT.mkdir(parents=True,exist_ok=True)
     bpy.ops.export_scene.gltf(filepath=str(OUT/(name+".glb")),export_format="GLB",
-                              export_texcoords=False,export_animations=name=="stone",
+                              export_texcoords=False,export_apply=name=="workbench",
+                              export_animations=name=="stone",
                               export_animation_mode="SCENE",export_frame_range=True)
