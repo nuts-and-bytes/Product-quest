@@ -129,8 +129,10 @@
       next?.focus({preventScroll:true});
     }
   }
-  function setLabel(station, exhibit = copy.labels[station === lab ? 'shitou' : station === cinema ? 'cinema' : 'archive']) {
+  function setLabel(station) {
+    const exhibit=copy.labels[station === lab ? 'shitou' : station === cinema ? 'cinema' : 'archive'];
     label.hidden = false;
+    labelToggle.textContent = label.open ? ui.closeLabel : ui.readLabel;
     label.querySelector('small').textContent = exhibit.subtitle;
     label.querySelector('h3').textContent = exhibit.title;
     label.querySelector('p').textContent = exhibit.body;
@@ -397,8 +399,7 @@
     if (!force && next === nearby) return;
     nearby = next;
     const actions = [];
-    let message = (coarse.matches ? ui.hintTouch : ui.hintDesktop)+' · '+
-      (coarse.matches ? ui.browseHintTouch : ui.browseHintDesktop);
+    let message = coarse.matches ? ui.browseHintTouch : ui.hintDesktop+' · '+ui.browseHintDesktop;
     const greet = (line, fallback) => {
       if (visited.has(line)) return fallback;
       visited.add(line);
@@ -529,15 +530,17 @@
   });
 
   const up=point(0,1,0), stoneLocal=point(0,0,0);
+  const portraitFov=79;
   function updateCamera(dt) {
-    const portrait=innerWidth/innerHeight<.9;
-    const portraitDistance = clamp(4.1*innerHeight/innerWidth-3.6,3.7,7.6);
+    const portrait=camera.aspect<.9;
     let position=stand,target;
     if(mode==='computer') {
       position=portrait ? local(lab,.63,1.79,2.60) : local(lab,.56,1.68,1.48);
       target=portrait ? local(lab,.84,1.12,.19) : local(lab,.70,1.12,.13);
     } else if(mode==='screen' || mode==='shelf') {
-      position=screenCenter.clone().add(point(portrait?portraitDistance:3.72,-.29,0));
+      const halfWidthPerMeter=Math.tan(THREE.MathUtils.degToRad(portraitFov/2))*camera.aspect;
+      const distance = portrait ? clamp(screenWidth/(2*halfWidthPerMeter*.88),3.72,7.6) : 3.72;
+      position=screenCenter.clone().add(point(distance,-.29,0));
       target=screenCenter.clone().add(point(0,-.22,0));
     }
     const blend=reduced.matches?1:1-Math.exp(-dt*11);
@@ -547,7 +550,7 @@
       targetRot.setFromRotationMatrix(targetMatrix);
     } else targetRot.setFromEuler(viewRotation.set(pitch,yaw,0,'YXZ'));
     camera.quaternion.slerp(targetRot,blend);
-    const fov=portrait&&target?79:65;
+    const fov=portrait&&target?portraitFov:65;
     if(camera.fov!==fov) {camera.fov=fov;camera.updateProjectionMatrix();}
     camera.updateMatrixWorld();
   }
