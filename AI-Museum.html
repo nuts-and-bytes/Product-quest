@@ -1,4 +1,4 @@
-<!doctype html><html lang="zh-CN"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>潮汐馆 · AI 博物馆</title><style>
+<!doctype html><html lang="zh-CN"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>潮汐馆 · AI 博物馆</title><link rel="icon" href="data:,"><style>
 *{box-sizing:border-box}body{margin:0;overflow:hidden;background:#182829;color:#f4ead7;font:15px/1.5 system-ui}canvas{position:fixed;inset:0;width:100%;height:100%;touch-action:none;cursor:grab}canvas:active{cursor:grabbing}header{position:fixed;left:22px;top:16px;font:600 20px Georgia,serif;text-shadow:0 1px 6px #000;pointer-events:none}header small{display:block;font:10px system-ui;letter-spacing:.18em}aside{position:fixed;left:50%;bottom:max(18px,env(safe-area-inset-bottom));transform:translateX(-50%);max-width:94vw;width:max-content;text-align:center;background:#102b29ef;border:1px solid #a998715e;border-radius:12px;padding:9px 15px}p{margin:0}nav{display:flex;justify-content:center;gap:6px;flex-wrap:wrap}nav:not(:empty){margin-top:6px}button{min-height:44px;border:0;border-radius:6px;padding:6px 13px;background:#edd6a7;color:#243d38;font:inherit;cursor:pointer}button:focus-visible{outline:3px solid coral}#aim{position:fixed;left:50%;top:50%;width:5px;height:5px;border-radius:50%;background:#fff9df;box-shadow:0 0 3px #293b39;pointer-events:none}#stick{display:none;position:fixed;left:max(16px,env(safe-area-inset-left));bottom:20px;width:76px;height:76px;border:1px solid #fff8;border-radius:50%;background:#102b2970;touch-action:none;place-items:center}#stick i{width:30px;height:30px;border-radius:50%;background:#ece2c4aa}@media(pointer:coarse){#stick{display:grid}aside{left:auto;right:10px;transform:none;max-width:calc(100vw - 115px);font-size:13px}}
 aside.visiting {
   display: flex;
@@ -37,8 +37,8 @@ body:has(.visiting) :is(#aim,#stick) {display: none}
 #label small {color: #4b6158}
 #label h3 {margin: 4px 0 6px; font: 600 1.1rem/1.45 Georgia,serif}
 #label footer {padding-top: 8px; margin-top: 6px; border-top: 1px solid #bdb293; color: #40594c}
-</style><canvas aria-label="第一人称展馆，可拖动环顾"></canvas><header>潮汐馆<small>AI 博物馆</small></header><div id="aim"></div><div id="stick" aria-label="移动摇杆"><i></i></div><aside><div class="reading"><h2 id="station-title" hidden></h2><p id="status" aria-live="polite"></p><p id="readout" aria-live="polite" hidden></p>
-<details id="label" hidden><summary></summary><article><small></small><h3></h3><p id="label-body"></p><footer></footer></article></details></div><nav></nav></aside><script>/* Three.js r170 classic build */
+</style><link rel="stylesheet" href="assets/tide-museum.css"><canvas aria-label="第一人称展馆，可拖动环顾"></canvas><header>潮汐馆<small>AI 博物馆</small></header><div id="aim"></div><div id="stick" aria-label="移动摇杆"><i></i></div><div id="tide-markers"></div><aside><progress id="tide-progress" max="24" value="0" hidden></progress><div class="reading"><h2 id="station-title" hidden></h2><p id="status" aria-live="polite"></p><p id="readout" aria-live="polite" hidden></p>
+<details id="label" hidden><summary></summary><article><small></small><h3></h3><p id="label-body"></p><footer></footer></article></details><div id="tide-reels"></div></div><nav></nav></aside><script>/* Three.js r170 classic build */
 (function(){
 /**
  * @license
@@ -3438,108 +3438,7 @@ const t="170",e={LEFT:0,MIDDLE:1,RIGHT:2,ROTATE:0,DOLLY:1,PAN:2},n={ROTATE:0,PAN
 
   window.PQIsland = PQIsland;
 })();
-</script><script id="museum-copy" type="application/json">{
-  "meta": {
-    "version": "1.1",
-    "locale": "zh-CN",
-    "museum": "潮汐馆 · AI 博物馆",
-    "audience": "first-time-visitor",
-    "sourceRefs": [
-      "content/ai/museum.js",
-      "content/ai/terms.js",
-      "museum/visit.js",
-      "museum/index.html"
-    ]
-  },
-  "stone": {
-    "firstVisit": "推门进来吧，海风大。这儿不收门票，也不考你高等数学。我叫石头，这间馆的看门人。眼前这台终端连着一块空桌面，先直接点「运行终端」查查夜市几点开摊，看看它手边没资料时会怎么答。",
-    "missingContext": "看见了吧？它回你「缺少营业时间」，不是机器坏了，是眼下工作桌面是空的——它没见过夜市的新牌子，总不能闭卷瞎编。点「插入便签」把旁边的营业时间便签递给它，再点一次「运行终端」试试。",
-    "noteInserted": "好，这张写着「夜市 18:00 开摊」的便签已经摊在它的工作桌面上了。刚才它手边空着，只能老实答缺资料；现在有了现成依据——再点「运行终端」，看看回答有什么不一样。",
-    "groundedResult": "这回稳了——「夜市 18:00 开摊（来自便签）」。模型还是同一个，差别只在你亲手把真资料补上了工作桌面。这步演示的是手工补充上下文；真要做成完整的检索增强（RAG），还得靠系统自己先检索出相关材料，再交给模型生成。看完这边，可以去对面像素放映厅和里头实验档案室转转。",
-    "noteRemoved": "便签撤回来了，终端的短期桌面又清空啦。想再对照一次没资料时的表现，直接点「运行终端」就行。",
-    "returning": "又逛回来啦？茶刚沏好。刚才那轮便签实验已经跑通了——想再拿「取下便签」和「插入便签」对照两遍随时动手；要是还没存底，记得去里头实验档案室把这次记录归档。",
-    "returningArchived": "典藏员那边收好你的实验记录了吧？茶还热着，歇会儿慢慢逛。在博物馆里慢半拍，反而容易看清 AI 的脾气——想重演刚才的对照，工作台随时归你用。"
-  },
-  "labels": {
-    "shitou": {
-      "subtitle": "01 · 上下文实验台",
-      "title": "把依据摊上桌，AI 才会开卷作答",
-      "body": "大模型不会自动装进所有实时事实。工作桌面空着时，终端会诚实返回「缺少营业时间」；插入写着「夜市 18:00 开摊」的便签再运行终端，它就会依据桌面资料给出带出处的回答。这一步演示的是手工补充上下文；完整的检索增强（RAG），还需要系统自动检索相关材料后再交给模型生成。",
-      "cue": "先直接「运行终端」，再「插入便签」运行一次，对照前后差别。"
-    },
-    "cinema": {
-      "subtitle": "02 · 像素放映厅",
-      "title": "三卷像素胶片，看懂 AI 七十年",
-      "body": "三卷短片把展馆时间长廊缩进了放映机：第一卷从 1956 年达特茅斯木屋讲到寒冬与深度学习；第二卷记录 Transformer 与 ChatGPT 把算法装进聊天框；第三卷看向开源浪潮与动手干活的智能体。转动放映盘，按时间顺序切换画面。",
-      "cue": "点击「转动放映盘」，依次浏览 3 卷历史胶片（1/3 至 3/3）。"
-    },
-    "archive": {
-      "subtitle": "03 · 实验档案室",
-      "title": "把一次靠谱对照，留成可回看的样本",
-      "body": "馆里不只展出结论，也收藏验证过程。你在上下文实验台跑出的「夜市 18:00 开摊（来自便签）」对照，能证明同一台模型在缺资料与有依据时的行为边界。归档后，这份记录会保存在本地展馆档案中，供下次来馆核对。",
-      "cue": "完成便签实验后，点击「归档实验记录」收藏本次对照。"
-    }
-  },
-  "noteCard": {
-    "title": "星潮夜市营业时间便签",
-    "content": "夜市 18:00 开摊"
-  },
-  "terminal": {
-    "query": "查询：星潮夜市几点开摊？",
-    "idleStatus": "石头 · 上下文实验台 · 终端等待读取资料",
-    "readyStatus": "石头 · 上下文实验台 · 终端已接入营业时间便签",
-    "missingResult": "查询结果 · 缺少营业时间",
-    "groundedResult": "查询结果 · 夜市 18:00 开摊（来自便签）"
-  },
-  "cinema": {
-    "stationName": "像素放映厅",
-    "npcName": "放映员",
-    "greeting": "欢迎来像素放映厅。机子里装了三卷压缩版历史胶片，点「转动放映盘」就能一卷一卷往下看。",
-    "films": [
-      {
-        "index": 1,
-        "label": "胶片 1/3",
-        "title": "1956 达特茅斯木屋 · 从写死规则到数据学习",
-        "caption": "十位学者在夏日黑板写下 AI 的名字。历经两次寒冬后，机器才走出手工死规则，转向从数据里找规律。"
-      },
-      {
-        "index": 2,
-        "label": "胶片 2/3",
-        "title": "2017–2022 破圈之夜 · Transformer 走进聊天框",
-        "caption": "注意力机制让模型看懂前后文，而一个像发消息一样的聊天框，把实验室算法递到了普通人手边。"
-      },
-      {
-        "index": 3,
-        "label": "胶片 3/3",
-        "title": "2025–2026 开源与智能体 · 从动嘴到动手干活",
-        "caption": "开源浪潮拉低了深度推理门槛，AI 开始走进真实工作流，而权限沙箱与人工确认成了新底线。"
-      }
-    ]
-  },
-  "archive": {
-    "stationName": "实验档案室",
-    "npcName": "典藏员",
-    "beforeExperiment": "工作台完成实验后可归档。先去石头那儿把营业时间便签接入终端跑一遍，再来我这儿建档。",
-    "readyToArchive": "有一份实验记录可归档：已收到「夜市 18:00 开摊（来自便签）」的对照结果，点「归档实验记录」就能收入馆藏。",
-    "archived": "已收藏便签实验记录：缺资料返回「缺少营业时间」，接入便签返回「夜市 18:00 开摊（来自便签）」。下次来馆依然能查到这份样本。"
-  },
-  "ui": {
-    "museumTitle": "潮汐馆",
-    "museumSubtitle": "AI 博物馆",
-    "visitPrefix": "拜访",
-    "insertNote": "插入便签",
-    "removeNote": "取下便签",
-    "runTerminal": "运行终端",
-    "backToLab": "回到工作台",
-    "turnReel": "转动放映盘",
-    "archiveRecord": "归档实验记录",
-    "continueBrowse": "继续逛",
-    "readLabel": "查看展签",
-    "closeLabel": "收起展签",
-    "hintDesktop": "滚轮或 WASD 移动 · 拖动环顾 · E 互动",
-    "hintTouch": "左侧摇杆移动 · 拖动画面环顾"
-  }
-}</script><script>/*
+</script><script>/*
 The MIT License
 
 Copyright © 2010-2024 three.js authors
@@ -3587,7 +3486,7 @@ function placard(parent,x,y,z,w,h,paint){
   const board=new THREE.Mesh(new THREE.PlaneGeometry(w,h),new THREE.MeshBasicMaterial({map:texture}));
   board.position.set(x,y,z);parent.add(board);return board;
 }
-scene.add(new THREE.HemisphereLight(0xfff0d4,0x9fbcb5,1.5));
+const ambient = new THREE.HemisphereLight(0xfff0d4,0x9fbcb5,1.5);scene.add(ambient);
 const light=new THREE.DirectionalLight(0xffdfb1,1.65);light.position.set(-5,8,4);scene.add(light);
 const oak=0xa78058, brass=0xc59c61, green=0x305750;
 box(scene,0,-.13,0,9,.25,22,0xbfa986);
@@ -3655,7 +3554,6 @@ for(const [i,s] of stations.entries()){
   s.rig=PQIsland.createCharacter(s.key);s.rig.group.position.set(-1.23,0,.65);g.add(s.rig.group);
 }
 const [lab,cinema,archive]=stations;
-const sheet=box(lab.group,.99,1.085,.16,.43,.035,.31,0xffe2a0);
 box(lab.counter,.3,1.43,.01,.93,.68,.12,0x253939);
 const display=box(lab.group,.3,1.43,.082,.82,.52,.02,0x96c5ae);
 for(let i=0;i<8;i++)box(archive.group,-.4+i*.22,1.36,0,.16,.5+i%3*.065,.39,i%2?0xba7757:0x5d787c);
@@ -3663,35 +3561,8 @@ box(cinema.counter,.46,1.47,.02,1.75,.87,.13,0x222f32);
 const pixels=Array.from({length:18},(_,i)=>box(cinema.group,-.30+i*.09,1.47,.1,.065,.05,.025,0xe9c086));
 // The original rig and counters remain usable while their models arrive.
 const loader=new MuseumGLTF.GLTFLoader();
-let stoneMixer;
+let stoneMixer, stoneHead, stoneLook = 0;
 let deskReady=false;
-function signalTexture(){
-  const paper=document.createElement('canvas');paper.width=256;paper.height=144;
-  const ctx=paper.getContext('2d');
-  ctx.fillStyle='#163e3d';ctx.fillRect(0,0,256,144);
-  ctx.strokeStyle='#32534e';
-  for(let x=12;x<256;x+=16){ctx.beginPath();ctx.moveTo(x,12);ctx.lineTo(x,133);ctx.stroke();}
-  for(let y=16;y<144;y+=16){ctx.beginPath();ctx.moveTo(10,y);ctx.lineTo(246,y);ctx.stroke();}
-  ctx.strokeStyle='#a3dbb9';ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(12,77);
-  for(let x=13;x<=244;x++)ctx.lineTo(x,77+(8+32*Math.exp(-((x-137)**2)/1200))*Math.sin(x*.094));
-  ctx.stroke();
-  ctx.fillStyle='#d9ca93';
-  for(let i=0;i<6;i++)ctx.fillRect(16+i*11,122,7,6);
-  ctx.fillRect(211,17,27,3);
-  const texture=new THREE.CanvasTexture(paper);texture.colorSpace=THREE.SRGBColorSpace;
-  return texture;
-}
-function syncDesk(){
-  if(deskReady){
-    sheet.position.set(inserted ? .91 : 1.18,1.134,.312);
-    sheet.rotation.y=inserted?0:-.12;
-    sheet.scale.set(.37,.037,.194);
-    display.material.color.setHex(inserted?0xffd387:0xffffff);
-  }else{
-    sheet.position.x=inserted ? .32 : .99;
-    display.material.color.setHex(inserted?0xeed18b:0x96c5ae);
-  }
-}
 async function mountModel(name,station,replace){
   try {
     const url=window.museumModels?.[name] || 'models/'+name+'.glb';
@@ -3719,6 +3590,7 @@ mountModel('stone',lab,(root,clips)=>{
   root.position.copy(lab.rig.group.position);
   lab.group.remove(lab.rig.group);
   lab.rig=null;
+  stoneHead = root.getObjectByName('Listening');
   stoneMixer=new THREE.AnimationMixer(root);
   for(const clip of clips)stoneMixer.clipAction(clip).play();
   floorShadow(lab.group,root.position.x,root.position.z,1.02,.77);
@@ -3726,9 +3598,7 @@ mountModel('stone',lab,(root,clips)=>{
 mountModel('workbench',lab,()=>{
   lab.group.remove(lab.counter);
   display.position.set(.30,1.451,.117);display.scale.set(.80,.456,.022);
-  display.material=new THREE.MeshBasicMaterial({map:signalTexture()});
   deskReady=true;
-  syncDesk();
   const lamp=new THREE.PointLight(0xffcf91,.72,3);
   lamp.position.set(-.391,1.63,.05);lab.group.add(lamp);
   floorShadow(lab.group,.48,.13,2.8,1.3);
@@ -3746,185 +3616,9 @@ placard(endWall,0,2.45,0,5.3,2.85,(ctx,w,h)=>{
  for(let k=0;k<3;k++){ctx.fillStyle=['#789c94','#648781','#406f70'][k];ctx.beginPath();ctx.moveTo(0,h);for(let x=0;x<=w+8;x+=8)ctx.lineTo(x,h*(.57+k*.12)+14*Math.sin(x*.012+k)+7*Math.cos(x*.021));ctx.lineTo(w,h);ctx.fill();}
 });
 for(const x of [-2.7,0,2.7])box(endWall,x,2.45,.04,.09,3,.12,oak);
-let selected=null,film=0,inserted=false,experiment=false,archived=false;
-try { archived=localStorage.getItem('pq-museum-design-record')==='1'; } catch {}
-const copy = JSON.parse(document.querySelector('#museum-copy').textContent);
-const {stone, terminal, noteCard, ui} = copy;
-const placards = new Map([[lab,copy.labels.shitou], [cinema,copy.labels.cinema], [archive,copy.labels.archive]]);
-const card = document.querySelector('aside');
-const heading = document.querySelector('#station-title');
-const label = document.querySelector('#label');
-const labelToggle = label.querySelector('summary');
-const status = document.querySelector('#status');
-const readout = document.querySelector('#readout');
-const nav = document.querySelector('nav');
-let labMessage = '';
-cinema.title = copy.cinema.npcName;
-cinema.place = copy.cinema.stationName;
-archive.title = copy.archive.npcName;
-archive.place = copy.archive.stationName;
-label.ontoggle = () => {
-  labelToggle.textContent = label.open ? ui.closeLabel : ui.readLabel;
-  if (label.open) labelToggle.scrollIntoView({block: 'start'});
-};
-
-function panel(message, actions, detail = '') {
-  readout.hidden = !detail;
-  readout.textContent = detail;
-  status.textContent = message;
-  card.querySelector('.reading').scrollTop = 0;
-  nav.replaceChildren(...actions.map(([text, activate]) => {
-    const button = document.createElement('button');
-    button.textContent = text;
-    button.onclick = activate;
-    return button;
-  }));
-}
-function toggleNote() {
-  inserted = !inserted;
-  syncDesk();
-  labMessage = inserted ? stone.noteInserted : stone.noteRemoved;
-  interact();
-}
-function runTerminal() {
-  if (inserted) experiment = true;
-  labMessage = '';
-  const next = inserted ? [ui.removeNote, toggleNote] : [ui.insertNote, toggleNote];
-  const result = inserted ? terminal.groundedResult : terminal.missingResult;
-  panel(inserted ? stone.groundedResult : stone.missingContext,
-    [next, [ui.backToLab, interact], [ui.continueBrowse, browse]], terminal.query + '\n' + result);
-}
-function interact() {
-  const actions = [];
-  let message, detail = '';
-  if (selected === lab) {
-    message = labMessage;
-    detail = [terminal.query, inserted ? terminal.readyStatus : terminal.idleStatus];
-    if (inserted) detail.push(noteCard.title + ' · ' + noteCard.content);
-    detail = detail.join('\n');
-    actions.push([ui.runTerminal, runTerminal], [inserted ? ui.removeNote : ui.insertNote, toggleNote]);
-  } else if (selected === cinema) {
-    const reel = copy.cinema.films[film];
-    message = copy.cinema.greeting;
-    detail = reel.label + ' · ' + reel.title + '\n' + reel.caption;
-    actions.push([ui.turnReel, () => { film = (film + 1) % copy.cinema.films.length; interact(); }]);
-  } else {
-    message = archived ? copy.archive.archived : experiment ? copy.archive.readyToArchive : copy.archive.beforeExperiment;
-    if (experiment && !archived) actions.push([ui.archiveRecord, () => {
-      archived = true;
-      try { localStorage.setItem('pq-museum-design-record', '1'); } catch {}
-      interact();
-    }]);
-  }
-  panel(message, [...actions, [ui.continueBrowse, browse]], detail);
-}
-let yaw=-.20,pitch=0,nearby,travel=0,drag=null;
-const keys=new Set(),stick={x:0,y:0},ray=new THREE.Raycaster();
-function move(side,forward){
-  const x=camera.position.x+Math.cos(yaw)*side-Math.sin(yaw)*forward;
-  const z=camera.position.z-Math.sin(yaw)*side-Math.cos(yaw)*forward;
-  function clear(x,z){
-    return stations.every(s=>Math.abs(s.z-z)>1.9||Math.sign(s.x)*x<2.41);
-  }
-  if(clear(x,camera.position.z))camera.position.x=THREE.MathUtils.clamp(x,-4.02,4.02);
-  if(clear(camera.position.x,z))camera.position.z=THREE.MathUtils.clamp(z,-10.45,10.45);
-}
-function showPrompt(){
-  if(selected)return;
-  const p=camera.position;
-  const next=stations.find(s=>{
-    const dx=s.x-p.x,dz=s.z-p.z,dist=Math.hypot(dx,dz);
-    return dist<3.25&&(-Math.sin(yaw)*dx-Math.cos(yaw)*dz)/dist>.35;
-  })||null;
-  if(nearby===next)return;
-  nearby=next;
-  if(next)panel(next.place,[[ui.visitPrefix+next.title,()=>enter(next)]]);
-  else panel(matchMedia('(pointer:coarse)').matches?ui.hintTouch:ui.hintDesktop,[]);
-}
-function browse() {
-  selected = null;
-  card.classList.remove('visiting');
-  label.hidden = heading.hidden = true;
-  nearby = undefined;
-  showPrompt();
-}
-function enter(station) {
-  selected = station;
-  travel = 0;
-  keys.clear();
-  resetStick();
-  const exhibit = placards.get(station);
-  card.classList.add('visiting');
-  heading.hidden = label.hidden = false;
-  heading.textContent = station.title + ' · ' + station.place;
-  labelToggle.textContent = ui.readLabel;
-  label.querySelector('small').textContent = exhibit.subtitle;
-  label.querySelector('h3').textContent = exhibit.title;
-  label.querySelector('footer').textContent = exhibit.cue;
-  label.querySelector('p').textContent = exhibit.body;
-  label.open = false;
-  card.querySelector('.reading').scrollTop = 0;
-  if (station === lab) {
-    labMessage = archived ? stone.returningArchived : experiment ? stone.returning : inserted ? stone.noteInserted : stone.firstVisit;
-  }
-  interact();
-}
-canvas.addEventListener('pointerdown',e=>{
-  if(drag)return;
-  drag={id:e.pointerId,x:e.clientX,y:e.clientY,amount:0};
-  canvas.setPointerCapture(e.pointerId);
-});
-canvas.addEventListener('pointermove',e=>{
-  if(drag?.id!==e.pointerId)return;
-  const dx=e.clientX-drag.x,dy=e.clientY-drag.y;
-  drag.amount+=Math.abs(dx)+Math.abs(dy);drag.x=e.clientX;drag.y=e.clientY;
-  if(!selected){yaw-=dx*.004;pitch=THREE.MathUtils.clamp(pitch-dy*.003,-1.1,1.05);}
-});
-canvas.addEventListener('pointerup',e=>{
-  if(drag?.id!==e.pointerId)return;
-  const tap=drag.amount<7;drag=null;
-  if(!tap||selected)return;
-  ray.setFromCamera({x:e.clientX/innerWidth*2-1,y:1-e.clientY/innerHeight*2},camera);
-  const hit=ray.intersectObjects(stations.map(s=>s.group),true)[0];
-  if(hit&&hit.distance<3.5){
-    let root=hit.object;while(root.parent!==scene)root=root.parent;
-    enter(stations.find(s=>s.group===root));
-  }
-});
-canvas.addEventListener('pointercancel',()=>drag=null);
-canvas.addEventListener('wheel',e=>{e.preventDefault();if(!selected && !e.ctrlKey){const unit=e.deltaMode?12:1;yaw-=e.deltaX*unit*.004;travel=THREE.MathUtils.clamp(travel+e.deltaY*unit*.008,-3,3);}},{passive:false});
-addEventListener('keydown',e=>{
- if(e.altKey||e.ctrlKey||e.metaKey)return;
- if(e.code==='Escape'&&selected){browse();return;}
- if(!selected&&e.code==='KeyE'&&nearby&&!e.repeat){enter(nearby);return;}
- if(!selected&&['KeyW','KeyS','KeyA','KeyD','ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.code)){e.preventDefault();keys.add(e.code);}
-});
-addEventListener('keyup',e=>keys.delete(e.code));
-const pad=document.querySelector('#stick');let pointer=null;
-function resetStick(){pointer=null;stick.x=stick.y=0;pad.firstElementChild.style.transform='';}
-function slide(e){
- if(pointer!==e.pointerId)return;
- const r=pad.getBoundingClientRect(),x=e.clientX-r.left-r.width/2,y=e.clientY-r.top-r.height/2,scale=Math.max(24,Math.hypot(x,y));
- stick.x=x/scale;stick.y=-y/scale;pad.firstElementChild.style.transform='translate('+stick.x*22+'px,'+(-stick.y*22)+'px)';
-}
-pad.onpointerdown=e=>{pointer=e.pointerId;pad.setPointerCapture(pointer);slide(e);};pad.onpointermove=slide;pad.onlostpointercapture=resetStick;
-addEventListener('blur',()=>{keys.clear();resetStick();travel=0;drag=null;});
-function resize(){camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight,false);}
-resize();addEventListener('resize',resize);browse();
-const clock=new THREE.Clock();
-renderer.setAnimationLoop(time=>{
- const dt=Math.min(clock.getDelta(),.055);
- if(!selected){
-  yaw+=((+keys.has('ArrowLeft'))-(+keys.has('ArrowRight')))*dt*1.7;
-  const side=stick.x+(+keys.has('KeyD'))-(+keys.has('KeyA'));
-  const forward=stick.y+(+(keys.has('KeyW')||keys.has('ArrowUp')))-(+(keys.has('KeyS')||keys.has('ArrowDown')));
-  const stride=dt*3.2/Math.max(1,Math.hypot(side,forward)),wheel=travel*(1-Math.exp(-dt*9));
-  travel-=wheel;move(side*stride,forward*stride+wheel);showPrompt();
- }
- camera.rotation.set(pitch,yaw,0,'YXZ');
- stoneMixer?.update(dt);
- stations.forEach((s,i)=>{if(!s.rig)return;s.rig.head.rotation.y=Math.sin(time*.0007+i)*.10;s.rig.rightArm.rotation.x=(s===selected?-.55:-.1)+Math.sin(time*.0015+i)*.045;});
- pixels.forEach((p,i)=>{p.scale.y=.09+.5*Math.abs(Math.sin(i*(film+1)*.25+time*.001));});
- renderer.render(scene,camera);
-});
-</script></html>
+</script>
+<script src="assets/tide-interactions.js"></script>
+<script src="assets/tide-films.js"></script>
+<script src="content/ai/tide-trial-copy.js"></script>
+<script src="assets/tide-museum.js"></script>
+</html>
