@@ -36,7 +36,9 @@
    this.up=e=>{if(this.pointer?.id===e.pointerId){this.ignoreClick=this.pointer.moved;this.pointer=null;}};
    this.cancel=()=>{this.pointer=null;this.ignoreClick=true;};
    canvas.addEventListener('pointerdown',this.down);canvas.addEventListener('pointermove',this.drag);canvas.addEventListener('pointerup',this.up);canvas.addEventListener('pointercancel',this.cancel);
-   this.status(this.touch()?'点地面或拖摇杆走动 · 拖动画面环顾':'点击地面走动 · WASD / 方向键移动 · 拖动画面环顾');
+   this.scroll=e=>{if(this.blocked()||!PQCameraInput.trackpad||e.ctrlKey)return;e.preventDefault();this.yaw=Math.max(-1.1,Math.min(1.1,this.yaw+e.deltaX*(e.deltaMode?16:1)*.006));};
+   canvas.addEventListener('wheel',this.scroll,{passive:false});
+   this.status(!this.touch()&&PQCameraInput.trackpad?PQ.cameraHelp.cafeHint:this.touch()?'点地面或拖摇杆走动 · 拖动画面环顾':'点击地面走动 · WASD / 方向键移动 · 拖动画面环顾');
   },
   makeShell(){
    if(this.room===PQStory3D.scene)return;this.room=PQStory3D.scene;const r=PQStory3D,root=PQCafeLife.props.root;
@@ -149,6 +151,6 @@
     b.style.visibility=nearby?'':'hidden';if(nearby){b.style.transform='none';b.style.left=place.x+'px';b.style.top=place.y+'px';occupied.push(place);}
    }
   },
-  detach(){if(!this.active)return;this.active=false;this.stop();this.menu(false);this.pointer=null;for(const [name,fn]of [['pointerdown',this.down],['pointermove',this.drag],['pointerup',this.up],['pointercancel',this.cancel]])this.canvas?.removeEventListener(name,fn);this.canvas=null;for(const id of ['cafe-mei','cafe-li']){const b=$(id);b.style.left=b.style.top='0px';b.style.visibility='';b.classList.remove('cafe-dot','is-current');b.removeAttribute('aria-pressed');}$('cafe-context').hidden=true;$('game').classList.remove('cafe-context-open');this.marker.visible=false;this.shell.visible=false;$('game').classList.remove('cafe-walk-mode');}
+  detach(){if(!this.active)return;this.canvas.removeEventListener('wheel',this.scroll);this.active=false;this.stop();this.menu(false);this.pointer=null;for(const [name,fn]of [['pointerdown',this.down],['pointermove',this.drag],['pointerup',this.up],['pointercancel',this.cancel]])this.canvas?.removeEventListener(name,fn);this.canvas=null;for(const id of ['cafe-mei','cafe-li']){const b=$(id);b.style.left=b.style.top='0px';b.style.visibility='';b.classList.remove('cafe-dot','is-current');b.removeAttribute('aria-pressed');}$('cafe-context').hidden=true;$('game').classList.remove('cafe-context-open');this.marker.visible=false;this.shell.visible=false;$('game').classList.remove('cafe-walk-mode');}
  };window.PQCafeWalk=W;
 })();

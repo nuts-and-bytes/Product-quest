@@ -844,6 +844,8 @@
 <link rel="stylesheet" href="assets/cafe-life.css?v=3.10.1">
 <link rel="stylesheet" href="assets/scene-prompts.css?v=3.10.2">
 <link rel="stylesheet" href="assets/ai-journey.css?v=3.11.1">
+<link rel="stylesheet" href="assets/continent-course.css">
+<link rel="stylesheet" href="assets/term-display.css">
 </head>
 <body>
 <div id="game" class="world-mode" data-screen="landing">
@@ -868,6 +870,7 @@
         <button id="land-cta" onclick="G.startFromLanding()"><span>开启我的冒险</span><span aria-hidden="true">↗</span></button>
         <button class="land-explore" onclick="G.toMap({archipelago:true})">先去世界里看看 <span aria-hidden="true">→</span></button>
       </div>
+      <nav id="land-continents"><button onclick="PQFieldCourse.open('growth')">增长大陆 ↗</button><button onclick="PQFieldCourse.open('design')">设计大陆 ↗</button></nav>
       <div class="land-meta">零基础出发 <i></i> 自由探索 <i></i> 进度自动保存</div>
     </main>
     <div class="land-world-caption"><span class="live-dot"></span> 星火群岛 <small>拖动环视 · 滚轮靠近</small></div>
@@ -972,13 +975,13 @@
         <polygon points="70,90 180,50 330,70 470,40 640,80 710,150 690,250 560,330 380,350 200,330 90,260" fill="#0b2438" opacity=".55" transform="translate(0,12)"/>
         <polygon points="70,90 180,50 330,70 470,40 640,80 710,150 690,250 560,330 380,350 200,330 90,260" fill="none" stroke="#0b2438" stroke-width="22" stroke-linejoin="round"/>
         <polygon points="70,90 180,50 330,70 470,40 640,80 710,150 690,250 560,330 380,350 200,330 90,260" fill="none" stroke="#e8cf9a" stroke-width="13" stroke-linejoin="round"/>
-        <!-- ===== 未开放板块（接壤的拼图块） ===== -->
-        <g>
-          <polygon points="330,70 470,40 640,80 585,150 520,210 440,170 360,180 352,120" fill="url(#landS)"/>
+        <!-- 增长大陆 -->
+        <g class="isle-g" role="button" tabindex="0" aria-label="增长大陆" onclick="PQFieldCourse.open('growth')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();PQFieldCourse.open('growth')}">
+          <polygon points="330,70 470,40 640,80 585,150 520,210 440,170 360,180 352,120" fill="#e5ad61"/>
           <ellipse cx="450" cy="90" rx="34" ry="10" fill="#ffffff2e"/>
-          <text x="468" y="110" font-size="20" text-anchor="middle" opacity=".75">?</text>
-          <text x="468" y="137" font-size="14" fill="#eef3f8" text-anchor="middle" font-weight="bold">增长大陆</text>
-          <text x="468" y="154" font-size="10.5" fill="#c4cede" text-anchor="middle">用户增长与运营 · 开发中</text>
+          <text x="468" y="110" font-size="20" text-anchor="middle" opacity=".75">◆</text>
+          <text x="468" y="137" font-size="14" fill="#20313a" text-anchor="middle" font-weight="bold">增长大陆</text>
+          <text x="468" y="154" font-size="10.5" fill="#263c42" text-anchor="middle">用户增长与运营 ▶</text>
         </g>
         <!-- ===== AI 大陆（可点击开放拼图块） ===== -->
         <g class="isle-g" onclick="PQAIJourney.open()" style="cursor:pointer">
@@ -996,12 +999,12 @@
             <text x="630" y="248" font-size="10.5" fill="#bce7ee" text-anchor="middle">全5章已开放 · 点击登陆 ▶</text>
           </g>
         </g>
-        <g>
-          <polygon points="360,180 440,170 520,210 545,270 560,330 380,350 300,342 330,270 335,225" fill="url(#landS)" style="filter:brightness(.86)"/>
+        <g class="isle-g" role="button" tabindex="0" aria-label="设计大陆" onclick="PQFieldCourse.open('design')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();PQFieldCourse.open('design')}">
+          <polygon points="360,180 440,170 520,210 545,270 560,330 380,350 300,342 330,270 335,225" fill="#f5a1ac" style="filter:brightness(.86)"/>
           <ellipse cx="400" cy="320" rx="30" ry="9" fill="#ffffff22"/>
-          <text x="435" y="258" font-size="20" text-anchor="middle" opacity=".75">?</text>
-          <text x="435" y="285" font-size="14" fill="#eef3f8" text-anchor="middle" font-weight="bold">设计大陆</text>
-          <text x="435" y="302" font-size="10.5" fill="#c4cede" text-anchor="middle">体验与交互设计 · 规划中</text>
+          <text x="435" y="258" font-size="20" text-anchor="middle" opacity=".75">◆</text>
+          <text x="435" y="285" font-size="14" fill="#20313a" text-anchor="middle" font-weight="bold">设计大陆</text>
+          <text x="435" y="302" font-size="10.5" fill="#263c42" text-anchor="middle">体验与交互设计 ▶</text>
         </g>
         <!-- ===== 产品大陆（可点击拼图块） ===== -->
         <g class="isle-g" onclick="G.toMap()" style="cursor:pointer">
@@ -1085,6 +1088,7 @@
       <button type="button" class="isl-tool" id="isl-arch-btn" onclick="PQIsland.toggleArchipelago()">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M3.6 9h16.8M3.6 15h16.8M12 3a13 13 0 0 1 0 18M12 3a13 13 0 0 0 0 18"/></svg>群岛全览
       </button>
+      <select data-camera-input></select><small data-camera-hint></small>
       <button type="button" class="isl-tool" id="isl-time-btn" onclick="PQIsland.cycleTimeOfDay()">🕒 实时</button>
     </div>
 
@@ -1097,6 +1101,8 @@
     <div id="isl-status"></div>
 
     <div id="map-foot">
+      <button class="pxbtn small" onclick="PQFieldCourse.open('growth')">增长大陆</button>
+      <button class="pxbtn small" onclick="PQFieldCourse.open('design')">设计大陆</button>
       <button class="pxbtn small" onclick="PQAIJourney.open()">✦ AI 大陆章节</button>
       <button class="pxbtn small" onclick="G.openDex()"><i data-pxi="book" data-size="13"></i> 术语图鉴</button>
       <button class="pxbtn small" onclick="G.openNotes()"><i data-pxi="note" data-size="13"></i> 方法卡</button>
@@ -1110,6 +1116,16 @@
       <button class="pxbtn small" onclick="G.resetAll()">↺ 重置进度</button>
     </div>
   </div>
+
+  <section class="screen" id="field-screen">
+    <div id="field-hud">
+      <header><button id="field-menu"></button><button id="field-view"></button><button id="field-exit"></button></header>
+      <h2 id="field-heading"></h2><p id="field-task" aria-live="polite"></p>
+      <div id="field-sites"></div>
+      <div class="field-input"><button type="button" id="field-pan" aria-pressed="false">平移</button><button type="button" onclick="G.openDex()">术语图鉴</button><select data-camera-input></select><small data-camera-hint></small></div>
+    </div>
+    <dialog id="field-dialog" aria-labelledby="field-dialog-title"></dialog>
+  </section>
 
   <!-- 游戏屏 -->
   <div class="screen" id="play-screen">
@@ -1183,16 +1199,15 @@
   <div id="toast"></div>
 
   <!-- 术语速查弹窗 -->
-  <div id="term-pop"></div>
+  <dialog id="term-pop" aria-labelledby="term-title"></dialog>
 
   <!-- 术语图鉴 -->
-  <div class="modal" id="dex">
-    <h2><i data-pxi="book" data-size="20" data-color="var(--accent)"></i> 术语图鉴</h2>
+  <dialog class="modal" id="dex" aria-labelledby="dex-title">
+    <h2 id="dex-title">术语图鉴</h2>
     <div class="cnt" id="dex-cnt"></div>
-    <div id="dex-grid"></div>
-    <div id="dex-detail"></div>
+    <div class="dex-cabinet"><section class="dex-lectern"><div class="term-stage" id="dex-stage"></div><small class="term-gesture"></small><div id="dex-detail" aria-live="polite"></div></section><div id="dex-grid"></div></div>
     <button class="pxbtn center closebtn" onclick="G.closeModal('dex')">关闭</button>
-  </div>
+  </dialog>
 
   <!-- 档案馆 -->
   <div class="modal" id="archive">
@@ -1250,8 +1265,12 @@ if(_qp) window.OPC_SAVE_KEY = 'opc-pq-' + (/^[a-zA-Z0-9-]{1,80}$/.test(_qp) ? _q
 <script src="assets/world-visibility.js?v=3.8.3"></script>
 <script src="assets/world-quality.js?v=3.1"></script>
 <script src="assets/chapter-progress.js?v=3.7"></script>
+<script src="assets/continent-settlements.js"></script>
 <script src="assets/world-environment.js?v=3.11"></script>
 <script src="assets/ai-journey-state.js?v=3.11"></script>
+<script src="content/camera-help.js"></script>
+<script src="assets/camera-input.js"></script>
+<script src="assets/term-display.js"></script>
 <script src="assets/island3d.js?v=3.11"></script>
 <script src="assets/first-day-state.js?v=3.2"></script>
 <script src="content/pm/island-chapters.js?v=3.7"></script>
@@ -1280,6 +1299,8 @@ if(_qp) window.OPC_SAVE_KEY = 'opc-pq-' + (/^[a-zA-Z0-9-]{1,80}$/.test(_qp) ? _q
 <script src="assets/cafe-walk.js?v=3.10.1"></script>
 <script src="assets/cafe-life.js?v=3.10.1"></script>
 <script src="assets/ai-journey.js?v=3.11"></script>
+<script src="content/continent-courses.js"></script>
+<script src="assets/continent-course.js"></script>
 <script src="engine.js?v=3.11"></script>
 </body>
 </html>
