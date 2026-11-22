@@ -50,6 +50,10 @@
 .exp-primary{width:100%;padding:12px;border:1px solid #d6c08b55;border-radius:5px;background:#d3bc8720;color:#e6d9b4;font-size:12px;cursor:pointer;}
 #exp-interact{position:absolute;bottom:126px;left:50%;transform:translateX(-50%);border:1px solid #dfc38688;background:#172e37ee;color:#f4dba6;border-radius:8px;padding:13px 24px;font-size:12px;z-index:18;cursor:pointer;white-space:nowrap;}
 #isl-status{bottom:77px;color:#e7e5d8;background:#162c35dd;border:1px solid #c4cbb722;max-width:80%;font-size:11px;}
+#game[data-screen="map-screen"] #isl-status.movement-hint{
+ top:calc(100px + env(safe-area-inset-top,0px));bottom:auto;box-sizing:border-box;
+ width:max-content;max-width:calc(100% - 28px);
+}
 #isl-joy{left:25px;bottom:230px;opacity:.7;}
 #isl-prompt{bottom:130px;}
 #exp-photo-exit{display:none;}
@@ -125,6 +129,13 @@ button:focus-visible,select:focus-visible{outline:2px solid #f0ca81;outline-offs
 .land-guide b{font-size:17px;font-weight:400;color:#eddbb5;}
 .land-guide p{font-size:12px;line-height:1.95;color:#abc0bd;margin-top:15px;}
 .land-guide small{font-size:10px;line-height:2;color:#8faaa6;}
+:root[data-island-input="touch"] .island-desktop-copy,
+:root[data-island-input="touch"] #isl-toolbar [data-camera-hint],
+:root:not([data-island-input="touch"]) .island-touch-copy{display:none;}
+.island-desktop-copy kbd{
+ display:inline-block;padding:.08em .38em;border:1px solid currentColor;border-radius:.35em;
+ font:inherit;line-height:1.2;white-space:nowrap;vertical-align:baseline;
+}
 #landing.peek-island{background:transparent;}
 #landing.peek-island #land-story{transform:translateY(-48%);}
 #bpanel{background:#142c35f2;border:1px solid #d9d4af38;backdrop-filter:blur(22px);padding:22px;border-radius:13px;box-shadow:0 18px 60px #061d2955;}

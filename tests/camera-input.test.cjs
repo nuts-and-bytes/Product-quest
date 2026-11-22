@@ -4,12 +4,16 @@ const fs = require('node:fs');
 const vm = require('node:vm');
 const framing = require('../assets/world-framing');
 
-function controls(savedMode) {
+function controls(savedMode, coarse = false) {
   const handlers = {};
-  const window = {addEventListener() {}};
+  const inputHandlers = {};
+  const dataset = {};
+  const pointer = {matches:coarse, addEventListener:(name, fn)=>{inputHandlers[name]=fn;}};
+  const window = {addEventListener:(name, fn)=>{inputHandlers[name]=fn;}};
   vm.runInNewContext(fs.readFileSync(require.resolve('../assets/camera-input'), 'utf8'), {
     window, navigator:{platform:'MacIntel'}, localStorage:{getItem:()=>savedMode},
-    document:{querySelector:()=>null}, PQWorldFraming:framing,
+    document:{querySelector:()=>null, documentElement:{dataset}}, PQWorldFraming:framing,
+    matchMedia:()=>pointer,
   });
   const world = {
     mode:'orbit', camera:{aspect:1}, spherical:{radius:50,polar:.8,azimuth:.4},
@@ -20,8 +24,28 @@ function controls(savedMode) {
   function wheel(x,y,pinch=false){
     handlers.wheel({deltaX:x,deltaY:y,deltaMode:0,ctrlKey:pinch,preventDefault(){}});
   }
-  return {world,wheel,handlers};
+  return {world,wheel,handlers,inputHandlers,dataset,cameraInput:window.PQCameraInput};
 }
+
+test('island hints follow actual input while preserving the trackpad preference',()=>{
+  const {inputHandlers, dataset, cameraInput} = controls('trackpad');
+  assert.equal(dataset.islandInput, 'desktop');
+  inputHandlers.pointerdown({pointerType:'touch'});
+  assert.equal(dataset.islandInput, 'touch');
+  inputHandlers.keydown({key:'w'});
+  assert.equal(dataset.islandInput, 'desktop');
+  inputHandlers.pointerdown({pointerType:'touch'});
+  inputHandlers.wheel();
+  assert.equal(dataset.islandInput, 'desktop');
+  assert.equal(cameraInput.trackpad, true);
+});
+
+test('island hints start with touch on a coarse primary pointer and respond to a mouse',()=>{
+  const {inputHandlers, dataset} = controls('mouse', true);
+  assert.equal(dataset.islandInput, 'touch');
+  inputHandlers.pointerdown({pointerType:'mouse'});
+  assert.equal(dataset.islandInput, 'desktop');
+});
 
 test('trackpad scroll moves the map without changing scale, pinch changes only scale',()=>{
   const {world,wheel}=controls(null);

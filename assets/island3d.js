@@ -2450,13 +2450,13 @@
       if (mode === 'fp') {
         this.fpYaw = this.playerYaw;
         this.fpPitch = -0.04;
-        this.setStatus(PQCameraInput.trackpad ? PQCameraInput.hint(this) : '第一人称模式：拖拽环视街道，WASD / 方向键 / 点击地面行走，靠近建筑按 E 互动', 4200);
+        this.showMovementHint('fp', 4200);
       } else if (mode === 'walk') {
         this.camTarget.x = this.playerPos.x;
         this.camTarget.y = 2.0;
         this.camTarget.z = this.playerPos.z;
         if(previous!=='walk')this.frameWalk();
-        this.setStatus(PQCameraInput.trackpad ? PQCameraInput.hint(this) : '漫步模式：WASD / 方向键 或 点击地面移动立体小人，靠近建筑按 E 互动', 3800);
+        this.showMovementHint('walk', 3800);
       } else if (mode === 'orbit') {
         this.spherical.radius = Math.max(24, Math.min(this.spherical.radius, 76));
         this.spherical.polar = 0.84;
@@ -2555,10 +2555,19 @@
       };
     },
 
-    setStatus(text, ttl) {
+    showMovementHint(mode, ttl) {
+      const hint = document.getElementById('island-hint-' + mode).content.cloneNode(true);
+      if (PQCameraInput.trackpad) {
+        hint.querySelector('.island-desktop-copy').textContent = PQCameraInput.hint(this);
+      }
+      this.setStatus(hint, ttl, true);
+    },
+
+    setStatus(content, ttl, movementHint = false) {
       const el = document.getElementById('isl-status');
       if (!el) return;
-      el.textContent = text;
+      el.replaceChildren(content);
+      el.classList.toggle('movement-hint', movementHint);
       el.classList.add('show');
       clearTimeout(this._statusTimer);
       if (ttl) this._statusTimer = setTimeout(() => el.classList.remove('show'), ttl);
@@ -3160,7 +3169,9 @@
       const el = document.getElementById('isl-prompt');
       if (!el) return;
       if (!b) { el.classList.remove('show'); return; }
-      el.textContent = `按 E 或点此进入「${b.name}」▶`;
+      const hint = document.getElementById('island-hint-enter').content.cloneNode(true);
+      for (const name of hint.querySelectorAll('[data-building-name]')) name.textContent = b.name;
+      el.replaceChildren(hint);
       el.onclick = () => this.focusBuilding(b.id);
       el.classList.add('show');
     },

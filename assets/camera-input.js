@@ -7,6 +7,27 @@ window.PQCameraInput = (() => {
     const saved = localStorage.getItem(key);
     if (saved === 'trackpad' || saved === 'mouse') mode = saved;
   } catch {}
+
+  // Match the initial device hint to the primary pointer, then follow the
+  // actual input on devices that offer both touch and desktop controls.
+  const primaryPointer = matchMedia('(pointer:coarse)');
+  const dataset = document.documentElement.dataset;
+  function showInput(input) {
+    if (dataset.islandInput !== input) dataset.islandInput = input;
+  }
+  function showPrimaryInput() {
+    showInput(primaryPointer.matches ? 'touch' : 'desktop');
+  }
+  showPrimaryInput();
+  primaryPointer.addEventListener('change', showPrimaryInput);
+  window.addEventListener('pointerdown', (event) => {
+    if (event.pointerType) showInput(event.pointerType === 'mouse' ? 'desktop' : 'touch');
+  }, {capture:true, passive:true});
+  window.addEventListener('wheel', () => showInput('desktop'), {capture:true, passive:true});
+  window.addEventListener('keydown', (event) => {
+    if (!event.isComposing && !event.metaKey && !event.ctrlKey && !event.altKey) showInput('desktop');
+  }, {capture:true});
+
   function hint(world) {
     const copy = PQ.cameraHelp;
     if (world.detachedFollow || world.archipelago || !['walk','fp'].includes(world.mode)) return copy.mapHint;

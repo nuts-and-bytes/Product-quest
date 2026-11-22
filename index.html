@@ -833,7 +833,7 @@
     #t-logo h1{font-size:23px;}
   }
 </style>
-<link rel="stylesheet" href="assets/world-ui.css?v=3.1">
+<link rel="stylesheet" href="assets/world-ui.css?v=3.1.1">
 <link rel="stylesheet" href="assets/first-day.css?v=3.2">
 <link rel="stylesheet" href="assets/cafe-case.css?v=3.6">
 <link rel="stylesheet" href="assets/island-life.css?v=3.6">
@@ -878,7 +878,15 @@
       <div class="land-edition"><span>PRODUCT QUEST</span><small>产品经理大冒险 · 开放群岛</small></div>
       <div class="land-stat"><b>09</b><span>故事章节</span></div>
       <div class="land-stat"><b>37</b><span>成长关卡</span></div>
-      <details class="land-guide"><summary>这场冒险怎么玩 <span>＋</span></summary><div><b>选择，让世界改变。</b><p>拜访岛上的建筑，完成剧情决策与随堂检验。通关章节会点亮相关建筑，解锁成果回顾与庆典。</p><p>自由探索三座外围岛屿，寻找信标收集手记。WASD 移动，Shift 奔跑，E 互动，H 取景。</p><small>71 个术语 · 37 张方法卡 · 16 篇案例</small></div></details>
+      <details class="land-guide">
+        <summary>这场冒险怎么玩 <span>＋</span></summary>
+        <div>
+          <b>选择，让世界改变。</b>
+          <p>拜访岛上的建筑，完成剧情决策与随堂检验。通关章节会点亮相关建筑，解锁成果回顾与庆典。</p>
+          <p>自由探索三座外围岛屿，寻找信标收集手记。<span class="island-desktop-copy"><kbd>WASD</kbd> 移动，<kbd>Shift</kbd> 奔跑，<kbd>E</kbd> 互动，<kbd>H</kbd> 取景。</span><span class="island-touch-copy">用虚拟摇杆或轻点地面行走，第一人称拖动画面环顾，靠近建筑轻触按钮进入。</span></p>
+          <small>71 个术语 · 37 张方法卡 · 16 篇案例</small>
+        </div>
+      </details>
     </footer>
   </div>
 
@@ -1099,6 +1107,18 @@
     <div id="isl-joy" aria-label="漫步方向摇杆"><div id="isl-joy-knob"></div></div>
     <button type="button" id="isl-prompt"></button>
     <div id="isl-status"></div>
+    <template id="island-hint-walk">
+      <span class="island-desktop-copy"><kbd>WASD</kbd> / <kbd>方向键</kbd>或点击地面行走</span>
+      <span class="island-touch-copy">拖动摇杆或轻点地面行走</span>
+    </template>
+    <template id="island-hint-fp">
+      <span class="island-desktop-copy"><kbd>WASD</kbd> / <kbd>方向键</kbd>或点地行走 · 鼠标拖动环顾</span>
+      <span class="island-touch-copy">摇杆或点地行走 · 拖动画面环顾</span>
+    </template>
+    <template id="island-hint-enter">
+      <span class="island-desktop-copy">按 <kbd>E</kbd> 或点击进入 <span data-building-name></span></span>
+      <span class="island-touch-copy">轻触进入 <span data-building-name></span></span>
+    </template>
 
     <div id="map-foot">
       <button class="pxbtn small" onclick="PQFieldCourse.open('growth')">增长大陆</button>
@@ -1269,9 +1289,9 @@ if(_qp) window.OPC_SAVE_KEY = 'opc-pq-' + (/^[a-zA-Z0-9-]{1,80}$/.test(_qp) ? _q
 <script src="assets/world-environment.js?v=3.11"></script>
 <script src="assets/ai-journey-state.js?v=3.11"></script>
 <script src="content/camera-help.js"></script>
-<script src="assets/camera-input.js"></script>
+<script src="assets/camera-input.js?v=3.11.1"></script>
 <script src="assets/term-display.js"></script>
-<script src="assets/island3d.js?v=3.11"></script>
+<script src="assets/island3d.js?v=3.11.1"></script>
 <script src="assets/first-day-state.js?v=3.2"></script>
 <script src="content/pm/island-chapters.js?v=3.7"></script>
 <script src="assets/chapter-journey-state.js?v=3.8.3"></script>
