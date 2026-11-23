@@ -77,7 +77,7 @@ node scripts/build-single-html.mjs  # 打包离线单文件 dist/Product-Quest.h
   - 所有进度保存在当前浏览器本地，跨设备或换域名迁移前请使用内置的导出/导入存档功能。
   - 咖啡馆排队、增长与 AI 实验均由确定性状态模型驱动，不接入联网 AI 打分，所有人物、店铺与经营数据为虚构教学情境。
   - 帧率随设备性能变化，可在游戏内「更多」切换画质档位。
-- **反馈与许可**：问题或内容纠错欢迎提 [Issue](https://github.com/nuts-and-bytes/Product-quest/issues)。代码拟采用 MIT，剧情与知识内容拟采用 CC BY-NC 4.0（仓库后续将补齐独立 LICENSE 文件）。
+- **反馈与许可**：问题或内容纠错欢迎提 [Issue](https://github.com/nuts-and-bytes/Product-quest/issues)。源码采用 MIT License，原创剧情与学习内容采用 CC BY-NC 4.0，详见 [LICENSE](LICENSE)。
 
 </details>
 
