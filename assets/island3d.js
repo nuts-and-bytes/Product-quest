@@ -1552,7 +1552,48 @@
       };
     },
 
+    // threejs-materials-lighting: procedural IBL via PMREMGenerator (offline-safe, enriches metallic & PBR highlights)
+    _createProceduralEnv(renderer, warmStudio) {
+      if (!renderer || !THREE.PMREMGenerator) return null;
+      try {
+        const pmrem = new THREE.PMREMGenerator(renderer);
+        const envScene = new THREE.Scene();
+        envScene.background = new THREE.Color(warmStudio ? '#243a42' : '#7ab8d9');
+        const panels = warmStudio
+          ? [
+              ['#fff6e3', 6, 8, 6, 6, 4, 0.2],
+              ['#b9e2f2', -7, 4, 5, 5, 4, 0.2],
+              ['#ffd89c', -3, 6, -7, 5, 3, 0.2],
+              ['#52463d', 0, -5, 0, 14, 0.2, 14]
+            ]
+          : [
+              ['#fff6dc', 10, 14, 8, 8, 5, 0.4],
+              ['#cceeff', -12, 10, -8, 10, 6, 0.4],
+              ['#4f8c7a', 0, -8, 0, 22, 0.4, 22]
+            ];
+        panels.forEach(([col, x, y, z, sx, sy, sz]) => {
+          const m = new THREE.Mesh(
+            new THREE.BoxGeometry(sx, sy, sz),
+            new THREE.MeshBasicMaterial({ color: col })
+          );
+          m.position.set(x, y, z);
+          m.lookAt(0, 0, 0);
+          envScene.add(m);
+        });
+        const rt = pmrem.fromScene(envScene, 0.04);
+        pmrem.dispose();
+        return rt.texture;
+      } catch (e) {
+        return null;
+      }
+    },
+
     _setupLightsAndSky() {
+      const envTex = this._createProceduralEnv(this.renderer, false);
+      if (envTex) {
+        this.scene.environment = envTex;
+        if ('environmentIntensity' in this.scene) this.scene.environmentIntensity = 0.45;
+      }
       this.hemiLight = new THREE.HemisphereLight('#e6f7ff', '#4fa85a', 0.96);
       this.scene.add(this.hemiLight);
 
@@ -2319,6 +2360,11 @@
         renderer.toneMapping = THREE.ACESFilmicToneMapping;
         renderer.toneMappingExposure = 1.02;
         const scene = new THREE.Scene();
+        const studioEnv = this._createProceduralEnv(renderer, true);
+        if (studioEnv) {
+          scene.environment = studioEnv;
+          if ('environmentIntensity' in scene) scene.environmentIntensity = 0.68;
+        }
         const camera = new THREE.PerspectiveCamera(31, w / h, 0.1, 40);
         camera.position.set(0, 1.92, 6.15);
         camera.lookAt(0, 1.30, 0);
@@ -3350,6 +3396,14 @@
       this.pointLights.forEach((pl) => { pl.intensity = c.lampInt; });
 
       if (this.starsMesh) this.starsMesh.material.opacity = c.starOp;
+      // Audio-design: adaptive ambience & dialogue ducking synced with world state
+      if (typeof SFX !== 'undefined' && SFX.setAmbience) {
+        const indoor = !!window.PQStory3D?.active;
+        const mode = indoor ? 'indoor' : (c.starOp > 0.35 ? 'island-night' : 'island-day');
+        SFX.setAmbience(mode);
+        const dialogActive = !!(window.PQFirstDay?.dialogOpen || document.getElementById('game-screen')?.classList.contains('active'));
+        SFX.setDuck(dialogActive);
+      }
       if (this.moonMesh) {
         this.moonMesh.visible = c.moonOp > 0.03;
         this.moonMesh.material.opacity = c.moonOp;
