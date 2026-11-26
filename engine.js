@@ -86,8 +86,91 @@ const SFX = {
     if(this.ctx && this.ctx.state === 'suspended'){
       try{ this.ctx.resume(); }catch(e){}
     }
+    if(this.ctx && !this.buses) this._initMixer(this.ctx);
     return this.ctx;
   },
+  // Audio-design: Master <- (SFX, Ambience <- AmbienceDuck) with master limiter
+  _initMixer(ac){
+    try{
+      const limiter=ac.createDynamicsCompressor();
+      limiter.threshold.value=-3; limiter.knee.value=12; limiter.ratio.value=8;
+      limiter.attack.value=0.003; limiter.release.value=0.18;
+      const master=ac.createGain();
+      master.gain.value=this.muted?0:1;
+      const sfx=ac.createGain(); sfx.gain.value=1;
+      const ambDuck=ac.createGain(); ambDuck.gain.value=1;
+      const amb=ac.createGain(); amb.gain.value=0;
+      sfx.connect(master);
+      amb.connect(ambDuck); ambDuck.connect(master);
+      master.connect(limiter); limiter.connect(ac.destination);
+      this.buses={master,sfx,amb,ambDuck,limiter};
+      this._ambMode='off'; this._ducked=false;
+    }catch(e){}
+  },
+  syncMaster(){
+    if(!this.ctx||!this.buses)return;
+    try{
+      const t=this.ctx.currentTime||0;
+      this.buses.master.gain.setTargetAtTime(this.muted?0:1,t,0.04);
+    }catch(e){}
+  },
+  // Audio-design: gentle procedural ocean/night/indoor ambience (zero external assets)
+  _ensureAmbienceGraph(){
+    const ac=this.ctx; if(!ac||!this.buses||this._ambNodes)return;
+    try{
+      const len=ac.sampleRate*4;
+      const buf=ac.createBuffer(1,len,ac.sampleRate);
+      const d=buf.getChannelData(0);
+      // Pink-ish filtered noise for warm sea breeze / cozy room tone
+      let b0=0,b1=0,b2=0;
+      for(let i=0;i<len;i++){
+        const w=Math.random()*2-1;
+        b0=0.997*b0+w*0.029; b1=0.985*b1+w*0.032; b2=0.950*b2+w*0.048;
+        d[i]=(b0+b1+b2+w*0.015)*0.45;
+      }
+      const src=ac.createBufferSource(); src.buffer=buf; src.loop=true;
+      const lp=ac.createBiquadFilter(); lp.type='lowpass'; lp.frequency.value=420; lp.Q.value=0.6;
+      const waveGain=ac.createGain(); waveGain.gain.value=0.75;
+      const lfo=ac.createOscillator(); lfo.type='sine'; lfo.frequency.value=0.14;
+      const lfoDepth=ac.createGain(); lfoDepth.gain.value=0.25;
+      lfo.connect(lfoDepth); lfoDepth.connect(waveGain.gain);
+      src.connect(lp); lp.connect(waveGain); waveGain.connect(this.buses.amb);
+      src.start(); lfo.start();
+      this._ambNodes={src,lp,waveGain,lfo,lfoDepth};
+    }catch(e){}
+  },
+  setAmbience(mode){
+    const ac=this.ctx; if(!ac||ac.state!=='running'||!this.buses)return;
+    if(this._ambMode===mode && this._ambNodes)return;
+    this._ambMode=mode;
+    this._ensureAmbienceGraph();
+    if(!this._ambNodes)return;
+    try{
+      const t=ac.currentTime||0;
+      const cfg={
+        'island-day':  {vol:0.038, freq:460, rate:0.14, depth:0.26},
+        'island-night':{vol:0.030, freq:340, rate:0.10, depth:0.22},
+        'indoor':      {vol:0.022, freq:240, rate:0.06, depth:0.08},
+        'off':         {vol:0.0,   freq:260, rate:0.08, depth:0.05}
+      }[mode]||{vol:0,freq:260,rate:0.08,depth:0.05};
+      this.buses.amb.gain.setTargetAtTime(cfg.vol,t,0.45);
+      this._ambNodes.lp.frequency.setTargetAtTime(cfg.freq,t,0.45);
+      this._ambNodes.lfo.frequency.setTargetAtTime(cfg.rate,t,0.45);
+      this._ambNodes.lfoDepth.gain.setTargetAtTime(cfg.depth,t,0.45);
+    }catch(e){}
+  },
+  // Audio-design: smooth ducking on AmbienceDuck bus (never overwrites user mute/volume)
+  setDuck(active){
+    const want=!!active;
+    if(this._ducked===want)return;
+    this._ducked=want;
+    if(!this.ctx||!this.buses)return;
+    try{
+      const t=this.ctx.currentTime||0;
+      this.buses.ambDuck.gain.setTargetAtTime(want?0.28:1.0,t,want?0.08:0.22);
+    }catch(e){}
+  },
+  _out(){ return (this.buses&&this.buses.sfx)||this.ctx?.destination; },
   beep(freq,dur,type,vol){
     if(this.muted)return;
     try{
@@ -97,7 +180,7 @@ const SFX = {
       const t=ac.currentTime||0;
       g.gain.setValueAtTime(vol||.04, t);
       g.gain.exponentialRampToValueAtTime(.001, t+(dur||.06));
-      o.connect(g); g.connect(ac.destination); o.start(t); o.stop(t+(dur||.06));
+      o.connect(g); g.connect(this._out()); o.start(t); o.stop(t+(dur||.06));
     }catch(e){}
   },
   // Room foley shares the existing audio context and global mute preference.
@@ -113,7 +196,7 @@ const SFX = {
         filter.type='bandpass';filter.frequency.value=1400;filter.Q.value=.5;
       }else{source=ac.createOscillator();source.type='sine';source.frequency.setValueAtTime(100,t);source.frequency.exponentialRampToValueAtTime(48,t+.065);duration=.085;filter.type='lowpass';filter.frequency.value=260;}
       g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(kind==='paper'?.025:.014,t+.008);g.gain.exponentialRampToValueAtTime(.0001,t+duration);
-      source.connect(filter);filter.connect(g);g.connect(ac.destination);
+      source.connect(filter);filter.connect(g);g.connect(this._out());
       source.onended=()=>{source.disconnect();filter.disconnect();g.disconnect();};source.start(t);source.stop(t+duration+.01);
     }catch(e){}
   },
@@ -131,7 +214,7 @@ const SFX = {
       g.gain.setValueAtTime(0,t);
       g.gain.linearRampToValueAtTime(.012,t+.004);
       g.gain.exponentialRampToValueAtTime(.0001,t+.05);
-      o.connect(lp); lp.connect(g); g.connect(ac.destination);
+      o.connect(lp); lp.connect(g); g.connect(this._out());
       o.start(t); o.stop(t+.055);
     }catch(e){}
   },
@@ -152,7 +235,7 @@ const SFX = {
       g.gain.setValueAtTime(0,t);
       g.gain.linearRampToValueAtTime(.026,t+.003);
       g.gain.exponentialRampToValueAtTime(.0001,t+.042);
-      o.connect(lp); lp.connect(g); g.connect(ac.destination);
+      o.connect(lp); lp.connect(g); g.connect(this._out());
       o.start(t); o.stop(t+.048);
     }catch(e){}
   },
@@ -172,7 +255,7 @@ const SFX = {
       g.gain.setValueAtTime(0,t);
       g.gain.linearRampToValueAtTime(peak,t+.005);
       g.gain.exponentialRampToValueAtTime(.0001,t+.055);
-      o.connect(lp); lp.connect(g); g.connect(ac.destination);
+      o.connect(lp); lp.connect(g); g.connect(this._out());
       o.start(t); o.stop(t+.06);
     }catch(e){}
   }
@@ -301,8 +384,38 @@ const G = {
     panel.querySelector('button:not([disabled])')?.focus({preventScroll:true});
     if(window.PQIsland?.keys)PQIsland.keys={};
   },
-  save(){ try{ localStorage.setItem((window.OPC_SAVE_KEY || 'pmquest2'), JSON.stringify({trust:this.trust,unlocked:this.unlocked,notes:this.notes,progress:this.progress,avatar:this.avatar,stats:this.stats||{},exploration:this.exploration||{},fieldCourses:this.fieldCourses||{},firstDay:this.firstDay,cafeCase:this.cafeCase,lifeFilms:this.lifeFilms,cafeLife:this.cafeLife,campaign:this.campaign,nightMarket:window.PQNightMarketModel?PQNightMarketModel.pack(this.nightMarket):this.nightMarket})); }catch(e){} },
-  load(){ try{ const d=JSON.parse(localStorage.getItem((window.OPC_SAVE_KEY || 'pmquest2'))); if(d){Object.assign(this,d); this.avatar=normalizeAvatar(d.avatar);} }catch(e){} },
+  // Save-systems: versioned JSON snapshot with .bak fallback against mid-write corruption
+  save(){
+    try{
+      const key=(window.OPC_SAVE_KEY || 'pmquest2');
+      const prev=localStorage.getItem(key);
+      if(prev){ try{ JSON.parse(prev); localStorage.setItem(key+':bak', prev); }catch(_){} }
+      const payload={
+        saveVersion:2,
+        trust:this.trust,unlocked:this.unlocked,notes:this.notes,progress:this.progress,
+        avatar:this.avatar,stats:this.stats||{},exploration:this.exploration||{},
+        fieldCourses:this.fieldCourses||{},firstDay:this.firstDay,cafeCase:this.cafeCase,
+        lifeFilms:this.lifeFilms,cafeLife:this.cafeLife,campaign:this.campaign,
+        nightMarket:window.PQNightMarketModel?PQNightMarketModel.pack(this.nightMarket):this.nightMarket
+      };
+      localStorage.setItem(key, JSON.stringify(payload));
+    }catch(e){}
+  },
+  load(){
+    const key=(window.OPC_SAVE_KEY || 'pmquest2');
+    for(const k of [key, key+':bak']){
+      try{
+        const raw=localStorage.getItem(k);
+        if(!raw) continue;
+        const d=JSON.parse(raw);
+        if(d && typeof d==='object'){
+          Object.assign(this,d);
+          this.avatar=normalizeAvatar(d.avatar);
+          return;
+        }
+      }catch(e){}
+    }
+  },
 
   /* ---------- 角色DIY ---------- */
   applyPreset(id){
@@ -1166,7 +1279,7 @@ const G = {
   toggleMute(){ SFX.muted=!SFX.muted;
     try{ SFX.muted?localStorage.setItem('pqmute','1'):localStorage.removeItem('pqmute'); }catch(e){} // 不持久化=玩家关了它还回来
     this.syncMute(); },
-  syncMute(){ const b=document.getElementById('mute-btn'); if(b) b.innerHTML=PQ.pxi(SFX.muted?'mute':'sound',15); }
+  syncMute(){ const b=document.getElementById('mute-btn'); if(b) b.innerHTML=PQ.pxi(SFX.muted?'mute':'sound',15); SFX.syncMaster(); }
 };
 
 document.getElementById('dialog').addEventListener('click',e=>{ if(e.target.closest('#choices')||e.target.closest('.kcard'))return; G.advance(); });
