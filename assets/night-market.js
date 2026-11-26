@@ -23,7 +23,7 @@
       if(!this.run.intro&&this.view==='arrival')PQLifeFilm.playMarket('arrival');
     },
     suspend(){if(!this.active)return;if(PQLifeFilm.active)PQLifeFilm.finish(false);this.active=false;this.paused=true;G.save();PQNightMarketScene.detach();$('game').classList.remove('market-mode');this.dialog=null;},
-    close(){this.suspend();G.toMap();const w=PQIsland,d=w.buildings.cafe?.doorPos;if(d){w.playerPos.copy(d);w.playerPos.x+=1.3;w.playerPos.z+=1.8;w.playerRig.group.position.copy(w.playerPos);w.setMode('walk');w.recentre(true);}PQNightMarketScene.worldSync();if(G.nightMarket.legacy)w.setStatus('夜市留下的'+(G.nightMarket.legacy.run.plan.space==='bench'?'长凳':'取餐架')+'，就在蓝山旁边。',5000);},
+    close(){this.suspend();G.toMap();const w=PQIsland,d=w.buildings.cafe?.doorPos;if(d){w.playerPos.copy(d);w.playerPos.x+=1.3;w.playerPos.z+=1.8;w.playerRig.group.position.copy(w.playerPos);if(w.mode!=='follow')w.setMode('walk');w.recentre(true);}PQNightMarketScene.worldSync();if(G.nightMarket.legacy)w.setStatus('夜市留下的'+(G.nightMarket.legacy.run.plan.space==='bench'?'长凳':'取餐架')+'，就在蓝山旁边。',5000);},
     button(text,a,v='',cls='',disabled=false,pressed){return `<button data-a="${a}" data-v="${esc(v)}" class="${cls}"${disabled?' disabled':''}${pressed===undefined?'':` aria-pressed="${pressed}"`}>${text}</button>`;},
     step(type,value){const ok=M.act(G.nightMarket,type,value);if(ok)G.save();return ok;},
     selectedOrder(){return this.run.orders.find(o=>o.id===this.selected&&['waiting','accepted'].includes(o.status))||this.run.orders.find(o=>['waiting','accepted'].includes(o.status));},

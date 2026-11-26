@@ -2,7 +2,7 @@
    assets/island3d.js — Product Quest × Geminisland 3D体素开放世界引擎 v2
    - 体素面剔除 + 四角 AO + 独立自发光通道 (日夜车灯/橱窗/路灯)
    - 真3D立体方块角色骨骼 (独立头部/躯干/四肢摆臂迈腿 + 3D眼镜与长短发)
-   - 五视角系统：平移(Pan) / 环绕(Orbit) / 第三人称漫步(Walk) / 第一人称(FP) / 群岛全览
+   - 视角系统：平移 / 环绕 / 漫步 / 角色跟随 / 第一人称 / 群岛全览
    - 丰富开放世界要素：中央喷泉、8座车流与斑马线、雪山瀑布、跨湖拱桥凉亭、
      码头帆船、旋转光束灯塔、热气球与云朵、樱花银杏树、散步路人、流萤与日夜光影
    ============================================================ */
@@ -1400,7 +1400,8 @@
     inited: false,
     running: false,
     rafId: 0,
-    mode: 'pan',       // 'pan' | 'orbit' | 'walk' | 'fp'
+    mode: 'pan',       // 'pan' | 'orbit' | 'walk' | 'follow' | 'fp'
+    get isOnFoot() { return this.mode==='walk'||this.mode==='follow'||this.mode==='fp'; },
     cinematicMode: 'landing', // 'landing' | 'avatar' | null
     timeMode: 'sunset', // 'clock' | 'day' | 'sunset' | 'night' | 'auto'
     autoPhase: 0,
@@ -1462,6 +1463,12 @@
     spherical: { radius: 64, polar: 0.74, azimuth: 0.56 },
     curSpherical: { radius: 64, polar: 0.74, azimuth: 0.56 },
     walkView: { radius: 54, polar: .8, azimuth: .56 },
+    followView: PQWorldFraming.followView(),
+    followDistance: NaN,
+    followTerrain: [],
+    _followPivot: new THREE.Vector3(),
+    _followEye: new THREE.Vector3(),
+    _followTarget: new THREE.Vector3(),
     curTod: null,
 
     pointers: new Map(),
@@ -1792,6 +1799,10 @@
             else topCol = ((x + z) & 1) ? '#dce2ec' : '#cfd6e3';
           }
 
+          // Match the raised voxel columns without raycasting the entire island mesh.
+          if(topY>=2)this.followTerrain.push(new THREE.Box3(
+            new THREE.Vector3(x,1,z),new THREE.Vector3(x+1,topY+1,z+1)));
+
           for (let y = -2; y <= topY; y++) {
             if (y === topY) {
               if (isPondWater) vg.set(x, -1, z, '#728296');
@@ -1869,6 +1880,7 @@
       gazVg.fillBox(-2, 6, -2, 2, 6, 2, '#b0423f');
       gazVg.set(0, 7, 0, '#ffcd75');
       const gazMesh = makeVoxelMesh(gazVg, 0.52, [0, 0, 0]);
+      gazMesh.userData.pqFollowBlocker=true;
       gazMesh.position.set(-19, 1.0, 14.5);
       this.scene.add(gazMesh);
 
@@ -2053,6 +2065,7 @@
       fv.fillBox(-2, 0, -2, 2, 0, 2, '#4cc4ff');
       fv.fillBox(-1, 1, -1, 1, 2, 1, '#dce3ee');
       const fountainBase = makeVoxelMesh(fv, 0.58, [0, 0, 0], this.solidMat);
+      fountainBase.userData.pqFollowBlocker=true;
       fountainBase.position.set(0, 1.0, 0);
       this.scene.add(fountainBase);
 
@@ -2169,7 +2182,9 @@
       lhVg.fillBox(-1, 14, -1, 1, 14, 1, '#263042');
       const lhGrp = new THREE.Group();
       lhGrp.position.set(32, 2.0, -22);
-      lhGrp.add(makeVoxelMesh(lhVg, 0.65, [0, 0, 0], this.solidMat));
+      const lighthouse=makeVoxelMesh(lhVg, 0.65, [0, 0, 0], this.solidMat);
+      lighthouse.userData.pqFollowBlocker=true;
+      lhGrp.add(lighthouse);
       const lhGlow = makeVoxelMesh(lhGv, 0.65, [0, 0, 0], this.glowMat, true);
       lhGlow.castShadow = false;
       lhGrp.add(lhGlow);
@@ -2675,6 +2690,9 @@
       this.init();
       this.refreshState();
       this._resize();
+      if(document.getElementById('field-screen').classList.contains('active')&&this.mode==='follow'){
+        this._returnFromFieldFollow={...this.followView};
+      }
 
       if (opts.diveFromBadge) {
         this.partCloudsAndDiveTo('map');
@@ -2689,10 +2707,19 @@
             this.setArchipelago(true, true);
           } else {
             this.setArchipelago(false, true);
-            if (opts.focusCurrent !== false && this.mode !== 'walk' && this.mode !== 'fp') {
+            if (opts.focusCurrent !== false && !this.isOnFoot) {
               this.recentre(true);
             }
           }
+        }
+      }
+
+      if(this._returnFromFieldFollow&&document.getElementById('map-screen').classList.contains('active')){
+        const view=this._returnFromFieldFollow;
+        this._returnFromFieldFollow=null;
+        if(!opts.archipelago&&!window.PQFirstDay?.guided()){
+          this.setMode('follow');
+          this.followView=view;
         }
       }
 
@@ -2710,8 +2737,22 @@
         cancelAnimationFrame(this.rafId);
         this.rafId = 0;
       }
-      this.keys = {};
-      this.joyVec = { x: 0, z: 0 };
+      this.resetInput();
+    },
+
+    resetInput(){
+      this.keys={};
+      this.pointers.clear();
+      this.dragStart=null;
+      this.pinchDist=0;
+      this.floatingJoystick?.reset();
+      this._releaseFloatingJoystick();
+    },
+
+    _releaseFloatingJoystick(){
+      this.joyVec={x:0,z:0};
+      this.joystick?.classList.remove('show');
+      this.joystickKnob?.style.removeProperty('transform');
     },
 
     rememberWalkView(){
@@ -2735,6 +2776,7 @@
       if(this.detachedFollow)this.detachFollow(false);
       document.getElementById('field-pan').hidden=mode==='fp';
       const previous=this.mode;this.rememberWalkView();this.visibility?.resetFollow();
+      if(previous!==mode&&this.floatingJoystick){this.floatingJoystick.reset();this._releaseFloatingJoystick();}
       this.mode = mode;
       PQCameraInput.refresh(this);
       this.walkGoal = null;
@@ -2745,10 +2787,10 @@
       if (mapScreen) mapScreen.dataset.mode = mode;
 
       document.querySelectorAll('#isl-toolbar [data-cam]').forEach((btn) => {
-        btn.classList.toggle('active', btn.dataset.cam === mode);
+        const active=btn.dataset.cam===mode;
+        btn.classList.toggle('active',active);
+        btn.setAttribute('aria-pressed',String(active));
       });
-      const joy = document.getElementById('isl-joy');
-      if (joy) joy.classList.toggle('show', mode === 'walk' || mode === 'fp');
       if (this.playerRig) {
         this.playerRig.group.visible = (mode !== 'fp');
       }
@@ -2757,6 +2799,13 @@
         this.fpYaw = this.playerYaw;
         this.fpPitch = -0.04;
         this.showMovementHint('fp', 4200);
+      } else if(mode==='follow'){
+        if(previous!=='follow')this.followView=PQWorldFraming.followView({azimuth:this.playerYaw+Math.PI});
+        this.followDistance=NaN;
+        const toolbar=document.getElementById('isl-toolbar');
+        const menu=document.getElementById('world-view-toggle');
+        if(menu&&!toolbar.hidden){this.visibility?.closeMenus();menu.focus();}
+        this.showMovementHint('follow',3800);
       } else if (mode === 'walk') {
         this.camTarget.x = this.playerPos.x;
         this.camTarget.y = 2.0;
@@ -2783,7 +2832,7 @@
       if (btn) btn.classList.toggle('active', this.archipelago);
 
       if (this.archipelago) {
-        if (this.mode === 'fp' || this.mode === 'walk') { this.archipelago = false; this.setMode('pan'); this.archipelago = true; }
+        if(this.isOnFoot){this.archipelago = false; this.setMode('pan'); this.archipelago = true;}
         this.camTarget = { x: 18, y: 1.5, z: 6 };
         this.spherical = { radius: Math.max(152,190 / this.camera.aspect), polar: 0.76, azimuth: 0.44 };
         this.setStatus('群岛全览：三条栈道连接四座岛屿，点击岛屿查看地标，切换漫步开始探索', 4000);
@@ -2806,10 +2855,13 @@
       if(this.detachedFollow)this.detachFollow(false);
       this.visibility?.resetFollow();
       if (this.archipelago) this.setArchipelago(false, snap);
-      if (!this.cinematicMode && (this.mode === 'walk' || this.mode === 'fp')) {
+      if (!this.cinematicMode && this.isOnFoot) {
         this.camTarget = { x: this.playerPos.x, y: 2.0, z: this.playerPos.z };
         if (this.mode === 'walk') { this.spherical=PQWorldFraming.walkView(this.spherical);this.rememberWalkView(); }
-        else { this.fpPitch = -0.04; }
+        else if(this.mode==='follow'){
+          this.followView=PQWorldFraming.followView({...this.followView,azimuth:this.playerYaw+Math.PI});
+          if(snap)this.followDistance=NaN;
+        }else { this.fpPitch = -0.04; }
       } else {
         const b = this.buildings[this.currentQuestBldId];
         if (b) this.camTarget = { x: b.data.wx * 0.65, y: 2.0, z: b.data.wz * 0.65 };
@@ -2829,7 +2881,7 @@
       const entry = this.buildings[id];
       if (!entry) return;
       this.activeBuildingId = id;
-      if (this.mode !== 'walk' && this.mode !== 'fp') {
+      if (!this.isOnFoot) {
         this.camTarget = { x: entry.data.wx, y: 3.0, z: entry.data.wz };
         this.spherical.radius = Math.min(this.spherical.radius, 34);
       }
@@ -2973,7 +3025,7 @@
       const isLanding = this.cinematicMode === 'landing';
       const isAvatar = this.cinematicMode === 'avatar';
       Object.values(this.buildings).forEach((entry) => {
-        project(entry.labelAnchor, this._labelEls['b_' + entry.data.id], !isLanding && !isAvatar && !this.archipelago && ((this.mode !== 'walk' && this.mode !== 'fp') || this.camera.position.distanceTo(entry.labelAnchor)<25));
+        project(entry.labelAnchor, this._labelEls['b_' + entry.data.id], !isLanding && !isAvatar && !this.archipelago && (!this.isOnFoot || this.camera.position.distanceTo(entry.labelAnchor)<25));
       });
       this.continents.forEach((c) => {
         const showC = !isAvatar && (isLanding || this.archipelago || (this.mode !== 'fp' && this.curSpherical.radius > 60));
@@ -2999,10 +3051,27 @@
         }
       });
       const canvas = this.renderer.domElement;
+      this.joystick=document.getElementById('isl-joy');
+      this.joystickKnob=document.getElementById('isl-joy-knob');
+      const floating=this.floatingJoystick=new PQMobilePlay.FloatingJoystick();
       canvas.addEventListener('contextmenu', (e) => e.preventDefault());
 
       canvas.addEventListener('pointerdown', (e) => {
-        if(window.PQStory3D?.active||window.PQFirstDay?.dialogOpen)return;
+        if(window.PQStory3D?.active||window.PQFirstDay?.dialogOpen||window.PQFirstDay?.transitioning)return;
+        const outdoor=document.getElementById('map-screen').classList.contains('active');
+        const fieldWalk=window.PQFieldCourse?.active&&!this.detachedFollow;
+        if(e.pointerType==='touch'&&this.isOnFoot&&!this.cinematicMode&&(outdoor||fieldWalk)){
+          const role=floating.start(e.pointerId,e.clientX,e.clientY);
+          if(role)canvas.setPointerCapture(e.pointerId);
+          if(role==='move'){
+            this.joystick.classList.add('show');
+            const rect=this.joystick.offsetParent.getBoundingClientRect();
+            this.joystick.style.left=`${e.clientX-rect.left}px`;
+            this.joystick.style.top=`${e.clientY-rect.top}px`;
+            this.joystickRadius=this.joystick.offsetWidth*.38;
+          }
+          return;
+        }
         canvas.setPointerCapture(e.pointerId);
         this.pointers.set(e.pointerId, { x: e.clientX, y: e.clientY, btn: e.button });
         if (this.pointers.size === 1) {
@@ -3019,6 +3088,14 @@
       });
 
       canvas.addEventListener('pointermove', (e) => {
+        const touch=floating.update(e.pointerId,e.clientX,e.clientY,this.joystickRadius);
+        if(touch?.role==='move'){
+          this.joyVec.x=touch.x;
+          this.joyVec.z=touch.z;
+          this.joystickKnob.style.transform=`translate(${touch.x*this.joystickRadius}px, ${touch.z*this.joystickRadius}px)`;
+          return;
+        }
+        if(touch?.role==='look'){this._rotateView(touch.dx,touch.dy);return;}
         const prev = this.pointers.get(e.pointerId);
         if (!prev) return;
         const dx = e.clientX - prev.x;
@@ -3029,9 +3106,13 @@
           const pts = [...this.pointers.values()];
           const dist = Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y);
           if (this.pinchDist > 0 && this.mode !== 'fp') {
-            const delta = (this.pinchDist - dist) * 0.14;
-            this.spherical.radius = Math.max(12, Math.min(this.archipelago?Math.max(220,220/this.camera.aspect):135, this.spherical.radius + delta));
-            if(this.mode==='walk'){this.spherical=PQWorldFraming.walkView(this.spherical);this.rememberWalkView();}
+            if(this.mode==='follow'&&!this.cinematicMode&&dist>0){
+              this.followView=PQWorldFraming.followView({...this.followView,radius:this.followView.radius*this.pinchDist/dist});
+            }else{
+              const delta = (this.pinchDist - dist) * 0.14;
+              this.spherical.radius = Math.max(12, Math.min(this.archipelago?Math.max(220,220/this.camera.aspect):135, this.spherical.radius + delta));
+              if(this.mode==='walk'){this.spherical=PQWorldFraming.walkView(this.spherical);this.rememberWalkView();}
+            }
           }
           this.pinchDist = dist;
           return;
@@ -3039,25 +3120,26 @@
 
         if (this.dragStart) this.dragStart.moved += Math.hypot(dx, dy);
 
-        if (this.mode === 'fp') {
-          this.fpYaw -= dx * 0.0055;
-          this.fpPitch = Math.max(-0.78, Math.min(0.85, this.fpPitch - dy * 0.0045));
-          return;
-        }
-
         const isRight = prev.btn === 2 || e.shiftKey;
-        if (this.detachedFollow || this.mode === 'pan' && !isRight && !this.archipelago && !this.cinematicMode) {
+        if(this.mode==='fp'||(this.mode==='follow'&&!this.cinematicMode)){
+          this._rotateView(dx,dy);
+        }else if (this.detachedFollow || this.mode === 'pan' && !isRight && !this.archipelago && !this.cinematicMode) {
           this._panByScreenDelta(dx, dy);
         } else if (this.mode === 'orbit' && isRight) {
           this._panByScreenDelta(dx, dy);
         } else {
-          this.spherical.azimuth -= dx * 0.0075;
-          this.spherical.polar = Math.max(0.32, Math.min(1.28, this.spherical.polar - dy * 0.0065));
-          if(this.mode==='walk'){this.spherical=PQWorldFraming.walkView(this.spherical);this.rememberWalkView();}
+          this._rotateView(dx,dy);
         }
       });
 
+      const endTouch=(e,cancelled)=>{
+        const role=floating.end(e.pointerId,cancelled);
+        if(role==='move'||role==='tap')this._releaseFloatingJoystick();
+        if(role==='tap')this._handleTap(e.clientX,e.clientY);
+        return !!role;
+      };
       const endPtr = (e) => {
+        if(endTouch(e,false)||!this.pointers.has(e.pointerId))return;
         const wasSingle = this.pointers.size === 1;
         this.pointers.delete(e.pointerId);
         if (this.pointers.size < 2) this.pinchDist = 0;
@@ -3067,7 +3149,13 @@
         if (this.pointers.size === 0) this.dragStart = null;
       };
       canvas.addEventListener('pointerup', endPtr);
-      canvas.addEventListener('pointercancel', (e) => { this.pointers.delete(e.pointerId); this.dragStart = null; this.pinchDist = 0; });
+      const cancelPtr=(e)=>{
+        if(endTouch(e,true)||!this.pointers.delete(e.pointerId))return;
+        this.dragStart=null;
+        this.pinchDist=0;
+      };
+      canvas.addEventListener('pointercancel',cancelPtr);
+      canvas.addEventListener('lostpointercapture',cancelPtr);
 
       PQCameraInput.init(this);
       PQCameraInput.bind(canvas,this);
@@ -3077,44 +3165,28 @@
         const k = e.key.toLowerCase();
         if (['arrowup','arrowdown','arrowleft','arrowright',' '].includes(k)) e.preventDefault();
         this.keys[k] = true;
-        if (k === 'e' && (this.mode === 'walk' || this.mode === 'fp') && this.nearBuildingId) {
+        if (k === 'e' && this.isOnFoot && this.nearBuildingId) {
           this.focusBuilding(this.nearBuildingId);
         }
       });
       window.addEventListener('keyup', (e) => {
         this.keys[e.key.toLowerCase()] = false;
       });
-      const clearInput = () => { this.keys = {}; this.joyVec = {x:0,z:0}; this.pointers.clear(); this.dragStart = null; const knob = document.getElementById('isl-joy-knob'); if(knob) knob.style.transform=''; };
-      window.addEventListener('blur', clearInput);
-      document.addEventListener('visibilitychange', () => { if(document.hidden) clearInput(); });
+      window.addEventListener('blur',()=>this.resetInput());
       window.addEventListener('resize', () => this._resize());
+    },
 
-      const joy = document.getElementById('isl-joy');
-      const knob = document.getElementById('isl-joy-knob');
-      if (joy && knob) {
-        let jId = null;
-        const updateJoy = (cx, cy) => {
-          const rect = joy.getBoundingClientRect();
-          const mx = rect.left + rect.width / 2;
-          const my = rect.top + rect.height / 2;
-          const maxR = rect.width * 0.38;
-          let dx = cx - mx, dy = cy - my;
-          const len = Math.hypot(dx, dy);
-          if (len > maxR) { dx = dx / len * maxR; dy = dy / len * maxR; }
-          knob.style.transform = `translate(${dx}px, ${dy}px)`;
-          this.joyVec.x = dx / maxR;
-          this.joyVec.z = dy / maxR;
-        };
-        joy.addEventListener('pointerdown', (e) => {
-          e.stopPropagation(); joy.setPointerCapture(e.pointerId); jId = e.pointerId; updateJoy(e.clientX, e.clientY);
-        });
-        joy.addEventListener('pointermove', (e) => { if (e.pointerId === jId) updateJoy(e.clientX, e.clientY); });
-        const endJoy = (e) => {
-          if (e.pointerId !== jId) return;
-          jId = null; knob.style.transform = ''; this.joyVec.x = 0; this.joyVec.z = 0;
-        };
-        joy.addEventListener('pointerup', endJoy);
-        joy.addEventListener('pointercancel', endJoy);
+    _rotateView(dx,dy){
+      if(this.mode==='fp'){
+        this.fpYaw-=dx*.0055;
+        this.fpPitch=Math.max(-.78,Math.min(.85,this.fpPitch-dy*.0045));
+      }else if(this.mode==='follow'&&!this.cinematicMode){
+        const view=this.followView;
+        this.followView=PQWorldFraming.followView({...view,azimuth:view.azimuth-dx*.0075,polar:view.polar-dy*.0065});
+      }else{
+        this.spherical.azimuth-=dx*.0075;
+        this.spherical.polar=Math.max(.32,Math.min(1.28,this.spherical.polar-dy*.0065));
+        if(this.mode==='walk'){this.spherical=PQWorldFraming.walkView(this.spherical);this.rememberWalkView();}
       }
     },
 
@@ -3148,7 +3220,7 @@
       if (hits.length > 0) {
         const ud = hits[0].object.userData;
         if (ud.expeditionId) {
-          if (ud.expeditionId === 'ai' || this.mode === 'walk' || this.mode === 'fp') this.environment.inspect(ud.expeditionId);
+          if (ud.expeditionId === 'ai' || this.isOnFoot) this.environment.inspect(ud.expeditionId);
           else this.environment.selectRegion(ud.expeditionId);
           return;
         }
@@ -3165,7 +3237,7 @@
           }
           return;
         }
-        if (ud.continentId && this.mode !== 'walk' && this.mode !== 'fp') {
+        if (ud.continentId && !this.isOnFoot) {
           this.environment.selectRegion(ud.continentId);
           return;
         }
@@ -3178,7 +3250,7 @@
           this.setArchipelago(false);
           return;
         }
-        if ((this.mode === 'walk' || this.mode === 'fp') && this._canWalkTo(pt.x, pt.z)) {
+        if (this.isOnFoot && this._canWalkTo(pt.x, pt.z)) {
           const path = PQWorldMap.findPath(this.playerPos, pt, PQ.buildings);
           if (!path) { this.setStatus('这里暂时没有可通行的路径，请沿栈道探索。', 2400); return; }
           this.walkPath = path;
@@ -3225,7 +3297,10 @@
         this.visibility?.suspend();
         PQStory3D.update(dt,tSec);this.environment.render();return;
       }
-      if(window.PQFirstDay?.dialogOpen||window.PQFirstDay?.transitioning){this.keys={};this.walkGoal=null;this.joyVec={x:0,z:0};}
+      if(window.PQFirstDay?.dialogOpen||window.PQFirstDay?.transitioning){
+        this.keys={};this.walkGoal=null;
+        if(this.floatingJoystick?.move||this.floatingJoystick?.look){this.floatingJoystick.reset();this._releaseFloatingJoystick();}
+      }
       this._updateTimeOfDay(dt, tSec);
       this._updatePlayer(dt, tSec);
       this._updateCars(dt);
@@ -3425,7 +3500,7 @@
       this._updateStepDust(dt);
       let moveX = 0, moveZ = 0;
 
-      if (!this.cinematicMode && (this.mode === 'walk' || this.mode === 'fp')) {
+      if (!this.cinematicMode && this.isOnFoot) {
         const up = this.keys['w'] || this.keys['arrowup'] ? 1 : 0;
         const dn = this.keys['s'] || this.keys['arrowdown'] ? 1 : 0;
         const lf = this.keys['a'] || this.keys['arrowleft'] ? 1 : 0;
@@ -3443,8 +3518,9 @@
             moveX = fwd * fx + kx * rx;
             moveZ = fwd * fz + kx * rz;
           } else {
-            const sinA = Math.sin(this.curSpherical.azimuth);
-            const cosA = Math.cos(this.curSpherical.azimuth);
+            const azimuth=this.mode==='follow'?this.followView.azimuth:this.curSpherical.azimuth;
+            const sinA = Math.sin(azimuth);
+            const cosA = Math.cos(azimuth);
             moveX = kx * cosA + kz * sinA;
             moveZ = -kx * sinA + kz * cosA;
           }
@@ -3543,7 +3619,7 @@
           this.camTarget.z = follow.z + this._lookAheadZ;
         }
         this._checkProximity();
-      } else if (this.mode === 'fp') {
+      } else if (this.isOnFoot) {
         this._checkProximity();
       } else {
         this._setPrompt(null);
@@ -3585,7 +3661,7 @@
         const right = new THREE.Vector3(-tangent.z, 0, tangent.x);
         const worldPos = pt.clone().addScaledVector(right, car.lane);
 
-        const nearPlayer = (this.mode === 'walk' || this.mode === 'fp') && pPos && worldPos.distanceTo(pPos) < 3.5;
+        const nearPlayer = this.isOnFoot && pPos && worldPos.distanceTo(pPos) < 3.5;
         if (!nearPlayer) car.t = (car.t + car.speed * dt + 1) % 1;
 
         car.mesh.position.set(worldPos.x, 1.07, worldPos.z);
@@ -3750,6 +3826,37 @@
       });
     },
 
+    _updateFollowCamera(dt) {
+      const {pivot,target,camera}=PQWorldFraming.followPose(this.playerPos,this.followView);
+      const origin=this._followPivot.set(pivot.x,pivot.y,pivot.z);
+      const eye=this._followEye.set(camera.x,camera.y,camera.z);
+      const desired=origin.distanceTo(eye);
+      const obstruction=this.visibility.followBlockerDistance(origin,eye);
+      const reduceMotion=this.environment.reducedMotion;
+      this.followDistance=PQWorldFraming.followClearance(desired,obstruction,this.followDistance,dt,reduceMotion);
+      eye.lerp(origin,1-this.followDistance/desired);
+
+      // If the shoulder view has no room at a wall, lift above the player.
+      if(this.followDistance<2.2){
+        eye.y+=(2.2-this.followDistance)*1.5;
+        const liftDistance=origin.distanceTo(eye);
+        const hit=this.visibility.followBlockerDistance(origin,eye);
+        const room=PQWorldFraming.followClearance(liftDistance,hit,liftDistance,dt);
+        eye.lerp(origin,1-room/liftDistance);
+      }
+
+      const look=this._followTarget.set(target.x,target.y,target.z);
+      this.camera.position.copy(eye);
+      this.camera.lookAt(look);
+      Object.assign(this.camCurTarget,{x:look.x,y:look.y,z:look.z});
+      // Keep the outgoing spherical camera pose consistent for scene transitions.
+      this._followEye.sub(look);
+      this.curSpherical.radius=this._followEye.length();
+      this.curSpherical.polar=Math.acos(THREE.MathUtils.clamp(this._followEye.y/this.curSpherical.radius,-1,1));
+      const azimuth=Math.atan2(this._followEye.x,this._followEye.z);
+      this.curSpherical.azimuth=this.spherical.azimuth+Math.atan2(Math.sin(azimuth-this.spherical.azimuth),Math.cos(azimuth-this.spherical.azimuth));
+    },
+
     _updateCamera(dt, now, tSec) {
       const landing=this.cinematicMode==='landing'&&!document.getElementById('landing').classList.contains('peek-island');
       const rect=this.renderer.domElement.getBoundingClientRect(),compact=rect.width<700;
@@ -3777,6 +3884,11 @@
         const tz = ez + Math.cos(this.fpPitch) * Math.cos(this.fpYaw) * 10;
         this.camera.position.set(ex, ey, ez);
         this.camera.lookAt(tx, ty, tz);
+        this.visibility?.frame(dt,now);
+        return;
+      }
+      if(this.mode==='follow'&&!this.cinematicMode&&!this.diveAnim){
+        this._updateFollowCamera(dt);
         this.visibility?.frame(dt,now);
         return;
       }

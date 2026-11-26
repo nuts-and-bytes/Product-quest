@@ -1,7 +1,7 @@
 #land-continents { display:flex; flex-wrap:wrap; gap:8px; margin:14px 0; }
 #land-continents button { color:#ffebc9; background:#19353c; border:1px solid #a6b9a2; border-radius:6px; padding:7px 12px; cursor:pointer; }
 #field-screen { pointer-events:none; --paper:#fff7e6; --ink:#203a3d; --line:#b7aa8e; }
-#field-hud, #field-dialog, #field-screen #isl-joy { pointer-events:auto; }
+#field-hud, #field-dialog { pointer-events:auto; }
 #field-hud, #field-dialog { background:var(--paper); color:var(--ink); font:15px/1.55 system-ui,sans-serif; }
 #field-hud { position:absolute; top:max(15px,env(safe-area-inset-top)); left:max(15px,env(safe-area-inset-left)); width:min(350px,calc(100% - 30px)); max-height:53%; overflow:auto; border-radius:12px; padding:12px 16px; box-shadow:0 3px 18px #162f3955; }
 #field-hud header { display:flex; justify-content:space-between; gap:8px; }
@@ -33,7 +33,6 @@
 .field-speaker { font-weight:750; }
 #field-dialog .field-exchange p { margin:4px 0; }
 #field-dialog.field-conversation button { margin-left:auto; width:auto; min-width:7em; text-align:center; }
-#field-screen #isl-joy { bottom:max(16px,env(safe-area-inset-bottom)); left:max(16px,env(safe-area-inset-left)); }
 #game[data-screen="field-screen"] #island-labels { display:none; }
 .guided-mode #exp-interact.course-island:not([hidden]) { display:block!important; }
 @media(max-width:699px) {

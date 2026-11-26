@@ -2,7 +2,7 @@
 (function(){
   'use strict';
   const $=id=>document.getElementById(id),T=THREE;
-  const J={dialogOpen:false,guide:null,route:null,near:false,
+  const J={dialogOpen:false,guide:null,route:null,near:false,mapView:'follow',
     init(){
       G.firstDay=PQFirstDayState.normalize(G.firstDay,G.progress);
       const game=$('game');
@@ -20,7 +20,7 @@
       $('journey-resume').onclick=()=>{G.firstDay.paused=false;G.save();this.onMap();};
       $('journey-locate').onclick=()=>this.locate();
       $('journey-help').onclick=()=>this.say('星火岛 · 随时可以回来','探索提示',[
-        '点击地面或使用 WASD / 方向键移动；手机也可拖动左下角摇杆。拖拽空白处转动镜头。',
+        '电脑用 WASD 或方向键移动，拖动画面转镜头。手机在画面任意空白处按住拖动，第二根手指拖动可转镜头，轻点仍能走过去。',
         '金色背包和脚下的细光环属于你。靠近目标后按 E 或点任务按钮交互；“找到自己”会把镜头带回来。'
       ],()=>this.render());
       $('cafe-mei').onclick=()=>this.chatMei();$('cafe-li').onclick=()=>this.chatLi();
@@ -41,21 +41,33 @@
     },
     guided(){return G.firstDay&&G.firstDay.stage!=='complete'&&!G.firstDay.paused;},
     step(event){G.firstDay=PQFirstDayState.step(G.firstDay,event);G.save();this.render();},
+    chooseMapView(mode){
+      this.mapView=mode;
+      PQIsland.setMode(mode);
+      if(mode==='follow'&&this.guided())this.faceFollowGoal(this.target());
+    },
     onMap(){
       this.closeDialog();
-      const w=PQIsland,s=G.firstDay;
-      if(this.guide)this.guide.group.visible=this.guided()&&['arrival','hq'].includes(s.stage);
-      w.npcRigs.forEach(n=>{if(n.role==='xiaomei')n.rig.group.visible=!(this.guided()&&['arrival','hq'].includes(s.stage));});
-      if(this.guided()){
+      const w=PQIsland,s=G.firstDay,guided=this.guided();
+      if(this.guide)this.guide.group.visible=guided&&['arrival','hq'].includes(s.stage);
+      w.npcRigs.forEach(n=>{if(n.role==='xiaomei')n.rig.group.visible=!(guided&&['arrival','hq'].includes(s.stage));});
+      if(guided){
         if(s.stage==='arrival')w.playerPos.set(-6.5,1.04,4.8);
-        s.started=true;G.save();w.diveAnim=null;w.setCinematic(null);w.setCloudOpen(1,true);w.setMode('walk');w.recentre(true);
-        this.frameIsland(true);
+        s.started=true;G.save();w.diveAnim=null;w.setCinematic(null);w.setCloudOpen(1,true);
         if(['arrival','hq'].includes(s.stage)){
           if(!this.guide){this.guide=w.createCharacter('xiaomei');w.scene.add(this.guide.group);}
           this.guide.group.visible=true;
           this.guide.group.position.set(-7,1.04,1.4);this.guide.group.rotation.y=.4;
         }
-        $('isl-status').classList.remove('show');
+      }
+      if(guided||!w.archipelago){
+        if(this.mapView==='follow')w.diveAnim=null;
+        if(w.mode!==this.mapView||w.archipelago)w.setMode(this.mapView);
+        if(guided){
+          if(w.mode==='follow')this.faceFollowGoal(this.target(),s.stage==='arrival');
+          else w.recentre(true);
+          $('isl-status').classList.remove('show');
+        }
       }
       this.render();
     },
@@ -86,13 +98,20 @@
       const goal=this.target();this.near=!!goal&&Math.hypot(PQIsland.playerPos.x-goal.x,PQIsland.playerPos.z-goal.z)<this.reach();
       $('journey-go').textContent=r[this.near?4:3]+(this.near?' · E':' →');
     },
-    frameIsland(snap=false){
-      // Keep the island readable throughout the outdoor introduction.
-      PQIsland.frameWalk(snap);
+    faceFollowGoal(goal,turnPlayer=false){
+      if(!goal)return false;
+      const w=PQIsland,x=goal.x-w.playerPos.x,z=goal.z-w.playerPos.z;
+      if(Math.hypot(x,z)<.4)return false;
+      const yaw=Math.atan2(x,z);
+      if(turnPlayer)w.playerYaw=yaw;
+      w.followView={...w.followView,azimuth:yaw+Math.PI};
+      w.followDistance=NaN;
+      return true;
     },
     locate(){
-      const w=PQIsland;w.setMode('walk');w.recentre();
-      this.frameIsland();
+      const w=PQIsland;
+      if(!w.isOnFoot)w.setMode(this.mapView==='follow'?'follow':'walk');
+      if(w.mode!=='follow'||!this.guided()||!this.faceFollowGoal(this.target()))w.recentre();
       this.markerUntil=performance.now()+4000;
       if(this.guided())$('isl-status').classList.remove('show');
     },
@@ -102,8 +121,8 @@
     },
     walkTo(goal){
       const w=PQIsland,path=PQWorldMap.findPath(w.playerPos,goal,PQ.buildings);if(!path){w.setStatus('先回到道路上，再点击继续引导。',3000);return;}
-      // Starting a route must preserve the player's chosen distance and angle.
-      if(w.mode!=='walk'){w.setMode('walk');if(this.guided())this.frameIsland();}
+      if(!w.isOnFoot)w.setMode(this.mapView==='follow'?'follow':'walk');
+      if(w.mode==='follow'&&!this.faceFollowGoal(path[0]))this.faceFollowGoal(goal);
       w.walkPath=path.map(p=>({...p}));w.walkGoal=w.walkPath.shift();
       w.goalRing.position.set(goal.x,1.08,goal.z);w.goalRing.visible=true;
       this.clearRoute();

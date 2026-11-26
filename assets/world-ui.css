@@ -54,7 +54,7 @@
  top:calc(100px + env(safe-area-inset-top,0px));bottom:auto;box-sizing:border-box;
  width:max-content;max-width:calc(100% - 28px);
 }
-#isl-joy{left:25px;bottom:230px;opacity:.7;}
+#isl-joy{opacity:.85;}
 #isl-prompt{bottom:130px;}
 #exp-photo-exit{display:none;}
 .photo-mode #island-labels,.photo-mode #map-screen>*{visibility:hidden;}
@@ -79,7 +79,6 @@ button:focus-visible,select:focus-visible{outline:2px solid #f0ca81;outline-offs
   #exp-region{font-size:14px;margin:2px 0 8px;}
   .exp-controls{padding-top:8px;justify-content:space-between;}
   #map-foot{bottom:12px;padding:5px 8px;}
-  #isl-joy{bottom:205px;left:16px;}
   #isl-status{bottom:188px;font-size:10px;max-width:calc(100% - 28px);}
   #isl-prompt,#exp-interact{bottom:215px;left:auto;right:14px;transform:none;max-width:205px;white-space:normal;padding:11px;font-size:11px;}
   #exp-journal-panel{left:14px;right:14px;width:auto;top:152px;max-height:calc(100% - 220px);padding:24px;}

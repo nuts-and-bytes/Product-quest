@@ -10,8 +10,7 @@
 #campaign-detail{margin-top:12px;border-top:1px solid #d6cb9b30;padding-top:4px}
 #campaign-detail p{margin:10px 0 12px}
 #campaign-detail button{width:100%}
-#game[data-screen="map-screen"] #journey-tools{bottom:20px;right:20px;z-index:25;flex-wrap:wrap;max-width:calc(100% - 130px);justify-content:flex-end}
-#game[data-screen="map-screen"] #isl-joy{bottom:20px;left:20px}
+#game[data-screen="map-screen"] #journey-tools{bottom:20px;right:20px;z-index:25;flex-wrap:wrap;max-width:calc(100% - 40px);justify-content:flex-end}
 #game[data-screen="map-screen"] #isl-toolbar{top:auto;bottom:82px;right:20px;left:auto;max-width:min(620px,calc(100% - 40px));z-index:26}
 #world-drawer{position:absolute;z-index:26;bottom:82px;right:20px;width:min(360px,calc(100% - 40px));max-height:calc(100dvh - 180px);overflow:auto;padding:18px;border:1px solid #c5d4bb48;border-radius:14px;background:#152e36f5;box-shadow:0 16px 50px #07192366;color:#e8ead9;backdrop-filter:blur(16px)}
 #world-drawer #expedition-hud,#world-drawer #map-foot{position:static;inset:auto;transform:none;width:auto;min-width:0;max-width:none;margin:0;padding:0;border:0;background:none;box-shadow:none;backdrop-filter:none}
@@ -27,15 +26,15 @@
 #player-marker:after{display:none}
 #player-marker{z-index:11}
 .photo-mode #world-target,.photo-mode #world-label-lines,.photo-mode #world-drawer{visibility:hidden}
-.guided-mode #world-view-toggle,.guided-mode #world-more-toggle{display:none}
+.guided-mode #world-more-toggle{display:none}
 #game[data-screen="map-screen"] #isl-prompt,#game[data-screen="map-screen"] #exp-interact{bottom:84px;max-width:calc(100% - 40px)}
 @media(max-width:600px){
   #campaign-route{left:12px;top:12px;width:calc(100% - 24px);padding:10px 14px;max-height:calc(100dvh - 160px)}
   #campaign-route h2{font-size:17px;margin:2px 0 8px}
   #campaign-route .campaign-summary{display:flex}
-  #game[data-screen="map-screen"] #journey-tools{right:12px;bottom:16px;max-width:calc(100% - 116px);gap:5px}
+  #game[data-screen="map-screen"] #journey-tools{right:12px;bottom:16px;max-width:calc(100% - 24px);gap:5px}
   #journey-tools button{min-height:44px;padding:8px 10px;font-size:11px}
-  #game[data-screen="map-screen"] #isl-joy{left:12px;bottom:18px;width:76px;height:76px}
+  #isl-joy{width:76px;height:76px}
   #game[data-screen="map-screen"] #isl-toolbar{left:12px;right:12px;bottom:122px;max-width:none;justify-content:flex-start;flex-wrap:wrap;padding:8px}
   #isl-toolbar .isl-tool{min-height:40px;font-size:11px}
   #world-drawer{left:12px;right:12px;bottom:122px;width:auto;max-height:calc(100dvh - 150px)}

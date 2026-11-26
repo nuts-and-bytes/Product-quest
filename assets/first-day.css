@@ -13,8 +13,7 @@
 #journey-tools{position:absolute;right:24px;bottom:88px;z-index:12;display:flex;gap:7px;}
 #journey-tools button{background:#172f38df;border:1px solid #d5d7bc33;color:#dfdfc9;padding:9px 13px;backdrop-filter:blur(12px);}
 .guided-mode #journey-tools{bottom:24px;}
-.guided-mode #isl-hud-left,.guided-mode #isl-toolbar,.guided-mode #expedition-hud,.guided-mode #map-foot,.guided-mode #island-labels,.guided-mode #isl-prompt,.guided-mode #exp-interact,.guided-mode #isl-status{display:none!important;}
-.guided-mode #isl-joy{bottom:27px;left:28px;}
+.guided-mode #isl-hud-left,.guided-mode #expedition-hud,.guided-mode #map-foot,.guided-mode #island-labels,.guided-mode #isl-prompt,.guided-mode #exp-interact,.guided-mode #isl-status{display:none!important;}
 #player-marker{position:absolute;top:0;left:0;z-index:9;pointer-events:none;display:flex;align-items:center;gap:6px;background:#253d40df;color:#fff0c9;border:1px solid #e0c18a;border-radius:20px;padding:5px 10px;font:10px Inter,"PingFang SC",sans-serif;box-shadow:0 2px 12px #17232e3a;white-space:nowrap;}
 #player-marker:after{content:"";position:absolute;bottom:-7px;left:calc(50% - 4px);border-left:4px solid transparent;border-right:4px solid transparent;border-top:6px solid #e0c18a;}
 #player-marker i{height:6px;width:6px;background:#edcf93;transform:rotate(45deg);}
@@ -79,8 +78,7 @@
   #journey-hud p{font-size:11px;margin-bottom:12px;}
   #journey-tools{bottom:235px;right:14px;gap:5px;}
   #journey-tools button{padding:8px 11px;font-size:10px;}
-  .guided-mode #journey-tools{bottom:22px;left:118px;right:14px;flex-wrap:wrap;justify-content:flex-end;}
-  .guided-mode #isl-joy{bottom:24px;left:14px;}
+  .guided-mode #journey-tools{bottom:22px;right:14px;flex-wrap:wrap;justify-content:flex-end;}
   #journey-dialog{bottom:14px;width:calc(100% - 28px);padding:18px 20px;max-height:49dvh;}
   #journey-text{font-size:14px;line-height:1.9;}
   #journey-speaker{font-size:16px;margin:8px 0;}

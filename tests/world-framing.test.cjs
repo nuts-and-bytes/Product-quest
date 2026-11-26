@@ -7,6 +7,28 @@ test('outdoor walking starts high and bounds imported or extreme camera input',(
   assert.deepEqual(F.walkView({radius:NaN,polar:Infinity,azimuth:NaN}),F.walkView());
   assert.deepEqual(F.walkView({radius:61,polar:.7,azimuth:2}),{radius:61,polar:.7,azimuth:2});
 });
+test('character follow starts behind the player with a low, shoulder-offset view',()=>{
+  const player={x:5,y:1.04,z:9};
+  const view=F.followView({azimuth:Math.PI});
+  const {pivot,target,camera}=F.followPose(player,view);
+  assert.ok(camera.z<player.z-4.8 && camera.z>player.z-5.5);
+  assert.ok(camera.y<player.y+2.4);
+  assert.equal(pivot.x,player.x);
+  assert.ok(target.x<pivot.x && Math.abs(camera.x-target.x)<1e-8);
+  assert.ok(F.followView({radius:30,polar:2}).radius<15);
+  assert.ok(F.followView({radius:1,polar:2}).polar<Math.PI/2);
+});
+test('character follow pulls in on contact and eases back out at either frame rate',()=>{
+  const home=7.2;
+  const blocked=F.followClearance(home,2.2,home,1/60);
+  assert.ok(blocked>1 && blocked<2.2);
+  let at60=blocked,at30=blocked;
+  for(let i=0;i<30;i++)at60=F.followClearance(home,Infinity,at60,1/60);
+  for(let i=0;i<15;i++)at30=F.followClearance(home,Infinity,at30,1/30);
+  assert.ok(at60>blocked && at60<home);
+  assert.ok(Math.abs(at60-at30)<1e-8);
+  assert.equal(F.followClearance(home,Infinity,blocked,1/60,true),home);
+});
 test('labels avoid the mission panel, hero and previously placed labels across viewports',()=>{
   for(const screen of [{width:1440,height:1000},{width:390,height:844},{width:320,height:740}]){
     const occupied=[{x:12,y:12,width:Math.min(286,screen.width-24),height:142},{x:screen.width/2-20,y:screen.height/2-20,width:40,height:60}];

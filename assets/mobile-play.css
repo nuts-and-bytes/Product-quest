@@ -3,6 +3,7 @@
 #play-safe-probe{position:fixed;visibility:hidden;pointer-events:none;padding:var(--device-safe-top) var(--device-safe-right) var(--device-safe-bottom) var(--device-safe-left)}
 .mobile-play-button[hidden],#mobile-play-hint[hidden]{display:none!important}
 .mobile-play-button{min-height:44px!important;padding:8px 12px!important;border:1px solid #c9d1ad44;border-radius:8px;background:#21453ee8;color:#e9ddba;font:12px/1.5 system-ui,sans-serif!important;cursor:pointer;white-space:nowrap;touch-action:manipulation}
+#journey-tools .mobile-play-button{background:#e4c996;color:#223c3c;border-color:#f2dcaf}
 #mobile-play-hint{position:absolute;bottom:calc(var(--play-bottom) + 112px);left:var(--play-left);right:var(--play-right);display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:8px;padding:8px 10px;border:1px solid #d2c49555;border-radius:12px;background:#173b36f2;color:#ddd9bd;z-index:28;font:12px/1.6 system-ui,sans-serif}
 #mobile-play-hint button{min-height:44px;padding:8px 12px;background:#e6cf9d;color:#254439;border:0;border-radius:7px;font:inherit;cursor:pointer}#mobile-play-hint button:last-child{background:none;color:#d3d9c7}
 #mobile-play-status{position:absolute;z-index:100;bottom:calc(var(--play-bottom) + 90px);left:50%;transform:translateX(-50%);max-width:min(440px,calc(100% - var(--play-left) - var(--play-right)));padding:10px 16px;background:#e9d8b1;color:#253f37;border-radius:9px;font:13px/1.7 system-ui,sans-serif;pointer-events:none}#mobile-play-status:empty{display:none}
@@ -12,7 +13,6 @@
 .chapter-bench-actions{position:sticky;bottom:-22px;background:#193b35;padding:10px 0;z-index:2}
 #landing #land-story{transition:opacity .28s}
 #game[data-screen="map-screen"] #journey-tools{right:max(20px,var(--device-safe-right));bottom:max(20px,var(--device-safe-bottom))}
-#game[data-screen="map-screen"] #isl-joy{left:max(20px,var(--device-safe-left));bottom:max(20px,var(--device-safe-bottom))}
 #campaign-route,#journey-hud{left:max(14px,var(--device-safe-left));top:max(14px,var(--device-safe-top))}
 #chapter-top,#market-top,#case-topbar{left:max(16px,var(--device-safe-left));right:max(16px,var(--device-safe-right));top:var(--play-top)}
 #life-film header{left:max(20px,var(--device-safe-left));right:max(20px,var(--device-safe-right));top:var(--play-top)}
@@ -34,8 +34,8 @@
   #campaign-route h2{font-size:16px;margin:2px 0 7px}#campaign-route .campaign-summary{gap:4px}
   #journey-hud{width:260px;right:auto;padding:12px 15px;max-height:calc(100dvh - var(--play-top) - var(--play-bottom) - 96px);overflow:auto}
   #journey-hud h2{font-size:18px;line-height:1.5;margin:6px 0}#journey-hud p{font-size:11px;margin-bottom:10px}.journey-eyebrow{font-size:9px}
-  #game[data-screen="map-screen"] #isl-joy{width:76px;height:76px;left:var(--play-left);bottom:var(--play-bottom)}
-  #game[data-screen="map-screen"] #journey-tools{left:auto;right:var(--play-right);bottom:var(--play-bottom);max-width:calc(100% - var(--play-left) - var(--play-right) - 96px);gap:5px}
+  #isl-joy{width:76px;height:76px}
+  #game[data-screen="map-screen"] #journey-tools{left:auto;right:var(--play-right);bottom:var(--play-bottom);max-width:calc(100% - var(--play-left) - var(--play-right));gap:5px}
   #journey-tools button{font-size:11px;padding:8px 11px;min-height:44px}
   #game[data-screen="map-screen"] #isl-toolbar{left:auto;right:var(--play-right);bottom:calc(var(--play-bottom) + 56px);max-width:calc(100% - var(--play-left) - var(--play-right));gap:2px}
   #isl-toolbar .isl-tool{font-size:11px;min-height:44px;padding:6px 8px}
