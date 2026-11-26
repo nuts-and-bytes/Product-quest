@@ -3409,13 +3409,6 @@
       this.scene.fog.density = c.fogDensity;
       if (this.ocean) this.ocean.material.color.copy(c.ocean);
       this.sunLight.color.copy(c.sunColor);
-      // Dynamic shadow-camera follow (threejs-materials-lighting): snap to 2m grid so far islands keep crisp shadows without shimmer.
-      const focusAnchor = (!this.cinematicMode && (this.mode === 'walk' || this.mode === 'fp') && this.playerPos) ? this.playerPos : this.camCurTarget;
-      const sx = Math.round((focusAnchor?.x || 0) * 0.5) * 2;
-      const sz = Math.round((focusAnchor?.z || 0) * 0.5) * 2;
-      this.sunLight.target.position.set(sx, 0, sz);
-      this.sunLight.target.updateMatrixWorld();
-      this.sunLight.position.set(c.sunPos.x + sx, c.sunPos.y, c.sunPos.z + sz);
       this.sunLight.intensity = c.sunInt;
       this.hemiLight.color.copy(c.hemiSky);
       this.hemiLight.groundColor.copy(c.hemiGround);
@@ -3684,7 +3677,7 @@
       });
       if (this.npcRigs) {
         const pPos = this.playerPos;
-        const nearActive = (this.mode === 'walk' || this.mode === 'fp') && pPos;
+        const nearActive = this.isOnFoot && pPos;
         this.npcRigs.forEach((n) => {
           animateRig(n.rig, false, tSec, n.phase);
           if (nearActive && n.rig.group.visible) {
@@ -3874,6 +3867,7 @@
         this.spherical.azimuth += dt * 0.06;
       }
 
+      if (this._trauma > 0) this._trauma = Math.max(0, this._trauma - 1.6 * dt);
       if (this.mode === 'fp' && !this.cinematicMode && !this.diveAnim) {
         const bob = this._playerMoving ? Math.abs(Math.sin(tSec * 10.5)) * 0.14 : 0;
         const ex = this.playerPos.x;
@@ -3927,7 +3921,6 @@
       let cz = this.camCurTarget.z + r * Math.sin(p) * Math.cos(a);
       // Decaying trauma^2 camera micro-shake (game-feel + camera-systems: visual offset only, respects reducedMotion)
       if (this._trauma > 0 && !this.environment?.reducedMotion) {
-        this._trauma = Math.max(0, this._trauma - 1.6 * dt);
         const shake = this._trauma * this._trauma * 0.42;
         const st = tSec * 32;
         cx += Math.sin(st * 1.7) * shake;

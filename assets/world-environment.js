@@ -511,9 +511,12 @@
       this.systems.forEach(s=>{s.mesh.material.uniforms.uOpacity.value=s.kind===0?night*.9+.05:s.kind===2?.5+day*.45:s.kind===4?.18+day*.45:.45+day*.4;});
       this.lods.forEach(l=>{const distant=w.camera.position.distanceTo(l.rig.group.position)>(this.tier===0?15:25);if(l.active!==distant){l.children.forEach(c=>c.visible=!distant);l.far.visible=distant;l.active=distant;}});
       const walking=!w.archipelago&&!w.cinematicMode&&w.isOnFoot;
-      const target=walking?w.playerPos:new T.Vector3(w.camCurTarget.x,0,w.camCurTarget.z),span=walking?30:w.archipelago?100:60;
+      const target=walking?w.playerPos:w.camCurTarget,span=walking?30:w.archipelago?100:60;
       const sc=w.sunLight.shadow.camera;if(sc.right!==span){sc.left=sc.bottom=-span;sc.right=sc.top=span;sc.far=260;sc.near=1;sc.updateProjectionMatrix();}
-      w.sunLight.target.position.set(target.x,0,target.z);w.sunLight.position.copy(c.sunPos).add(w.sunLight.target.position);
+      // Snap the shadow camera to a 2m grid to reduce shimmer as the player walks.
+      w.sunLight.target.position.set(Math.round(target.x/2)*2,0,Math.round(target.z/2)*2);
+      w.sunLight.target.updateMatrixWorld();
+      w.sunLight.position.copy(c.sunPos).add(w.sunLight.target.position);
       if(!this.reducedMotion){
         this.waterWheel.rotation.z=t*.62;
         this.ferry.rotation.x=.035*Math.sin(t*1.35);
