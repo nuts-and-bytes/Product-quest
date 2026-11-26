@@ -5,11 +5,21 @@
   class WorldVisibility {
     constructor(world){
       this.world=world;this.scene=world.scene;this.entries=[];this.ray=new T.Raycaster();this.point=new T.Vector3();this.direction=new T.Vector3();
+      this.cameraBlockers=[];
       this.enabled={value:0};this.viewport={value:new T.Vector2(1,1)};
       this.targets={value:[new T.Vector4(-2,-2,0,0),new T.Vector4(-2,-2,0,0)]};
       this.screen={width:1,height:1};this.obstacles=[];this.sizes=new WeakMap();this.sides=new WeakMap();this.offset=new T.Vector2();this.nextScan=0;this.nextMeasure=0;
       this.scene.updateMatrixWorld(true);
-      this.scene.traverse(mesh=>{if(mesh.isMesh&&mesh.userData.pqOccluder)this.register(mesh);});
+      this.scene.traverse(mesh=>{
+        if(!mesh.isMesh)return;
+        if(mesh.userData.pqOccluder){
+          this.register(mesh);
+          if(!mesh.userData.pqMovingOccluder)this.cameraBlockers.push(this.entries.at(-1));
+        }else if(mesh.userData.pqFollowBlocker){
+          mesh.geometry.computeBoundingBox();
+          this.cameraBlockers.push({mesh,box:mesh.geometry.boundingBox.clone().applyMatrix4(mesh.matrixWorld)});
+        }
+      });
     }
     get active(){return $('map-screen')?.classList.contains('active')&&!this.world.cinematicMode&&!this.world.archipelago&&!window.PQStory3D?.active&&!window.PQLifeFilm?.active;}
     register(mesh){
@@ -64,7 +74,7 @@
       const leader=document.createElementNS('http://www.w3.org/2000/svg','svg');leader.id='world-label-lines';leader.setAttribute('aria-hidden','true');$('game').append(leader);this.leader=leader;
       this.lines=[0,1,2].map(()=>{const l=document.createElementNS(leader.namespaceURI,'line');leader.append(l);return l;});
     }
-    stopWalking(){const w=this.world;w.keys={};w.walkGoal=null;w.walkPath=[];w.joyVec={x:0,z:0};}
+    stopWalking(){const w=this.world;w.resetInput();w.walkGoal=null;w.walkPath=[];}
     closeMenus(){
       for(const [panel,button] of [['world-drawer','world-more-toggle'],['isl-toolbar','world-view-toggle']]){
         const el=$(panel);if(el&&!el.hidden){el.hidden=true;$(button)?.setAttribute('aria-expanded','false');this.nextMeasure=0;}
@@ -85,7 +95,7 @@
     measure(now){
       if(now<this.nextMeasure)return;this.nextMeasure=now+160;
       const el=this.world.renderer.domElement,rect=el.getBoundingClientRect();this.screen={width:rect.width,height:rect.height};this.obstacles=[];
-      const ids=['campaign-route','journey-hud','journey-dialog','isl-toolbar','journey-tools','world-drawer','bpanel','exp-journal-panel','isl-prompt','exp-interact','isl-status','isl-joy','mobile-play-hint','mobile-play-status'];
+      const ids=['campaign-route','journey-hud','journey-dialog','isl-toolbar','journey-tools','world-drawer','bpanel','exp-journal-panel','isl-prompt','exp-interact','isl-status','mobile-play-hint','mobile-play-status'];
       for(const id of ids){
         const node=$(id);if(!node||node.hidden||(id==='bpanel'&&!node.classList.contains('open')))continue;
         const style=getComputedStyle(node);if(style.display==='none'||style.visibility==='hidden'||Number(style.opacity)===0)continue;
@@ -103,6 +113,25 @@
       return this.followPoint;
     }
     resetFollow(){this.followPoint=null;}
+    followBlockerDistance(from,to){
+      this.direction.subVectors(to,from);
+      const distance=this.direction.length();
+      if(!distance)return Infinity;
+      this.ray.set(from,this.direction.multiplyScalar(1/distance));
+      this.ray.far=distance+.42;
+      let nearest=Infinity;
+      for(const box of this.world.followTerrain){
+        const hit=this.ray.ray.intersectBox(box,this.point);
+        if(hit)nearest=Math.min(nearest,hit.distanceTo(from));
+      }
+      this.ray.far=Math.min(this.ray.far,nearest);
+      const candidates=this.cameraBlockers.filter(({mesh,box})=>{
+        const hit=mesh.visible&&this.ray.ray.intersectBox(box,this.point);
+        return hit&&(box.containsPoint(from)||hit.distanceTo(from)<=this.ray.far);
+      });
+      const hits=this.ray.intersectObjects(candidates.map(({mesh})=>mesh),false);
+      return Math.min(nearest,hits[0]?.distance??Infinity);
+    }
     throughCutout(buildingId,x,y){
       if(!this.active||!this.enabled.value)return false;
       const group=this.world.buildings[buildingId]?.group;
@@ -114,9 +143,12 @@
     frame(dt,now){
       this.installUI();
       if(!this.active){this.suspend();if(!this.world.cinematicMode&&!window.PQStory3D?.active&&!window.PQLifeFilm?.active)this.world.camera.clearViewOffset();return;}
-      if(window.PQFirstDay?.guided())this.closeMenus();
+      const drawer=$('world-drawer');
+      if(window.PQFirstDay?.guided()&&drawer?.hidden===false){
+        drawer.hidden=true;$('world-more-toggle').setAttribute('aria-expanded','false');this.nextMeasure=0;
+      }
       this.measure(now);const w=this.world;
-      const desired=w.mode==='walk'?this.anchor:{x:this.screen.width/2,y:this.screen.height/2};
+      const desired=w.mode==='walk'||w.mode==='follow'?this.anchor:{x:this.screen.width/2,y:this.screen.height/2};
       const k=w.environment.reducedMotion?1:1-Math.exp(-dt*5);
       this.offset.x+=(this.screen.width/2-desired.x-this.offset.x)*k;this.offset.y+=(this.screen.height/2-desired.y-this.offset.y)*k;
       if(Math.abs(this.offset.x)+Math.abs(this.offset.y)>.2)w.camera.setViewOffset(this.screen.width,this.screen.height,this.offset.x,this.offset.y,this.screen.width,this.screen.height);

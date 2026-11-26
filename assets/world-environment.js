@@ -52,7 +52,8 @@
       this.quality='auto';
       try{this.quality=localStorage.getItem('pq-graphics')||'auto';}catch(e){}
       if(!['auto','cinema','balanced','eco'].includes(this.quality))this.quality='auto';
-      this.governor=new PQQualityGovernor(innerWidth<700?1:2);this.lastFrame=0;this.warmup=performance.now()+5000;
+      this.touchGraphics=matchMedia('(pointer: coarse)').matches||(navigator.maxTouchPoints>0&&matchMedia('(hover: none)').matches);
+      this.governor=new PQQualityGovernor(PQWorldQuality.initialTier(this.touchGraphics,innerWidth));this.lastFrame=0;this.warmup=performance.now()+5000;
       this.createSky();this.createWater();this.batchRoads();this.createBridges();this.createBiomes();this.createFoliage();this.createParticles();this.createPost();this.createBuildingRewards();this.createUI();
       this.prepareLods();this.setQuality(this.quality,false);
       world.scene.add(world.sunLight.target);
@@ -168,6 +169,7 @@
       W.regions.forEach((r,ri)=>{
         if(r.settlement){
           const {district,moving}=PQSettlements.build(r,bake);
+          if(district.children[0])district.children[0].userData.pqFollowBlocker=true;
           if(r.id==='growth')this.waterWheel=moving;
           else this.ferry=moving;
           this.scene.add(district);
@@ -284,7 +286,7 @@
       this.shafts=make(`varying vec2 vUv;uniform sampler2D uDepth;uniform vec2 uLight;uniform vec3 uColor;uniform float uStrength;void main(){vec2 delta=(uLight-vUv)/20.;vec2 uv=vUv;float light=0.,decay=1.;for(int i=0;i<20;i++){uv+=delta;float inside=step(0.,uv.x)*step(uv.x,1.)*step(0.,uv.y)*step(uv.y,1.);light+=step(.9999,texture2D(uDepth,clamp(uv,vec2(0.),vec2(1.))).r)*decay*inside;decay*=.94;}float falloff=1.-smoothstep(.05,1.1,distance(vUv,uLight));gl_FragColor=vec4(uColor*light*.012*falloff*uStrength,1.);}`,
         {uDepth:{value:this.target.depthTexture},uLight:{value:new T.Vector2()},uColor:{value:color('#ffe2ac')},uStrength:{value:0}});
       this.sunScreen=new T.Vector3();
-      this.composite=make(`varying vec2 vUv;uniform sampler2D uScene,uBloom,uDepth,uRays;uniform float uExposure,uBloomStrength,uCinema,uFocus,uNight;uniform vec2 uPixel;uniform mat4 uInvProjection;
+      this.composite=make(`varying vec2 vUv;uniform sampler2D uScene,uBloom,uDepth,uRays;uniform float uExposure,uBloomStrength,uCinema,uDistanceBlur,uFocus,uNight;uniform vec2 uPixel;uniform mat4 uInvProjection;
         vec3 viewPosition(vec2 uv){float d=texture2D(uDepth,clamp(uv,vec2(.001),vec2(.999))).x;vec4 p=uInvProjection*vec4(uv*2.-1.,d*2.-1.,1.);return p.xyz/max(.00001,p.w);}
         void main(){vec3 c=texture2D(uScene,vUv).rgb;vec3 p=viewPosition(vUv);float z=-p.z;
           if(uCinema>.5){
@@ -294,9 +296,11 @@
               vec3 delta=viewPosition(vUv+off)-p;float len=length(delta);
               ao+=max(0.,dot(n,delta/max(.001,len))-.12)*(1.-smoothstep(.15,2.5,len));}
             c*=1.-clamp(ao*.13,0.,.24);
-            float dof=smoothstep(uFocus+26.,uFocus+115.,z)*.28;
-            vec2 o=uPixel*1.6;vec3 soft=(texture2D(uScene,vUv+vec2(o.x,o.y)).rgb+texture2D(uScene,vUv+vec2(-o.x,o.y)).rgb+texture2D(uScene,vUv-vec2(o.x,o.y)).rgb+texture2D(uScene,vUv+vec2(o.x,-o.y)).rgb)*.25;
-            c=mix(c,soft,dof);
+            if(uDistanceBlur>.5){
+              float dof=smoothstep(uFocus+26.,uFocus+115.,z)*.28;
+              vec2 o=uPixel*1.6;vec3 soft=(texture2D(uScene,vUv+vec2(o.x,o.y)).rgb+texture2D(uScene,vUv+vec2(-o.x,o.y)).rgb+texture2D(uScene,vUv-vec2(o.x,o.y)).rgb+texture2D(uScene,vUv+vec2(o.x,-o.y)).rgb)*.25;
+              c=mix(c,soft,dof);
+            }
           }
           c+=texture2D(uBloom,vUv).rgb*uBloomStrength;
           if(uCinema>.5)c+=texture2D(uRays,vUv).rgb;
@@ -306,7 +310,7 @@
           c*=mix(vec3(.96,1.005,1.025),vec3(1.025,1.,.975),smoothstep(.18,.75,l)*(1.-uNight*.6));
           float vignette=1.-.15*smoothstep(.23,.76,length(vUv-.5));c=clamp(c*vignette,0.,1.);
           c=mix(c*12.92,1.055*pow(c,vec3(1./2.4))-.055,step(vec3(.0031308),c));gl_FragColor=vec4(c,1.);}`,
-          {uScene:{value:this.target.texture},uBloom:{value:this.bloomB.texture},uDepth:{value:this.target.depthTexture},uRays:{value:this.rays.texture},uExposure:{value:1},uBloomStrength:{value:.27},uCinema:{value:1},uFocus:{value:60},uNight:{value:0},uPixel:{value:new T.Vector2()},uInvProjection:{value:new T.Matrix4()}});
+        {uScene:{value:this.target.texture},uBloom:{value:this.bloomB.texture},uDepth:{value:this.target.depthTexture},uRays:{value:this.rays.texture},uExposure:{value:1},uBloomStrength:{value:.27},uCinema:{value:1},uDistanceBlur:{value:this.touchGraphics?0:1},uFocus:{value:60},uNight:{value:0},uPixel:{value:new T.Vector2()},uInvProjection:{value:new T.Matrix4()}});
     }
 
     setQuality(value,notify=true){
@@ -319,12 +323,11 @@
     }
 
     applyTier(tier){
-      this.tier=tier;const r=this.world.renderer,cinema=tier===2,eco=tier===0;
-      // Resolution is bounded even on a Retina display; the frame governor can reduce it further.
-      r.setPixelRatio(Math.min(devicePixelRatio||1,eco?.85:cinema?1.6:1.15));
-      const size=eco?1024:2048;
+      this.tier=tier;const cinema=tier===2,eco=tier===0;
+      this.postProcessing=this.hdr&&PQWorldQuality.usePostProcessing(tier,this.quality,this.touchGraphics);
+      const size=eco||(this.touchGraphics&&!this.postProcessing)?1024:2048;
       if(this.world.sunLight.shadow.mapSize.x!==size){this.world.sunLight.shadow.mapSize.set(size,size);if(this.world.sunLight.shadow.map){this.world.sunLight.shadow.map.dispose();this.world.sunLight.shadow.map=null;}}
-      const samples=eco?0:cinema?4:2;
+      const samples=!this.postProcessing?0:cinema?4:2;
       if(this.target.samples!==samples){this.target.dispose();this.target.samples=samples;}
       this.grass.count=Math.floor(this.grassCount*(eco?.3:cinema?1:.65));
       this.systems.forEach(s=>s.mesh.geometry.setDrawRange(0,Math.floor(s.count*(eco?.25:cinema?1:.6))));
@@ -342,7 +345,10 @@
 
 
     resize(w,h){
-      const ratio=this.world.renderer.getPixelRatio();this.target.setSize(Math.round(w*ratio),Math.round(h*ratio));
+      const r=this.world.renderer;
+      const ratio=PQWorldQuality.renderPixelRatio(this.tier,devicePixelRatio,this.touchGraphics,w,h);
+      if(r.getPixelRatio()!==ratio)r.setPixelRatio(ratio);
+      this.target.setSize(Math.round(w*ratio),Math.round(h*ratio));
       this.bloomA.setSize(Math.max(1,Math.round(w*ratio/4)),Math.max(1,Math.round(h*ratio/4)));this.bloomB.setSize(this.bloomA.width,this.bloomA.height);this.rays.setSize(this.bloomA.width,this.bloomA.height);
       this.systems.forEach(s=>s.mesh.material.uniforms.uScale.value=h*ratio*.75);
       this.composite.uniforms.uPixel.value.set(1/(w*ratio),1/(h*ratio));
@@ -487,7 +493,7 @@
       this.waterUniforms.uSky.value.copy(c.sky).lerp(c.fog,.4);this.waterUniforms.uSun.value.copy(c.sunPos);this.waterUniforms.uSunColor.value.copy(c.sunColor);this.waterUniforms.uNight.value=night;
       w.fireflies.visible=false;
       this.composite.uniforms.uInvProjection.value.copy(w.camera.projectionMatrixInverse);
-      this.composite.uniforms.uFocus.value=w.curSpherical.radius;
+      this.composite.uniforms.uFocus.value=w.mode==='follow'&&!w.cinematicMode&&!w.diveAnim?w.followDistance:w.curSpherical.radius;
       this.composite.uniforms.uNight.value=night;
       this.composite.uniforms.uBloomStrength.value=this.tier===2?.30:.20;
       if(this.celebration){
@@ -504,10 +510,13 @@
       this.lanternMat.color.set('#ffd69a').multiplyScalar(.75+night*1.9);
       this.systems.forEach(s=>{s.mesh.material.uniforms.uOpacity.value=s.kind===0?night*.9+.05:s.kind===2?.5+day*.45:s.kind===4?.18+day*.45:.45+day*.4;});
       this.lods.forEach(l=>{const distant=w.camera.position.distanceTo(l.rig.group.position)>(this.tier===0?15:25);if(l.active!==distant){l.children.forEach(c=>c.visible=!distant);l.far.visible=distant;l.active=distant;}});
-      const walking=!w.archipelago&&!w.cinematicMode&&(w.mode==='walk'||w.mode==='fp');
-      const target=walking?w.playerPos:new T.Vector3(w.camCurTarget.x,0,w.camCurTarget.z),span=walking?30:w.archipelago?100:60;
+      const walking=!w.archipelago&&!w.cinematicMode&&w.isOnFoot;
+      const target=walking?w.playerPos:w.camCurTarget,span=walking?30:w.archipelago?100:60;
       const sc=w.sunLight.shadow.camera;if(sc.right!==span){sc.left=sc.bottom=-span;sc.right=sc.top=span;sc.far=260;sc.near=1;sc.updateProjectionMatrix();}
-      w.sunLight.target.position.set(target.x,0,target.z);w.sunLight.position.copy(c.sunPos).add(w.sunLight.target.position);
+      // Snap the shadow camera to a 2m grid to reduce shimmer as the player walks.
+      w.sunLight.target.position.set(Math.round(target.x/2)*2,0,Math.round(target.z/2)*2);
+      w.sunLight.target.updateMatrixWorld();
+      w.sunLight.position.copy(c.sunPos).add(w.sunLight.target.position);
       if(!this.reducedMotion){
         this.waterWheel.rotation.z=t*.62;
         this.ferry.rotation.x=.035*Math.sin(t*1.35);
@@ -532,7 +541,7 @@
     render(){
       const w=this.world,r=w.renderer;
       r.info.reset();r.info.autoReset=false;
-      if(this.tier===0||!this.hdr){r.setRenderTarget(null);r.render(w.scene,w.camera);return;}
+      if(!this.postProcessing){r.setRenderTarget(null);r.render(w.scene,w.camera);return;}
       r.setRenderTarget(this.target);r.render(w.scene,w.camera);
       const pass=(mat,target)=>{this.quad.material=mat;r.setRenderTarget(target);r.render(this.postScene,this.postCamera);};
       if(this.tier===2)pass(this.shafts,this.rays);

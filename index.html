@@ -395,13 +395,13 @@
   #map-foot .pxbtn.small{font-size:11.5px; padding:6px 10px; border-width:2px; box-shadow:none; white-space:nowrap;}
   #map-foot .pxbtn.small:hover{transform:translateY(-1px);}
 
-  /* 移动端漫步虚拟摇杆 */
+  /* 触摸开始时在落点显示移动方向。 */
   #isl-joy{
-    position:absolute; left:20px; bottom:78px; z-index:11;
+    position:absolute; z-index:11; transform:translate(-50%,-50%);
     width:92px; height:92px; border-radius:50%;
     background:rgba(255,255,255,0.28); backdrop-filter:blur(6px);
     border:2px solid rgba(255,255,255,0.65); box-shadow:0 6px 20px rgba(0,0,0,0.2);
-    display:none; align-items:center; justify-content:center; touch-action:none;
+    display:none; align-items:center; justify-content:center; pointer-events:none;
   }
   #isl-joy.show{display:flex;}
   #isl-joy-knob{
@@ -805,7 +805,7 @@
     .bp-lv .nm{font-size:13px;}
     #isl-status{bottom:62px; font-size:11px; padding:6px 12px;}
     #isl-prompt{bottom:100px; font-size:12px; padding:7px 14px;}
-    #isl-joy{bottom:68px; left:14px; width:82px; height:82px;}
+    #isl-joy{width:82px; height:82px;}
     #map-foot{bottom:10px; padding:5px 8px; gap:5px; scrollbar-width:none; -webkit-overflow-scrolling:touch;}
     #world-screen{padding:14px 10px; gap:12px;}
     #world-screen h2{font-size:19px;}
@@ -833,18 +833,18 @@
     #t-logo h1{font-size:23px;}
   }
 </style>
-<link rel="stylesheet" href="assets/world-ui.css?v=3.1.1">
-<link rel="stylesheet" href="assets/first-day.css?v=3.2">
+<link rel="stylesheet" href="assets/world-ui.css?v=20261126.2">
+<link rel="stylesheet" href="assets/first-day.css?v=20261126.2">
 <link rel="stylesheet" href="assets/cafe-case.css?v=3.6">
 <link rel="stylesheet" href="assets/island-life.css?v=3.6">
 <link rel="stylesheet" href="assets/chapter-journey.css?v=3.7">
 <link rel="stylesheet" href="assets/night-market.css?v=3.8">
-<link rel="stylesheet" href="assets/world-visibility.css?v=3.8.2">
-<link rel="stylesheet" href="assets/mobile-play.css?v=3.8.3">
+<link rel="stylesheet" href="assets/world-visibility.css?v=20261126.2">
+<link rel="stylesheet" href="assets/mobile-play.css?v=20261126.2">
 <link rel="stylesheet" href="assets/cafe-life.css?v=3.10.1">
 <link rel="stylesheet" href="assets/scene-prompts.css?v=3.10.2">
 <link rel="stylesheet" href="assets/ai-journey.css?v=3.11.1">
-<link rel="stylesheet" href="assets/continent-course.css">
+<link rel="stylesheet" href="assets/continent-course.css?v=20261126.2">
 <link rel="stylesheet" href="assets/term-display.css">
 </head>
 <body>
@@ -868,7 +868,7 @@
       <p class="land-description">走进星火岛，成为产品经理。<br>在真实的选择里成长，让每一次通关，<br>都在这个世界留下你的印记。</p>
       <div class="land-actions">
         <button id="land-cta" onclick="G.startFromLanding()"><span>开启我的冒险</span><span aria-hidden="true">↗</span></button>
-        <button class="land-explore" onclick="G.toMap({archipelago:true})">先去世界里看看 <span aria-hidden="true">→</span></button>
+        <button class="land-explore" onclick="G.toMap()">先去世界里看看 <span aria-hidden="true">→</span></button>
       </div>
       <nav id="land-continents"><button onclick="PQFieldCourse.open('growth')">增长大陆 ↗</button><button onclick="PQFieldCourse.open('design')">设计大陆 ↗</button></nav>
       <div class="land-meta">零基础出发 <i></i> 自由探索 <i></i> 进度自动保存</div>
@@ -883,7 +883,7 @@
         <div>
           <b>选择，让世界改变。</b>
           <p>拜访岛上的建筑，完成剧情决策与随堂检验。通关章节会点亮相关建筑，解锁成果回顾与庆典。</p>
-          <p>自由探索三座外围岛屿，寻找信标收集手记。<span class="island-desktop-copy"><kbd>WASD</kbd> 移动，<kbd>Shift</kbd> 奔跑，<kbd>E</kbd> 互动，<kbd>H</kbd> 取景。</span><span class="island-touch-copy">用虚拟摇杆或轻点地面行走，第一人称拖动画面环顾，靠近建筑轻触按钮进入。</span></p>
+          <p>自由探索三座外围岛屿，寻找信标收集手记。<span class="island-desktop-copy"><kbd>WASD</kbd> 移动，<kbd>Shift</kbd> 奔跑，<kbd>E</kbd> 互动，<kbd>H</kbd> 取景。</span><span class="island-touch-copy">在场景空白处拖动行走，第二根手指拖动转镜头，靠近后轻触按钮互动。</span></p>
           <small>71 个术语 · 37 张方法卡 · 16 篇案例</small>
         </div>
       </details>
@@ -1078,16 +1078,17 @@
     </div>
 
     <div id="isl-toolbar" role="toolbar" aria-label="视角与探索模式">
-      <button type="button" class="isl-tool active" data-cam="pan" onclick="PQIsland.setMode('pan')">
+      <button type="button" class="isl-tool active" data-cam="pan" onclick="PQFirstDay.chooseMapView('pan')">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M5 9l-3 3 3 3M9 5l3-3 3 3M15 19l-3 3-3-3M19 9l3 3-3 3M2 12h20M12 2v20"/></svg>平移
       </button>
-      <button type="button" class="isl-tool" data-cam="orbit" onclick="PQIsland.setMode('orbit')">
+      <button type="button" class="isl-tool" data-cam="orbit" onclick="PQFirstDay.chooseMapView('orbit')">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 3v6h-6"/></svg>环绕
       </button>
-      <button type="button" class="isl-tool" data-cam="walk" onclick="PQIsland.setMode('walk')">
+      <button type="button" class="isl-tool" data-cam="walk" onclick="PQFirstDay.chooseMapView('walk')">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><circle cx="13" cy="4" r="2"/><path d="m10 10 3-2 3 3M9 21l2-6 3 2v4M7 13l3-3"/></svg>漫步
       </button>
-      <button type="button" class="isl-tool" data-cam="fp" onclick="PQIsland.setMode('fp')">
+      <button type="button" class="isl-tool" data-cam="follow" onclick="PQFirstDay.chooseMapView('follow')">角色跟随</button>
+      <button type="button" class="isl-tool" data-cam="fp" onclick="PQFirstDay.chooseMapView('fp')">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.5-6 10-6 10 6 10 6-3.5 6-10 6-10-6-10-6Z"/><circle cx="12" cy="12" r="2.8"/></svg>第一人称
       </button>
       <span class="isl-sep" aria-hidden="true"></span>
@@ -1105,16 +1106,20 @@
 
     <div id="bpanel"></div>
 
-    <div id="isl-joy" aria-label="漫步方向摇杆"><div id="isl-joy-knob"></div></div>
+    <div id="isl-joy" aria-hidden="true"><div id="isl-joy-knob"></div></div>
     <button type="button" id="isl-prompt"></button>
     <div id="isl-status"></div>
     <template id="island-hint-walk">
       <span class="island-desktop-copy"><kbd>WASD</kbd> / <kbd>方向键</kbd>或点击地面行走</span>
-      <span class="island-touch-copy">拖动摇杆或轻点地面行走</span>
+      <span class="island-touch-copy">空白处拖动行走 · 第二指拖动环顾</span>
+    </template>
+    <template id="island-hint-follow">
+      <span class="island-desktop-copy"><kbd>WASD</kbd> / <kbd>方向键</kbd>或点地行走 · 拖动环顾</span>
+      <span class="island-touch-copy">空白处拖动行走 · 第二指拖动环顾</span>
     </template>
     <template id="island-hint-fp">
       <span class="island-desktop-copy"><kbd>WASD</kbd> / <kbd>方向键</kbd>或点地行走 · 鼠标拖动环顾</span>
-      <span class="island-touch-copy">摇杆或点地行走 · 拖动画面环顾</span>
+      <span class="island-touch-copy">空白处拖动行走 · 第二指拖动环顾</span>
     </template>
     <template id="island-hint-enter">
       <span class="island-desktop-copy">按 <kbd>E</kbd> 或点击进入 <span data-building-name></span></span>
@@ -1254,7 +1259,7 @@ window.PQ = { levels:[], terms:{}, notes:{}, cases:[], buildings:[], sprites:{},
 </script>
 <script src="assets/pxicons.js?v=1.6"></script>
 <script src="assets/world-map.js?v=3.0"></script>
-<script src="content/world.js?v=1.6"></script>
+<script src="content/world.js?v=20261126.3"></script>
 <script src="content/pm/terms.js?v=1.6"></script>
 <script src="content/pm/notes.js?v=1.6"></script>
 <script src="content/pm/cases.js?v=1.6"></script>
@@ -1281,24 +1286,24 @@ const _qp = new URLSearchParams(location.search).get('player');
 if(_qp) window.OPC_SAVE_KEY = 'opc-pq-' + (/^[a-zA-Z0-9-]{1,80}$/.test(_qp) ? _qp : 'guest');
 </script>
 <script src="assets/three.min.js?v=2.0"></script>
-<script src="assets/world-framing.js?v=3.8.2"></script>
-<script src="assets/mobile-play.js?v=3.8.3"></script>
-<script src="assets/world-visibility.js?v=3.8.3"></script>
-<script src="assets/world-quality.js?v=3.1"></script>
+<script src="assets/world-framing.js?v=20261126.2"></script>
+<script src="assets/mobile-play.js?v=20261126.2"></script>
+<script src="assets/world-visibility.js?v=20261126.2"></script>
+<script src="assets/world-quality.js?v=20261126"></script>
 <script src="assets/chapter-progress.js?v=3.7"></script>
 <script src="assets/continent-settlements.js"></script>
-<script src="assets/world-environment.js?v=3.11"></script>
-<script src="assets/ai-journey-state.js?v=3.11"></script>
-<script src="content/camera-help.js"></script>
-<script src="assets/camera-input.js?v=3.11.1"></script>
+<script src="assets/world-environment.js?v=20261126.3"></script>
+<script src="assets/ai-journey-state.js?v=20261126.3"></script>
+<script src="content/camera-help.js?v=20261126"></script>
+<script src="assets/camera-input.js?v=20261126.2"></script>
 <script src="assets/term-display.js"></script>
-<script src="assets/island3d.js?v=3.11.1"></script>
+<script src="assets/island3d.js?v=20261126.3"></script>
 <script src="assets/first-day-state.js?v=3.2"></script>
 <script src="content/pm/island-chapters.js?v=3.7"></script>
 <script src="assets/chapter-journey-state.js?v=3.8.3"></script>
 <script src="assets/chapter-rooms.js?v=3.11"></script>
 <script src="assets/story3d.js?v=3.11"></script>
-<script src="assets/first-day.js?v=3.9"></script>
+<script src="assets/first-day.js?v=20261126.2"></script>
 <script src="assets/cafe-dialogue.js?v=3.4"></script>
 <script src="assets/cafe-case-state.js?v=3.4"></script>
 <script src="assets/cafe-motion.js?v=3.5"></script>
@@ -1312,7 +1317,7 @@ if(_qp) window.OPC_SAVE_KEY = 'opc-pq-' + (/^[a-zA-Z0-9-]{1,80}$/.test(_qp) ? _q
 <script src="assets/chapter-journey.js?v=3.10.2"></script>
 <script src="assets/night-market-state.js?v=3.8"></script>
 <script src="assets/night-market-scene.js?v=3.10.2"></script>
-<script src="assets/night-market.js?v=3.10.2"></script>
+<script src="assets/night-market.js?v=20261126"></script>
 <script src="assets/cafe-life-state.js?v=3.9"></script>
 <script src="assets/prop-inspector.js?v=3.11"></script>
 <script src="assets/prop-library.js?v=3.9"></script>
@@ -1322,6 +1327,6 @@ if(_qp) window.OPC_SAVE_KEY = 'opc-pq-' + (/^[a-zA-Z0-9-]{1,80}$/.test(_qp) ? _q
 <script src="assets/ai-journey.js?v=3.11"></script>
 <script src="content/continent-courses.js"></script>
 <script src="assets/continent-course.js"></script>
-<script src="engine.js?v=3.11"></script>
+<script src="engine.js?v=20261126.3"></script>
 </body>
 </html>

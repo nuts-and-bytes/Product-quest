@@ -1,4 +1,5 @@
 const test=require('node:test'),assert=require('node:assert/strict');
+const fs=require('node:fs'),vm=require('node:vm');
 require('../assets/first-day-state.js');require('../assets/world-map.js');
 const S=PQFirstDayState;
 test('new players get an introduction while existing saves keep their progress',()=>{
@@ -27,13 +28,68 @@ test('a saved chapter completion recovers even if the journey checkpoint lagged'
   assert.equal(S.normalize({version:1,stage:'office',lesson:{phase:'quiz',node:-1,quiz:3}},0).lesson,null);
 });
 test('the first-day route reaches the receptionist, office and cafe without crossing obstacles',()=>{
-  const fs=require('node:fs'),vm=require('node:vm'),ctx={PQWorldMap,PQ:{sprites:{},buildings:[],pains:[]}};
+  const ctx={PQWorldMap,PQ:{sprites:{},buildings:[],pains:[]}};
   vm.runInNewContext(fs.readFileSync(require.resolve('../content/world.js'),'utf8'),ctx);
   const points=[{x:-6.5,z:4.8},{x:-7,z:1.4},{x:-19,z:-9.5},{x:-17.5,z:3}];
   for(let i=1;i<points.length;i++){
     const path=PQWorldMap.findPath(points[i-1],points[i],ctx.PQ.buildings);
     assert.ok(path&&path.length);for(const p of path)assert.ok(PQWorldMap.canWalk(p.x,p.z,ctx.PQ.buildings));
   }
+});
+
+function mapFixture(firstDay=S.normalize(null,0)){
+  const F=require('../assets/world-framing');
+  const nodes=new Map();
+  const document={getElementById(id){
+    if(!nodes.has(id))nodes.set(id,{classList:{remove(){}}});
+    return nodes.get(id);
+  }};
+  const context=vm.createContext({window:{},document,PQWorldMap,PQWorldFraming:F,PQ:{buildings:[]},G:{firstDay,save(){}},performance});
+  vm.runInContext(fs.readFileSync(require.resolve('../assets/three.min'),'utf8'),context);
+  const T=context.THREE=context.window.THREE;
+  const world=context.PQIsland={
+    mode:'pan',archipelago:false,playerPos:new T.Vector3(-6.5,1.04,4.8),playerYaw:.35,followView:F.followView(),
+    get isOnFoot(){return ['walk','follow','fp'].includes(this.mode);},
+    npcRigs:[],scene:new T.Scene(),goalRing:{position:new T.Vector3()},buildings:{},
+    createCharacter(){return {group:new T.Group()};},
+    setMode(next){this.mode=next;this.archipelago=false;},
+    setCinematic(){},setCloudOpen(){},recentre(){},frameWalk(){},
+  };
+  vm.runInContext(fs.readFileSync(require.resolve('../assets/first-day'),'utf8'),context);
+  return {journey:context.window.PQFirstDay,world};
+}
+
+test('the first outdoor view follows from behind and faces the receptionist',()=>{
+  const {journey,world}=mapFixture();
+  journey.onMap();
+  assert.equal(world.mode,'follow');
+  const target=journey.target();
+  const towardTarget=Math.atan2(target.x-world.playerPos.x,target.z-world.playerPos.z);
+  assert.equal(world.playerYaw,towardTarget);
+  assert.equal(world.followView.azimuth,towardTarget+Math.PI);
+});
+
+test('existing saves default to character follow while explicit session choices survive indoor returns',()=>{
+  const {journey,world}=mapFixture(S.normalize(null,5));
+  journey.onMap();
+  assert.equal(world.mode,'follow');
+  journey.chooseMapView('walk');
+  world.mode='fp';
+  journey.onMap();
+  assert.equal(world.mode,'walk');
+});
+
+test('finding yourself and walking to the receptionist keep the shoulder camera',()=>{
+  const {journey,world}=mapFixture();
+  journey.onMap();
+  world.mode='follow';
+  world.followView.azimuth=2;
+  journey.locate();
+  assert.equal(world.mode,'follow');
+  assert.notEqual(world.followView.azimuth,2);
+  journey.walkTo(journey.target());
+  assert.equal(world.mode,'follow');
+  assert.ok(world.walkGoal);
 });
 
 test('returning players can replay the introduction without changing chapter progress',()=>{

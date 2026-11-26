@@ -18,7 +18,7 @@ function controls(savedMode, coarse = false) {
   const world = {
     mode:'orbit', camera:{aspect:1}, spherical:{radius:50,polar:.8,azimuth:.4},
     rememberWalkView(){}, _panByScreenDelta(x,z){this.pan=[x,z];},
-    fpYaw:0,fpPitch:0,
+    fpYaw:0,fpPitch:0, followView:{radius:7.2,polar:1.26,azimuth:.4},
   };
   window.PQCameraInput.bind({addEventListener:(name,fn)=>{handlers[name]=fn;}},world);
   function wheel(x,y,pinch=false){
@@ -68,6 +68,16 @@ test('walking, detached view, and first person interpret the same scroll in cont
   assert.ok(world.fpYaw>0 && world.fpPitch>0);
   wheel(0,25,true);assert.equal(world.spherical.radius,50);
 });
+test('character follow inputs orbit and zoom through their own camera state',()=>{
+  const {world,wheel}=controls('trackpad');
+  world.mode='follow';
+  wheel(14,20);
+  assert.ok(world.followView.azimuth>.4);
+  assert.ok(world.followView.polar>1.26);
+  wheel(0,-20,true);
+  assert.ok(world.followView.radius<7.2);
+  assert.deepEqual(world.spherical,{radius:50,polar:.8,azimuth:.4});
+});
 test('mouse wheel keeps zooming and a Safari pinch is applied once',()=>{
   const {world,wheel,handlers}=controls('mouse');
   wheel(0,30);assert.ok(world.spherical.radius>50);
@@ -76,4 +86,16 @@ test('mouse wheel keeps zooming and a Safari pinch is applied once',()=>{
   wheel(0,-20,true);assert.equal(world.spherical.radius,before);
   handlers.gesturechange({scale:1.5,preventDefault(){}});
   assert.ok(Math.abs(world.spherical.radius - before / 1.5) < 1e-8);
+});
+
+test('Safari gestures cannot zoom while fingers are operating the floating controls',()=>{
+  const {world,handlers}=controls('trackpad',true);
+  world.mode='follow';
+  world.floatingJoystick={move:{id:1},look:{id:2}};
+  const before=world.followView.radius;
+  let prevented=0;
+  handlers.gesturestart({scale:1,preventDefault(){prevented++;}});
+  handlers.gesturechange({scale:1.4,preventDefault(){prevented++;}});
+  assert.equal(world.followView.radius,before);
+  assert.equal(prevented,2);
 });

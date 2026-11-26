@@ -30,7 +30,9 @@ window.PQCameraInput = (() => {
 
   function hint(world) {
     const copy = PQ.cameraHelp;
-    if (world.detachedFollow || world.archipelago || !['walk','fp'].includes(world.mode)) return copy.mapHint;
+    if (world.detachedFollow || world.archipelago) return copy.mapHint;
+    if (world.mode === 'follow') return copy.followHint;
+    if (!['walk','fp'].includes(world.mode)) return copy.mapHint;
     return world.mode === 'fp' ? copy.fpHint : copy.walkHint;
   }
   function refresh(world) {
@@ -58,6 +60,10 @@ window.PQCameraInput = (() => {
       document.querySelector('dialog[open], #dex.show, #term-pop.show');
     function zoom(factor) {
       if (world.mode === 'fp' && !world.cinematicMode) return;
+      if (world.mode === 'follow' && !world.cinematicMode) {
+        world.followView = PQWorldFraming.followView({...world.followView,radius:world.followView.radius*factor});
+        return;
+      }
       const min = world.mode === 'walk' ? 30 : 15;
       const max = world.archipelago ? Math.max(220,220/world.camera.aspect) : world.cinematicMode ? 150 : 96;
       world.spherical.radius = Math.max(min,Math.min(max,world.spherical.radius*factor));
@@ -76,6 +82,9 @@ window.PQCameraInput = (() => {
       } else if (world.mode === 'fp') {
         world.fpYaw += dx*.005;
         world.fpPitch = Math.max(-.78,Math.min(.85,world.fpPitch+dy*.004));
+      } else if (world.mode === 'follow') {
+        const view=world.followView;
+        world.followView=PQWorldFraming.followView({...view,azimuth:view.azimuth+dx*.006,polar:view.polar+dy*.004});
       } else {
         world.spherical.azimuth += dx*.006;
         world.spherical.polar += dy*.004;
@@ -85,9 +94,12 @@ window.PQCameraInput = (() => {
     }, {passive:false});
     // Safari emits scale gestures instead of Chromium's Ctrl+wheel pinch.
     canvas.addEventListener('gesturestart', e => {
-      if (!blocked()) { e.preventDefault(); gestureScale=e.scale || 1; }
+      if(blocked())return;
+      e.preventDefault();
+      gestureScale=world.floatingJoystick?.move||world.floatingJoystick?.look?0:e.scale||1;
     }, {passive:false});
     canvas.addEventListener('gesturechange', e => {
+      if(world.floatingJoystick?.move||world.floatingJoystick?.look){e.preventDefault();gestureScale=0;return;}
       if (!gestureScale || blocked() || !(e.scale>0)) return;
       e.preventDefault(); zoom(gestureScale/e.scale); gestureScale=e.scale;
     }, {passive:false});

@@ -6,6 +6,22 @@
   function walkView(view={}){
     return {radius:clamp(Number.isFinite(view.radius)?view.radius:54,30,96),polar:clamp(Number.isFinite(view.polar)?view.polar:.8,.55,.9),azimuth:Number.isFinite(view.azimuth)?view.azimuth:.56};
   }
+  function followView(view={}){
+    const {radius=5.2,polar=1.36,azimuth=.56}=view;
+    return {radius:clamp(radius,4.2,12),polar:clamp(polar,.83,1.46),azimuth};
+  }
+  function followPose(player,view){
+    const {radius,polar,azimuth}=view;
+    const sin=Math.sin(azimuth),cos=Math.cos(azimuth),horizontal=radius*Math.sin(polar);
+    const pivot={x:player.x,y:player.y+1.2,z:player.z};
+    const target={x:pivot.x+cos*.68,y:pivot.y,z:pivot.z-sin*.68};
+    return {pivot,target,camera:{x:target.x+sin*horizontal,y:target.y+radius*Math.cos(polar),z:target.z+cos*horizontal}};
+  }
+  function followClearance(desired,obstacle,current,dt,snap=false){
+    const clear=Math.min(desired,Math.max(0,obstacle-.42));
+    return snap||!Number.isFinite(current)||clear<=current
+      ?clear:current+(clear-current)*(1-Math.exp(-dt*6));
+  }
   function placeLabel(anchor,size,screen,obstacles=[],preferred){
     const {width,height}=size,pad=10,candidates=[];
     if(width>screen.width-pad*2||height>screen.height-pad*2)return null;
@@ -54,6 +70,6 @@
     if(state.clear>=.22)state.reveal=false;
     return state;
   }
-  const api={walkView,overlaps,placeLabel,safeAnchor,obstruction};
+  const api={walkView,followView,followPose,followClearance,overlaps,placeLabel,safeAnchor,obstruction};
   root.PQWorldFraming=api;if(typeof module!=='undefined')module.exports=api;
 })(typeof window==='undefined'?globalThis:window);

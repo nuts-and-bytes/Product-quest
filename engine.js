@@ -563,7 +563,15 @@ const G = {
     if(this._gold){ this._gold=false; this.exportPortfolio(true); this.toMap(); }
     else this.toMap({ archipelago:false, diveFromBadge:true });
   },
-  resetAll(){ if(confirm('确定清空全部进度？')){ try{localStorage.removeItem((window.OPC_SAVE_KEY || 'pmquest2'));}catch(e){} location.reload(); } },
+  resetAll(){
+    if(!confirm('确定清空全部进度？'))return;
+    const key=window.OPC_SAVE_KEY||'pmquest2';
+    try{
+      localStorage.removeItem(key+':bak');
+      localStorage.removeItem(key);
+    }catch(e){}
+    location.reload();
+  },
 
   toggleLandingPeek(){
     SFX.click();
