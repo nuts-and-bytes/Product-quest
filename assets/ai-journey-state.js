@@ -2,10 +2,10 @@
 (function(root){
  'use strict';
  const cast={
-  jianwei:{name:'姜见微',role:'评测负责人',look:{style:'short',outfit:'shirt',hair:'#8776ab',cloth:'#8f83b4',pants:'#48576e',glasses:'none',prop:'laptop',brow:'sharp'}},
-  luchen:{name:'陆沉',role:'首席科学家',look:{style:'short',outfit:'hoodie',hair:'#354653',cloth:'#3b6483',pants:'#42546b',glasses:'black',prop:'headset'}},
-  hechuan:{name:'贺川',role:'商务合伙人',look:{style:'slick',outfit:'suit',hair:'#714e3b',cloth:'#618c8b',tie:'#dfb66d',pants:'#425d69',glasses:'none',prop:'none'}},
-  linyou:{name:'林柚',role:'交互设计师',look:{style:'curly',outfit:'sweater',hair:'#b37954',cloth:'#e3c585',pants:'#718c9e',glasses:'none',prop:'laptop'}}
+  jianwei:{name:'姜见微',role:'评测负责人',look:{style:'short',outfit:'shirt',hair:'#5d5270',cloth:'#786e96',pants:'#424e61',glasses:'gold',prop:'clipboard',brow:'sharp',faceType:'sharp',heightScale:1.0,idleStyle:'tablet'}},
+  luchen:{name:'陆沉',role:'首席科学家',look:{style:'short',outfit:'hoodie',hair:'#2f3d4a',cloth:'#3d607a',pants:'#374659',glasses:'black',prop:'headset',faceType:'cool',heightScale:1.03,idleStyle:'nod'}},
+  hechuan:{name:'贺川',role:'商务合伙人',look:{style:'slick',outfit:'suit',hair:'#593e30',cloth:'#486e6e',tie:'#cfa45c',pants:'#344954',glasses:'none',prop:'briefcase',faceType:'mature',pocketSquare:'#f0e5cf',heightScale:1.05,idleStyle:'calm'}},
+  linyou:{name:'林柚',role:'交互设计师',look:{style:'beret',outfit:'sweater',hair:'#8f5c3e',cloth:'#d4b370',pants:'#5c7085',glasses:'none',prop:'sketchpad',faceType:'warm',beretColor:'#9e6b58',skirt:true,heightScale:0.98,idleStyle:'sketch'}}
  };
  const isLevel=l=>!!l&&/^ai\d+_/.test(l.id);
  const chapterId=l=>l.id.match(/^ai(\d+)_/)?.[1];

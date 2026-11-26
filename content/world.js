@@ -86,7 +86,7 @@ PQ.buildings.push(...[
     subtitle:'第1章 · 用户访谈现场',
     levels:['c2']},
   {id:'tea',  name:'波波奶茶店', emoji:'🧋', x:56, y:66, w:98,  h:74,  color:'#b56a86',
-    wx:18, wz:19, doorOffset:[-2, -6.0], doorDir:[0, -1], npcGuard:'xiaomei',
+    wx:18, wz:19, doorOffset:[-2, -6.0], doorDir:[0, -1], npcGuard:'tea_owner',
     subtitle:'第1-2章 · 街头观察与伪需求拆解',
     levels:['c3','u2']},
   {id:'home', name:'阳光社区', emoji:'🏠', x:38, y:60, w:100, h:88, color:'#c08552',

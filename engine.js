@@ -146,24 +146,28 @@ const SFX = {
 const QUIET=/[\s，。！？、；：""''（）《》〈〉—…·,.!?;:'"()\[\]]/; // 打字时不发声的字符
 const PAINS = PQ.pains; // 痛点文案由 content/world.js 注册
 const AV_COLORS = {
-  hair:['#ffd15c','#ff85a2','#5cc8ff','#ff9b54','#b085f5','#6cd488','#8c583a','#f4f6fc'],
-  skin:['#fff1e6','#ffe4d4','#f7d0b0'],
-  cloth:['#5cb9ff','#ff86a8','#ffd454','#5cd68d','#a57cff','#ff9248','#fff5e6']
+  hair:['#5c4033','#c9975b','#d4828f','#5b8fb8','#c7794a','#7e6fa8','#3c404a','#d9d4cb'],
+  skin:['#f7dcc8','#efd0b8','#e2ba9b'],
+  cloth:['#5285ad','#c97682','#d9a855','#659c7f','#7f6ea8','#cc7d52','#e8dfd1']
 };
 const PM_PRESETS = [
-  { id:'rookie',     label:'🐣 奶油元气鹅', style:'short',    outfit:'hoodie',     hair:'#ffd15c', skin:'#fff1e6', cloth:'#5cb9ff', glasses:'none',  prop:'coffee' },
-  { id:'researcher', label:'🍓 草莓甜心PM', style:'long',     outfit:'sweater',    hair:'#ff85a2', skin:'#fff1e6', cloth:'#ff86a8', glasses:'none',  prop:'coffee' },
-  { id:'geek',       label:'🐱 猫耳极客PM', style:'cap',      outfit:'hoodie',     hair:'#5cc8ff', skin:'#ffe4d4', cloth:'#5cd68d', glasses:'black', prop:'headset' },
-  { id:'director',   label:'🧸 焦糖暖熊姐', style:'curly',    outfit:'suit',       hair:'#ff9b54', skin:'#fff1e6', cloth:'#ffd454', glasses:'gold',  prop:'laptop' },
-  { id:'visionary',  label:'✨ 星光独角兽', style:'bun',      outfit:'turtleneck', hair:'#b085f5', skin:'#fff1e6', cloth:'#a57cff', glasses:'gold',  prop:'laptop' },
-  { id:'hacker',     label:'🍊 阳光多巴胺', style:'ponytail', outfit:'shirt',      hair:'#f4f6fc', skin:'#ffe4d4', cloth:'#ff9248', glasses:'sun',   prop:'coffee' }
+  { id:'rookie',     label:'🌱 星火见习PM', style:'short',    outfit:'hoodie',     hair:'#5c4033', skin:'#f7dcc8', cloth:'#5285ad', glasses:'none',  prop:'coffee' },
+  { id:'researcher', label:'🎀 暖茶调研官', style:'long',     outfit:'sweater',    hair:'#c9975b', skin:'#f7dcc8', cloth:'#c97682', glasses:'none',  prop:'coffee' },
+  { id:'geek',       label:'🎧 极客产品师', style:'cap',      outfit:'hoodie',     hair:'#3c404a', skin:'#efd0b8', cloth:'#659c7f', glasses:'black', prop:'headset' },
+  { id:'director',   label:'🎨 灵感设计师', style:'beret',    outfit:'sweater',    hair:'#c7794a', skin:'#f7dcc8', cloth:'#d9a855', glasses:'gold',  prop:'laptop' },
+  { id:'visionary',  label:'✨ 策略总监风', style:'bun',      outfit:'turtleneck', hair:'#7e6fa8', skin:'#f7dcc8', cloth:'#7f6ea8', glasses:'gold',  prop:'laptop' },
+  { id:'hacker',     label:'☀️ 阳光破局者', style:'ponytail', outfit:'shirt',      hair:'#d9d4cb', skin:'#efd0b8', cloth:'#cc7d52', glasses:'sun',   prop:'coffee' }
 ];
-const _DEFAULT_AV = { preset:'rookie', style:'short', outfit:'hoodie', hair:'#ffd15c', skin:'#fff1e6', cloth:'#5cb9ff', glasses:'none', prop:'coffee', name:'你' };
+const _DEFAULT_AV = { preset:'rookie', style:'short', outfit:'hoodie', hair:'#5c4033', skin:'#f7dcc8', cloth:'#5285ad', glasses:'none', prop:'coffee', name:'你' };
 const _BRIGHT_UPGRADE = {
-  '#2b2b2b':'#ffd15c', '#262235':'#b085f5', '#4a3222':'#ff9b54', '#5c3a21':'#ff85a2',
-  '#8a99ad':'#f4f6fc', '#2c3e66':'#5cb9ff', '#23293a':'#a57cff', '#4f9df0':'#5cb9ff',
-  '#3fae6b':'#5cd68d', '#e05a6d':'#ff86a8', '#7c4dff':'#a57cff', '#f2c19a':'#fff1e6',
-  '#f7cbb0':'#fff1e6', '#e3a878':'#ffe4d4'
+  '#2b2b2b':'#5c4033', '#262235':'#7e6fa8', '#4a3222':'#c7794a', '#5c3a21':'#5c4033',
+  '#8a99ad':'#d9d4cb', '#2c3e66':'#5285ad', '#23293a':'#7f6ea8', '#4f9df0':'#5285ad',
+  '#3fae6b':'#659c7f', '#e05a6d':'#c97682', '#7c4dff':'#7f6ea8', '#f2c19a':'#efd0b8',
+  '#f7cbb0':'#f7dcc8', '#e3a878':'#e2ba9b',
+  '#ffd15c':'#c9975b', '#ff85a2':'#d4828f', '#5cc8ff':'#5b8fb8', '#ff9b54':'#c7794a',
+  '#b085f5':'#7e6fa8', '#6cd488':'#659c7f', '#fff1e6':'#f7dcc8', '#ffe4d4':'#efd0b8',
+  '#5cb9ff':'#5285ad', '#ff86a8':'#c97682', '#ffd454':'#d9a855', '#5cd68d':'#659c7f',
+  '#a57cff':'#7f6ea8', '#ff9248':'#cc7d52'
 };
 function normalizeAvatar(av){
   const a = Object.assign({}, _DEFAULT_AV, av || {});
@@ -172,7 +176,7 @@ function normalizeAvatar(av){
   if(_BRIGHT_UPGRADE[a.cloth]) a.cloth = _BRIGHT_UPGRADE[a.cloth];
   if(a.glasses === true || a.glasses === '1') a.glasses = 'black';
   else if(!a.glasses || a.glasses === '0') a.glasses = 'none';
-  if(!['short','long','ponytail','curly','bun','cap'].includes(a.style)) a.style = 'short';
+  if(!['short','long','ponytail','curly','bun','cap','beret'].includes(a.style)) a.style = 'short';
   if(!['hoodie','suit','shirt','sweater','turtleneck'].includes(a.outfit)) a.outfit = 'hoodie';
   if(!['coffee','laptop','headset','none'].includes(a.prop)) a.prop = 'coffee';
   return a;

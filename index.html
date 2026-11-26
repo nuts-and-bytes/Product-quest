@@ -165,14 +165,14 @@
   .av-preset.rand{border-style:dashed; color:#9bd4ff;}
   #av-wrap{display:flex; gap:26px; align-items:center;}
   #av-stage{
-    position:relative; width:224px; height:292px; padding:10px 8px 12px; border:2.5px solid rgba(255,255,255,0.86); border-radius:16px;
+    position:relative; width:224px; height:292px; padding:10px 8px 12px; border:2px solid rgba(224,187,114,0.52); border-radius:16px;
     display:flex; flex-direction:column; align-items:center; justify-content:space-between; flex-shrink:0;
-    background:radial-gradient(circle at 50% 38%, #fffdf7 0%, #dff2ff 64%, #bce2ff 100%);
-    box-shadow:0 10px 28px rgba(15,35,68,0.25), inset 0 0 20px rgba(255,255,255,0.8);
+    background:radial-gradient(circle at 50% 34%, #2d4c54 0%, #1d343d 58%, #13222b 100%);
+    box-shadow:0 14px 32px rgba(6,16,28,0.45), inset 0 0 28px rgba(255,228,176,0.12);
   }
-  #av-prev{width:198px; height:242px; cursor:grab; touch-action:none; filter:drop-shadow(0 8px 12px rgba(32,64,120,.28));}
+  #av-prev{width:198px; height:242px; cursor:grab; touch-action:none; filter:drop-shadow(0 10px 16px rgba(4,12,24,.45));}
   #av-prev:active{cursor:grabbing;}
-  #av-drag-hint{font-size:11.5px; color:#2b4368; font-weight:bold; margin-top:0; letter-spacing:0.5px; pointer-events:none;}
+  #av-drag-hint{font-size:11.5px; color:#d8cbb2; font-weight:bold; margin-top:0; letter-spacing:0.5px; pointer-events:none;}
   #av-opts{display:flex; flex-direction:column; gap:7px; width:418px;}
   .av-row{display:flex; align-items:center; gap:6px; flex-wrap:wrap;}
   .av-row label{font-size:12.5px; color:var(--dim); width:40px; flex:none;}
@@ -902,12 +902,13 @@
           <div class="av-row"><label>昵称</label><input id="av-name" maxlength="6" placeholder="你的名字（≤6字）"></div>
           <details id="av-details"><summary>细调发型与穿搭 <span>可选</span></summary>
           <div class="av-row"><label>发型</label>
-            <button class="pxbtn avbtn" data-style="short">🐣 呆毛萌芽</button>
-            <button class="pxbtn avbtn" data-style="long">🎀 甜心兔耳</button>
+            <button class="pxbtn avbtn" data-style="short">🌱 清爽萌芽</button>
+            <button class="pxbtn avbtn" data-style="long">🎀 柔顺长发</button>
             <button class="pxbtn avbtn" data-style="ponytail">⭐ 元气马尾</button>
-            <button class="pxbtn avbtn" data-style="curly">🧸 奶卷小熊</button>
-            <button class="pxbtn avbtn" data-style="bun">👑 星光丸子</button>
-            <button class="pxbtn avbtn" data-style="cap">🧢 棒球帽</button>
+            <button class="pxbtn avbtn" data-style="curly">🧸 蓬松暖卷</button>
+            <button class="pxbtn avbtn" data-style="bun">👑 气质丸子</button>
+            <button class="pxbtn avbtn" data-style="cap">🧢 复古鸭舌</button>
+            <button class="pxbtn avbtn" data-style="beret">🎨 画家贝雷</button>
           </div>
           <div class="av-row"><label>穿搭</label>
             <button class="pxbtn avbtn" data-outfit="hoodie">极客卫衣</button>
