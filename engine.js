@@ -135,11 +135,47 @@ const SFX = {
       o.start(t); o.stop(t+.055);
     }catch(e){}
   },
-  ok(){ try{ this.beep(660,.09); setTimeout(()=>this.beep(990,.12),90); }catch(e){} },
+  ok(){ try{ this.beep(660,.09); setTimeout(()=>this.beep(990,.12),90); if(window.PQIsland?.popPlayer)PQIsland.popPlayer(0.11); }catch(e){} },
   mid(){ try{ this.beep(520,.1); setTimeout(()=>this.beep(620,.1),100); }catch(e){} },
-  bad(){ try{ this.beep(220,.16,'sawtooth',.05); setTimeout(()=>this.beep(160,.22,'sawtooth',.05),140); }catch(e){} },
-  unlock(){ try{ [523,659,784,1047].forEach((f,i)=>setTimeout(()=>this.beep(f,.1,'triangle',.05),i*80)); }catch(e){} },
-  click(){ try{ this.beep(440,.04,'square',.03); }catch(e){} }
+  bad(){ try{ this.beep(220,.16,'sawtooth',.05); setTimeout(()=>this.beep(160,.22,'sawtooth',.05),140); if(window.PQIsland?.addTrauma)PQIsland.addTrauma(0.32); }catch(e){} },
+  unlock(){ try{ [523,659,784,1047].forEach((f,i)=>setTimeout(()=>this.beep(f,.1,'triangle',.05),i*80)); if(window.PQIsland?.addTrauma)PQIsland.addTrauma(0.22); if(window.PQIsland?.popPlayer)PQIsland.popPlayer(0.15); }catch(e){} },
+  // Audio-design: soft pitch-varied UI click (replaces harsh static 440Hz square wave)
+  click(){
+    if(this.muted)return;
+    try{
+      const ac=this.ac(); if(!ac)return;
+      const t=ac.currentTime||0;
+      const o=ac.createOscillator(), g=ac.createGain(), lp=ac.createBiquadFilter();
+      o.type='triangle';
+      o.frequency.value=460*(0.96+Math.random()*0.08);
+      lp.type='lowpass'; lp.frequency.value=1800;
+      g.gain.setValueAtTime(0,t);
+      g.gain.linearRampToValueAtTime(.026,t+.003);
+      g.gain.exponentialRampToValueAtTime(.0001,t+.042);
+      o.connect(lp); lp.connect(g); g.connect(ac.destination);
+      o.start(t); o.stop(t+.048);
+    }catch(e){}
+  },
+  // Audio-design: gentle pitch- and gain-varied footstep tap (kills machine-gun repeat)
+  step(sprint){
+    if(this.muted)return;
+    try{
+      const ac=this.ac(); if(!ac||ac.state!=='running')return;
+      const t=ac.currentTime||0;
+      const o=ac.createOscillator(), g=ac.createGain(), lp=ac.createBiquadFilter();
+      o.type='sine';
+      const base=sprint?155:128;
+      o.frequency.setValueAtTime(base*(0.9+Math.random()*0.2),t);
+      o.frequency.exponentialRampToValueAtTime(58,t+.045);
+      lp.type='lowpass'; lp.frequency.value=420;
+      const peak=(sprint?.022:.014)*(0.85+Math.random()*0.3);
+      g.gain.setValueAtTime(0,t);
+      g.gain.linearRampToValueAtTime(peak,t+.005);
+      g.gain.exponentialRampToValueAtTime(.0001,t+.055);
+      o.connect(lp); lp.connect(g); g.connect(ac.destination);
+      o.start(t); o.stop(t+.06);
+    }catch(e){}
+  }
 };
 
 /* ================= 游戏引擎 ================= */

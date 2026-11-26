@@ -3334,7 +3334,13 @@
       this.scene.fog.density = c.fogDensity;
       if (this.ocean) this.ocean.material.color.copy(c.ocean);
       this.sunLight.color.copy(c.sunColor);
-      this.sunLight.position.copy(c.sunPos);
+      // Dynamic shadow-camera follow (threejs-materials-lighting): snap to 2m grid so far islands keep crisp shadows without shimmer.
+      const focusAnchor = (!this.cinematicMode && (this.mode === 'walk' || this.mode === 'fp') && this.playerPos) ? this.playerPos : this.camCurTarget;
+      const sx = Math.round((focusAnchor?.x || 0) * 0.5) * 2;
+      const sz = Math.round((focusAnchor?.z || 0) * 0.5) * 2;
+      this.sunLight.target.position.set(sx, 0, sz);
+      this.sunLight.target.updateMatrixWorld();
+      this.sunLight.position.set(c.sunPos.x + sx, c.sunPos.y, c.sunPos.z + sz);
       this.sunLight.intensity = c.sunInt;
       this.hemiLight.color.copy(c.hemiSky);
       this.hemiLight.groundColor.copy(c.hemiGround);
@@ -3359,8 +3365,64 @@
       }
     },
 
+    addTrauma(amount) {
+      if (this.environment?.reducedMotion) return;
+      this._trauma = Math.min(1, (this._trauma || 0) + Math.max(0, amount || 0));
+    },
+
+    popPlayer(strength) {
+      if (this.environment?.reducedMotion) return;
+      this._playerPop = { t: 0, dur: 0.22, s: Math.min(0.22, Math.max(0.05, strength || 0.12)) };
+    },
+
+    _spawnStepDust(x, z, sprint) {
+      if (!this.scene || this.environment?.reducedMotion || (this.environment && this.environment.tier === 0)) return;
+      if (!this._dustPool) {
+        this._dustPool = [];
+        const geo = new THREE.SphereGeometry(0.14, 7, 6);
+        for (let i = 0; i < 16; i++) {
+          const m = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({ color: '#ece3d0', transparent: true, opacity: 0, depthWrite: false }));
+          m.visible = false;
+          this.scene.add(m);
+          this._dustPool.push({ mesh: m, age: 1, life: 0.42, vx: 0, vy: 0, vz: 0, base: 0.5 });
+        }
+        this._dustIdx = 0;
+      }
+      const p = this._dustPool[this._dustIdx++ % this._dustPool.length];
+      p.age = 0;
+      p.life = sprint ? 0.36 : 0.44;
+      p.base = sprint ? 0.72 : 0.48;
+      p.vx = (Math.random() - 0.5) * 0.65;
+      p.vy = 0.55 + Math.random() * 0.45;
+      p.vz = (Math.random() - 0.5) * 0.65;
+      p.mesh.position.set(x + (Math.random() - 0.5) * 0.22, 1.08, z + (Math.random() - 0.5) * 0.22);
+      p.mesh.scale.setScalar(p.base);
+      p.mesh.material.opacity = sprint ? 0.44 : 0.32;
+      p.mesh.visible = true;
+    },
+
+    _updateStepDust(dt) {
+      if (!this._dustPool) return;
+      for (const p of this._dustPool) {
+        if (p.age >= p.life) continue;
+        p.age += dt;
+        const u = Math.min(1, p.age / p.life);
+        if (u >= 1) {
+          p.mesh.visible = false;
+        } else {
+          p.mesh.position.x += p.vx * dt;
+          p.mesh.position.y += p.vy * (1 - u * 0.6) * dt;
+          p.mesh.position.z += p.vz * dt;
+          const sc = p.base * (1 + u * 0.9);
+          p.mesh.scale.setScalar(sc);
+          p.mesh.material.opacity = (1 - u) * (1 - u) * 0.38;
+        }
+      }
+    },
+
     _updatePlayer(dt, timeSec) {
       if (!this.playerRig) return;
+      this._updateStepDust(dt);
       let moveX = 0, moveZ = 0;
 
       if (!this.cinematicMode && (this.mode === 'walk' || this.mode === 'fp')) {
@@ -3408,8 +3470,9 @@
 
       const moveLen = Math.hypot(moveX, moveZ);
       const isMoving = moveLen > 0.01;
+      const isSprint = !!this.keys['shift'];
       if (isMoving) {
-        const speed = this.keys['shift'] ? 11.5 : 6.8;
+        const speed = isSprint ? 11.5 : 6.8;
         const nx = this.playerPos.x + (moveX / moveLen) * speed * dt;
         const nz = this.playerPos.z + (moveZ / moveLen) * speed * dt;
         if (this._canWalkTo(nx, nz)) {
@@ -3430,11 +3493,37 @@
         this.playerRig.group.position.z = this.playerPos.z;
         this.playerRig.group.position.y = 1.04 + Math.abs(Math.sin(timeSec * 10.5)) * 0.16;
         this.playerRig.group.rotation.y = this.playerYaw;
+
+        // Rhythmic footstep dust & subtle pitch-varied step audio (game-feel + audio-design)
+        this._stepAccum = (this._stepAccum || 0) + dt * (isSprint ? 1.45 : 1.0);
+        if (this._stepAccum >= 0.34) {
+          this._stepAccum = 0;
+          this._spawnStepDust(this.playerPos.x, this.playerPos.z, isSprint);
+          if (typeof SFX !== 'undefined' && SFX.step) SFX.step(isSprint);
+        }
       } else {
+        this._stepAccum = 0.22;
         this.playerRig.group.position.x = this.playerPos.x;
         this.playerRig.group.position.z = this.playerPos.z;
         this.playerRig.group.position.y = 1.04;
         this.playerRig.group.rotation.y = this.mode === 'fp' ? this.fpYaw : this.playerYaw;
+      }
+
+      // Squash & stretch pop tween (snaps cleanly to 1,1,1 on completion)
+      if (this._playerPop) {
+        const pop = this._playerPop;
+        pop.t += dt;
+        const u = Math.min(1, pop.t / pop.dur);
+        if (u >= 1) {
+          this.playerRig.group.scale.set(1, 1, 1);
+          this._playerPop = null;
+        } else {
+          // Damped overshoot back to rest scale (area-preserving squash & stretch)
+          const wave = Math.sin(u * Math.PI * 1.5) * (1 - u);
+          const sy = 1 - pop.s * wave;
+          const sxz = 1 + pop.s * 0.55 * wave;
+          this.playerRig.group.scale.set(sxz, sy, sxz);
+        }
       }
       this._playerMoving = isMoving;
       animateRig(this.playerRig, isMoving, timeSec, 0);
@@ -3443,9 +3532,15 @@
         if(isMoving && this.detachedFollow)this.detachFollow(false);
         if(!this.detachedFollow){
           const follow=this.visibility?.follow()||this.playerPos;
-          this.camTarget.x = follow.x;
+          // Eased look-ahead in travel direction (camera-systems)
+          const laRate = 1 - Math.exp(-4.5 * dt);
+          const goalLaX = isMoving ? (moveX / moveLen) * (isSprint ? 2.1 : 1.35) : 0;
+          const goalLaZ = isMoving ? (moveZ / moveLen) * (isSprint ? 2.1 : 1.35) : 0;
+          this._lookAheadX = (this._lookAheadX || 0) + (goalLaX - (this._lookAheadX || 0)) * laRate;
+          this._lookAheadZ = (this._lookAheadZ || 0) + (goalLaZ - (this._lookAheadZ || 0)) * laRate;
+          this.camTarget.x = follow.x + this._lookAheadX;
           this.camTarget.y = 2.1;
-          this.camTarget.z = follow.z;
+          this.camTarget.z = follow.z + this._lookAheadZ;
         }
         this._checkProximity();
       } else if (this.mode === 'fp') {
@@ -3715,9 +3810,18 @@
       const r = this.curSpherical.radius;
       const p = this.curSpherical.polar;
       const a = this.curSpherical.azimuth;
-      const cx = this.camCurTarget.x + r * Math.sin(p) * Math.sin(a);
-      const cy = this.camCurTarget.y + r * Math.cos(p);
-      const cz = this.camCurTarget.z + r * Math.sin(p) * Math.cos(a);
+      let cx = this.camCurTarget.x + r * Math.sin(p) * Math.sin(a);
+      let cy = this.camCurTarget.y + r * Math.cos(p);
+      let cz = this.camCurTarget.z + r * Math.sin(p) * Math.cos(a);
+      // Decaying trauma^2 camera micro-shake (game-feel + camera-systems: visual offset only, respects reducedMotion)
+      if (this._trauma > 0 && !this.environment?.reducedMotion) {
+        this._trauma = Math.max(0, this._trauma - 1.6 * dt);
+        const shake = this._trauma * this._trauma * 0.42;
+        const st = tSec * 32;
+        cx += Math.sin(st * 1.7) * shake;
+        cy += Math.sin(st * 2.3) * shake * 0.65;
+        cz += Math.cos(st * 1.3) * shake;
+      }
       this.camera.position.set(cx, cy, cz);
       this.camera.lookAt(this.camCurTarget.x, this.camCurTarget.y, this.camCurTarget.z);
       this.visibility?.frame(dt,now);
